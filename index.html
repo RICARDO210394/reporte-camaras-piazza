@@ -2903,7 +2903,7 @@ function poblarSelectsPiazza(){
     document.getElementById('estadistica-filtro-piazza'),
     document.getElementById('pruebas-piazza')
   ];
-  selects.forEach(sel => {
+  selects.filter(Boolean).forEach(sel => {
     const placeholder = sel.id === 'filtro-piazza' || sel.id === 'realizados-filtro-piazza' || sel.id === 'estadistica-filtro-piazza' ? 'Todas las Piazzas' :
                          sel.id === 'consulta-piazza' || sel.id === 'pruebas-piazza' ? 'Seleccionar Piazza...' : 'Seleccionar...';
     const valorActual = sel.value;
