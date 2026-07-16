@@ -1533,11 +1533,13 @@ function cargarDatos(){
 
 function guardarDatos(){
   localStorage.setItem(CLAVE_STORAGE, JSON.stringify(pendientes));
-  if(_sincronizandoDesdeFirestore) return; // evitar reenviar lo que acaba de llegar de la nube
+  if(_sincronizandoDesdeFirestore) return;
   if(!window._firebase) return;
   const { coleccion, doc, setDoc } = window._firebase;
   pendientes.forEach(p => {
-    setDoc(doc(coleccion, p.id), p).catch(err => console.error('Error guardando en Firebase:', err));
+    // Quitar la foto (base64 pesado) antes de subir a Firebase para evitar superar 1MB por doc
+    const { foto, ...pSinFoto } = p;
+    setDoc(doc(coleccion, p.id), pSinFoto).catch(err => console.error('Error guardando en Firebase:', err));
   });
 }
 
