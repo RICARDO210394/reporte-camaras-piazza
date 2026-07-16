@@ -1513,7 +1513,7 @@ function cargarTrabajos(){
       });
       localStorage.setItem(CLAVE_STORAGE_TRABAJOS, JSON.stringify(trabajosRealizados));
       _sincronizandoTrabajosDesdeFirestore = false;
-      if(document.getElementById('tab-realizados').classList.contains('activo')) renderRealizados();
+      renderRealizados(); // siempre actualizar, no solo si el tab está activo
       console.log('✅ Trabajos sincronizados desde Firebase: ' + trabajosRealizados.length);
     }, err => console.error('Error onSnapshot trabajos:', err));
   };
@@ -3482,11 +3482,17 @@ function guardarPendiente(){
       guardarDatos([pendientes[idxPend].id]);
     }
 
+    // Mostrar en realizados inmediatamente (sin esperar Firebase)
+    renderRealizados();
+    limpiarForm();
+    cambiarTab('realizados');
+
     const notif = document.createElement('div');
-    notif.textContent = '✅ Trabajo guardado — sincronizando...';
+    notif.textContent = '✅ Trabajo guardado correctamente';
     notif.style.cssText = 'position:fixed;bottom:24px;right:24px;background:#198754;color:#fff;padding:12px 20px;border-radius:8px;font-weight:600;z-index:9999;box-shadow:0 4px 12px rgba(0,0,0,0.2);';
     document.body.appendChild(notif);
     setTimeout(() => { notif.remove(); }, 2500);
+    return; // salir antes del limpiarForm/cambiarTab genérico
 
   } else {
     // ===== REGISTRAR NORMAL: guarda en pendientes =====
