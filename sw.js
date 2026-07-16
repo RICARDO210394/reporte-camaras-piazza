@@ -1,8 +1,7 @@
 // Service Worker - Cámaras Piazza
-// VERSION: 2 — cambiar este número cada vez que se actualiza la app
-// El navegador detecta el cambio y fuerza la actualización automática
+// VERSION: 3 — cambiar este número cada vez que se actualiza la app
 
-const CACHE_NAME = 'camaras-piazza-v2';
+const CACHE_NAME = 'camaras-piazza-v3';
 const ARCHIVOS_ESENCIALES = [
   '/',
   '/index.html',
@@ -11,15 +10,13 @@ const ARCHIVOS_ESENCIALES = [
   '/icon-512.png'
 ];
 
-// Instalación: guardar archivos esenciales en caché
 self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(CACHE_NAME).then(cache => cache.addAll(ARCHIVOS_ESENCIALES))
   );
-  self.skipWaiting(); // Activar inmediatamente sin esperar
+  self.skipWaiting();
 });
 
-// Activación: limpiar cachés viejos y tomar control
 self.addEventListener('activate', event => {
   event.waitUntil(
     caches.keys().then(keys =>
@@ -30,10 +27,8 @@ self.addEventListener('activate', event => {
   );
 });
 
-// Fetch: Network First — siempre intenta la red primero
 self.addEventListener('fetch', event => {
   if (!event.request.url.startsWith(self.location.origin)) return;
-
   event.respondWith(
     fetch(event.request)
       .then(respuesta => {
@@ -47,7 +42,6 @@ self.addEventListener('fetch', event => {
   );
 });
 
-// Responder al mensaje de actualización inmediata
 self.addEventListener('message', event => {
   if(event.data && event.data.tipo === 'SKIP_WAITING'){
     self.skipWaiting();
