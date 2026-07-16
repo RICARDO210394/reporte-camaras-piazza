@@ -1,7 +1,7 @@
 // Service Worker - Cámaras Piazza
-// VERSION: 3 — cambiar este número cada vez que se actualiza la app
+// VERSION: 20260716181240 — se actualiza automáticamente con cada deploy
 
-const CACHE_NAME = 'camaras-piazza-v3';
+const CACHE_NAME = 'camaras-piazza-20260716181240';
 const ARCHIVOS_ESENCIALES = [
   '/',
   '/index.html',
