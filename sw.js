@@ -1,6 +1,6 @@
 // Service Worker - Cámaras Piazza
-// VERSION: 20260716192511
-const CACHE_NAME = 'camaras-piazza-20260716192511';
+// VERSION: 20260716193340
+const CACHE_NAME = 'camaras-piazza-20260716193340';
 const ARCHIVOS_ESENCIALES = ['/', '/index.html', '/manifest.json', '/icon-192.png', '/icon-512.png'];
 self.addEventListener('install', event => {
   event.waitUntil(caches.open(CACHE_NAME).then(cache => cache.addAll(ARCHIVOS_ESENCIALES)));

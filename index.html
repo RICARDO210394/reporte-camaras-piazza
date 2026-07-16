@@ -34,6 +34,14 @@
 
   window._firebase = { db, coleccion, doc, setDoc, deleteDoc, onSnapshot };
   window._firebaseListo = true;
+  // Indicador visual de conexión Firebase
+  document.addEventListener('DOMContentLoaded', () => {
+    const ind = document.createElement('div');
+    ind.id = 'firebase-status';
+    ind.style.cssText = 'position:fixed;bottom:8px;left:8px;font-size:0.72rem;padding:3px 8px;border-radius:4px;z-index:9999;background:#dc3545;color:#fff;font-weight:600;';
+    ind.textContent = '🔴 Firebase: conectando...';
+    document.body.appendChild(ind);
+  });
 </script>
 <style>
   :root{
@@ -1540,6 +1548,9 @@ function cargarDatos(){
 
       _firestoreActivo = true;
       primeraCarga = false;
+      // Actualizar indicador visual
+      const ind = document.getElementById('firebase-status');
+      if(ind){ ind.style.background='#198754'; ind.textContent='🟢 Firebase: ' + nuevaLista.length + ' registros sincronizados'; }
       poblarSelectsPiazza();
       poblarDVREstadistica();
       refrescarTodasLasVistas();
@@ -1568,6 +1579,8 @@ function guardarDatos(){
   });
   Promise.all(promesas).then(() => {
     console.log('Firebase: ' + guardadosFirebase + '/' + pendientes.length + ' registros guardados OK');
+    const ind = document.getElementById('firebase-status');
+    if(ind){ ind.style.background='#198754'; ind.textContent='🟢 Firebase: ' + guardadosFirebase + '/' + pendientes.length + ' guardados'; }
   });
 }
 
