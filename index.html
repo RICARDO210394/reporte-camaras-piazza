@@ -1465,15 +1465,7 @@ function migrarCamposRegistro(p){
     if(p.operador === undefined) p.operador = '';
     if(p.ubicacion === undefined) p.ubicacion = '';
     if(p.foto === undefined) p.foto = '';
-  if(p.origen === undefined){
-    // Detectar si es un trabajo realizado o un pendiente normal
-    // Los trabajos tienen técnico O reporte con texto sustancial
-    if((p.tecnico && p.tecnico.trim()) || (p.reporte && p.reporte.length > 10 && p.pendienteEstado === 'Resuelto')){
-      p.origen = 'trabajo';
-    } else {
-      p.origen = 'registrar';
-    }
-  }
+  if(p.origen === undefined) p.origen = 'registrar';
   return p;
 }
 
@@ -1511,9 +1503,17 @@ function cargarDatos(){
       _sincronizandoDesdeFirestore = true;
       const nuevaLista = [];
       const sinOrigenEnFirebase = []; // IDs que no tenían el campo 'origen' en Firebase
+      // Mapa de los pendientes locales para recuperar origen si Firebase no lo tiene
+      const mapaLocal = {};
+      pendientes.forEach(p => { mapaLocal[p.id] = p; });
+
       snapshot.forEach(docSnap => {
         const data = docSnap.data();
         const teniaSinOrigen = data.origen === undefined;
+        // Si Firebase no tiene origen pero localStorage sí lo tiene, preservar el local
+        if(teniaSinOrigen && mapaLocal[docSnap.id] && mapaLocal[docSnap.id].origen){
+          data.origen = mapaLocal[docSnap.id].origen;
+        }
         const p = migrarCamposRegistro({ ...data, id: docSnap.id });
         nuevaLista.push(p);
         if(teniaSinOrigen) sinOrigenEnFirebase.push(p);
