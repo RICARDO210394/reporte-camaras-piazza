@@ -1554,12 +1554,20 @@ function cargarDatos(){
 function guardarDatos(){
   localStorage.setItem(CLAVE_STORAGE, JSON.stringify(pendientes));
   if(_sincronizandoDesdeFirestore) return;
-  if(!window._firebase) return;
+  if(!window._firebase){
+    console.warn('Firebase no disponible — guardado solo en local');
+    return;
+  }
   const { coleccion, doc, setDoc } = window._firebase;
-  pendientes.forEach(p => {
-    // Quitar la foto (base64 pesado) antes de subir a Firebase para evitar superar 1MB por doc
+  let guardadosFirebase = 0;
+  const promesas = pendientes.map(p => {
     const { foto, ...pSinFoto } = p;
-    setDoc(doc(coleccion, p.id), pSinFoto).catch(err => console.error('Error guardando en Firebase:', err));
+    return setDoc(doc(coleccion, p.id), pSinFoto)
+      .then(() => { guardadosFirebase++; })
+      .catch(err => console.error('Error guardando en Firebase ID=' + p.id + ':', err));
+  });
+  Promise.all(promesas).then(() => {
+    console.log('Firebase: ' + guardadosFirebase + '/' + pendientes.length + ' registros guardados OK');
   });
 }
 
@@ -3423,6 +3431,20 @@ function guardarPendiente(){
   }
 
   guardarDatos();
+
+  // Notificación de sincronización para trabajos
+  if(_origenFormulario === 'trabajo'){
+    const notif = document.createElement('div');
+    notif.textContent = '✅ Trabajo guardado — sincronizando con Firebase...';
+    notif.style.cssText = 'position:fixed;bottom:24px;right:24px;background:#198754;color:#fff;padding:12px 20px;border-radius:8px;font-weight:600;z-index:9999;box-shadow:0 4px 12px rgba(0,0,0,0.2);';
+    document.body.appendChild(notif);
+    setTimeout(() => {
+      notif.textContent = window._firebase ? '✅ Trabajo guardado en Firebase — visible en todas las PCs' : '⚠️ Sin conexión a Firebase — guardado solo local';
+      notif.style.background = window._firebase ? '#0b2340' : '#dc3545';
+      setTimeout(() => notif.remove(), 3000);
+    }, 1500);
+  }
+
   limpiarForm();
   renderTabla();
   renderEstadistica();
