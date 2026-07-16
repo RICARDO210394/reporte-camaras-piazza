@@ -1465,7 +1465,15 @@ function migrarCamposRegistro(p){
     if(p.operador === undefined) p.operador = '';
     if(p.ubicacion === undefined) p.ubicacion = '';
     if(p.foto === undefined) p.foto = '';
-  if(p.origen === undefined) p.origen = 'registrar';
+  if(p.origen === undefined){
+    // Detectar si es un trabajo realizado o un pendiente normal
+    // Los trabajos tienen técnico O reporte con texto sustancial
+    if((p.tecnico && p.tecnico.trim()) || (p.reporte && p.reporte.length > 10 && p.pendienteEstado === 'Resuelto')){
+      p.origen = 'trabajo';
+    } else {
+      p.origen = 'registrar';
+    }
+  }
   return p;
 }
 
@@ -1502,18 +1510,30 @@ function cargarDatos(){
     onSnapshot(coleccion, (snapshot) => {
       _sincronizandoDesdeFirestore = true;
       const nuevaLista = [];
+      const sinOrigenEnFirebase = []; // IDs que no tenían el campo 'origen' en Firebase
       snapshot.forEach(docSnap => {
-        nuevaLista.push(migrarCamposRegistro({ ...docSnap.data(), id: docSnap.id }));
+        const data = docSnap.data();
+        const teniaSinOrigen = data.origen === undefined;
+        const p = migrarCamposRegistro({ ...data, id: docSnap.id });
+        nuevaLista.push(p);
+        if(teniaSinOrigen) sinOrigenEnFirebase.push(p);
       });
 
       if(primeraCarga && nuevaLista.length === 0 && pendientes.length > 0){
         // SEGURIDAD: la nube llegó vacía pero había datos guardados en este navegador.
-        // NO se borran: se suben a la nube para no perder información.
         console.warn('Firestore estaba vacío; subiendo ' + pendientes.length + ' registro(s) local(es) a la nube en vez de borrarlos.');
         pendientes.forEach(p => {
-          setDoc(doc(coleccion, p.id), p).catch(err => console.error('Error subiendo respaldo a Firebase:', err));
+          const { foto, ...pSinFoto } = p;
+          setDoc(doc(coleccion, p.id), pSinFoto).catch(err => console.error('Error subiendo respaldo a Firebase:', err));
         });
       } else {
+        // Re-guardar en Firebase los registros que no tenían 'origen' para que quede persistido
+        if(sinOrigenEnFirebase.length > 0){
+          sinOrigenEnFirebase.forEach(p => {
+            const { foto, ...pSinFoto } = p;
+            setDoc(doc(coleccion, p.id), pSinFoto).catch(e => console.error('Error guardando origen:', e));
+          });
+        }
         pendientes = nuevaLista;
         localStorage.setItem(CLAVE_STORAGE, JSON.stringify(pendientes));
       }
