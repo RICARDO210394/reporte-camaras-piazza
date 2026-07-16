@@ -3,6 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
 <title>Reporte de Cámaras, Botones de Pánico y Sistema Contra Incendio - Krause Negocios</title>
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="icon-192.png">
@@ -106,7 +109,12 @@
   }
   .tab{display:none;}
   .tab.activo{display:block;}
-  .tabla-pruebas{border-collapse:collapse; font-size:0.82rem; white-space:nowrap;}
+  .tabla-pruebas{border-collapse:collapse; font-size:0.82rem; white-space:nowrap; table-layout:fixed;}
+  .tabla-pruebas th, .tabla-pruebas td{border:1px solid var(--gris-borde); padding:0; text-align:center;}
+  #pruebas-thead-wrap{overflow:hidden; border-bottom:none;}
+  #pruebas-thead-wrap .tabla-pruebas .fila-mes th{background:#f2911c; color:#fff; padding:5px 4px; font-size:0.78rem;}
+  #pruebas-thead-wrap .tabla-pruebas .fila-semana th{background:var(--azul-oscuro); color:#fff; padding:6px 4px;}
+  #pruebas-body-wrap{overflow:auto; max-height:calc(100vh - var(--pruebas-wrap-top, 340px));}
   .tabla-grabacion{border-collapse:collapse; width:100%; font-size:0.85rem;}
   .tabla-grabacion th, .tabla-grabacion td{border:1px solid #d7dee6; padding:8px 10px; text-align:center; vertical-align:middle;}
   .tabla-grabacion .titulo-grabacion{background:var(--azul-oscuro); color:#fff; font-size:1rem; font-weight:700; padding:10px;}
@@ -121,17 +129,28 @@
   .tabla-grabacion .celda-dvr-vacia:hover{background:#f4f6f9; color:#5a6b7b;}
   .tabla-pruebas th, .tabla-pruebas td{border:1px solid var(--gris-borde); padding:0; text-align:center;}
   .tabla-pruebas thead th{background:var(--azul-oscuro); color:#fff; padding:6px 4px; position:sticky; top:0; z-index:2;}
-  .tabla-pruebas thead .fila-mes th{background:#f2911c; color:#fff; padding:5px 4px; font-size:0.78rem;}
-  .tabla-pruebas .col-eliminar{position:sticky; left:0; background:#fff; z-index:3; text-align:center; padding:4px; min-width:30px; width:30px;}
-  .tabla-pruebas thead .col-eliminar{background:var(--azul-oscuro); z-index:4;}
+  .tabla-pruebas thead.thead-meses .fila-mes th{background:#f2911c; color:#fff; padding:5px 4px; font-size:0.78rem; position:sticky; top:0; z-index:3;}
+  .tabla-pruebas thead.thead-semanas th{position:sticky; top:29px; z-index:2; background:var(--azul-oscuro); color:#fff; padding:6px 4px;}
+  .tabla-pruebas thead.thead-semanas .col-eliminar,
+  .tabla-pruebas thead.thead-semanas .col-fija,
+  .tabla-pruebas thead.thead-semanas .col-nombre,
+  .tabla-pruebas thead.thead-semanas .col-zona{padding:0; font-size:0; border:none; background:var(--azul-oscuro);}
+  .tabla-pruebas thead.thead-meses .col-eliminar{background:#f2911c; z-index:4;}
+  .tabla-pruebas thead.thead-meses .col-fija{background:#f2911c; z-index:4;}
+  .tabla-pruebas thead.thead-meses .col-nombre{background:#f2911c; z-index:4;}
+  .tabla-pruebas thead.thead-meses .col-zona{background:#f2911c; z-index:4;}
+  .tabla-pruebas .col-eliminar{position:sticky; left:0; background:#fff; z-index:3; text-align:center; padding:4px; width:52px; min-width:52px; max-width:52px;}
+  .tabla-pruebas thead.thead-meses .col-eliminar,.tabla-pruebas thead.thead-semanas .col-eliminar{z-index:5;}
   .btn-x-eliminar{background:#dc3545; color:#fff; border:none; border-radius:4px; width:22px; height:22px; font-size:0.75rem; font-weight:700; cursor:pointer; line-height:1;}
   .btn-x-eliminar:hover{background:#a71d2a;}
-  .tabla-pruebas .col-fija{position:sticky; left:30px; background:#fff; z-index:3; text-align:left; padding:6px 10px; min-width:70px;}
-  .tabla-pruebas thead .col-fija{background:var(--azul-oscuro); z-index:4;}
-  .tabla-pruebas .col-nombre{position:sticky; left:100px; background:#fff; z-index:3; text-align:left; padding:6px 10px; min-width:170px;}
-  .tabla-pruebas thead .col-nombre{background:var(--azul-oscuro); z-index:4;}
-  .tabla-pruebas .col-zona{position:sticky; left:270px; background:#fff; z-index:3; text-align:center; padding:6px 8px; min-width:55px;}
-  .tabla-pruebas thead .col-zona{background:var(--azul-oscuro); z-index:4;}
+  .tabla-pruebas .col-fija{position:sticky; left:52px; background:#fff; z-index:3; text-align:left; padding:6px 10px; width:80px; min-width:80px; max-width:80px;}
+  .tabla-pruebas thead.thead-meses .col-fija,.tabla-pruebas thead.thead-semanas .col-fija{z-index:5;}
+  .tabla-pruebas .col-nombre{position:sticky; left:132px; background:#fff; z-index:3; text-align:left; padding:6px 10px; width:200px; min-width:200px; max-width:200px;}
+  .tabla-pruebas thead.thead-meses .col-nombre,.tabla-pruebas thead.thead-semanas .col-nombre{z-index:5;}
+  .tabla-pruebas .col-zona{position:sticky; left:332px; background:#fff; z-index:3; text-align:center; padding:6px 8px; width:60px; min-width:60px; max-width:60px;}
+  .tabla-pruebas thead.thead-meses .col-zona,.tabla-pruebas thead.thead-semanas .col-zona{z-index:5;}
+  #tab-pruebas .card:first-child{position:sticky; top:56px; z-index:10; background:#fff; box-shadow:0 2px 8px rgba(0,0,0,0.08);}
+  #pruebas-tabla-wrap{overflow:auto; max-height:calc(100vh - var(--pruebas-wrap-top, 300px));}
   .celda-semana{width:34px; height:34px; cursor:pointer; font-weight:700; font-size:0.78rem; user-select:none;}
   .celda-semana:hover{outline:2px solid var(--naranja); outline-offset:-2px;}
   .celda-semana.est-guion{background:#f4f6f9; color:#c2c9d1;}
@@ -502,6 +521,7 @@
   <button data-tab="items">🛠️ Registrar Trabajo</button>
   <button data-tab="realizados">✅ Trabajos Realizados</button>
   <button data-tab="exportar">📤 Exportar</button>
+  <button data-tab="bitacora">📒 Bitácora</button>
 </nav>
 </div>
 
@@ -777,7 +797,7 @@
   <div class="tab" id="tab-resumen">
     <div class="card">
       <h2>📊 Estadística</h2>
-      <p style="color:#5a6b7b; margin-top:-8px;">Porcentaje de equipos funcionando correctamente (situación distinta de "Pendiente") sobre el 100% de lo registrado, por tipo de equipo.</p>
+      <p style="color:#5a6b7b; margin-top:-8px;">Porcentaje de equipos funcionando correctamente (situación distinta de "Pendiente" y excluyendo "Puerto libre") sobre el total registrado, por tipo de equipo.</p>
       <div class="filtros">
         <select id="estadistica-filtro-piazza" onchange="poblarDVREstadistica(); renderEstadistica();">
           <option value="">Todas las Piazzas</option>
@@ -827,15 +847,16 @@
         <select id="pruebas-local" onchange="renderPruebas()">
           <option value="">Todos los locales</option>
         </select>
-        <button class="btn btn-secundario" onclick="editarLocalSeleccionado()">✎ Editar local</button>
-        <button class="btn btn-peligro" onclick="eliminarLocalSeleccionado()">🗑 Eliminar local</button>
         <select id="pruebas-anio" onchange="renderPruebas()">
         </select>
+        <button class="btn btn-secundario" onclick="abrirModalAnadirLocal()" style="background:#198754;">➕ Añadir local</button>
         <button class="btn btn-primario" onclick="pedirDatosReporte(() => exportarPruebasPDF())">📄 Exportar PDF</button>
       </div>
+      <div id="pruebas-leyenda-fija"></div>
     </div>
     <div class="card" style="padding:0; overflow:hidden;">
-      <div id="pruebas-tabla-wrap" style="overflow-x:auto;">
+      <div id="pruebas-thead-wrap" style="overflow:hidden;"></div>
+      <div id="pruebas-body-wrap">
         <div class="vacio" id="pruebas-vacio">Selecciona una Piazza para ver la cuadrícula de pruebas semanales.</div>
       </div>
     </div>
@@ -903,6 +924,29 @@
         <button class="btn btn-primario" onclick="pedirDatosReporte(() => exportarConsolidadoPDF())">📄 Generar PDF con lo seleccionado</button>
       </div>
     </div>
+  </div>
+
+  <!-- TAB BITÁCORA -->
+  <div class="tab" id="tab-bitacora">
+    <div class="card">
+      <h2>📒 Bitácora de Cambios</h2>
+      <p style="color:#5a6b7b; margin-top:-8px;">Registro automático de todos los cambios realizados en la app. Solo lectura.</p>
+      <div class="filtros">
+        <select id="bitacora-filtro-piazza" onchange="renderBitacora()">
+          <option value="">Todas las Piazzas</option>
+        </select>
+        <select id="bitacora-filtro-tipo" onchange="renderBitacora()">
+          <option value="">Todos los tipos de evento</option>
+          <option value="pendiente">📋 Pendientes</option>
+          <option value="trabajo">🛠️ Trabajos</option>
+          <option value="prueba">📅 Pruebas Semanales</option>
+          <option value="catalogo">✎ Catálogo de Locales</option>
+        </select>
+        <input type="text" id="bitacora-buscar" placeholder="Buscar..." oninput="renderBitacora()" style="min-width:200px;">
+      </div>
+    </div>
+    <div id="bitacora-contenido"></div>
+    <div class="vacio" id="bitacora-vacio" style="display:none;">No hay eventos registrados aún.</div>
   </div>
 
 </main>
@@ -974,6 +1018,23 @@
 </div>
 
 <!-- MODAL DE PRUEBA SEMANAL -->
+<!-- MODAL AÑADIR LOCAL -->
+<div id="modal-anadir-local" style="display:none; position:fixed; inset:0; background:rgba(11,35,64,0.55); z-index:1100; align-items:center; justify-content:center; padding:16px;">
+  <div style="background:#fff; border-radius:12px; max-width:420px; width:100%; box-shadow:0 12px 40px rgba(0,0,0,0.3); padding:24px;">
+    <h3 style="margin:0 0 16px; color:#0b2340;">➕ Añadir nuevo local</h3>
+    <label style="display:block; margin-bottom:8px; font-weight:600; color:#0b2340;">Número del local</label>
+    <input id="anadir-local-numero" type="text" placeholder="Ej: A5, 10, 3B-4B" style="width:100%; padding:8px 10px; border:1px solid #d7dee6; border-radius:6px; margin-bottom:12px; box-sizing:border-box; font-size:0.95rem;">
+    <label style="display:block; margin-bottom:8px; font-weight:600; color:#0b2340;">Nombre del local</label>
+    <input id="anadir-local-nombre" type="text" placeholder="Ej: FYBECA" style="width:100%; padding:8px 10px; border:1px solid #d7dee6; border-radius:6px; margin-bottom:12px; box-sizing:border-box; font-size:0.95rem;">
+    <label style="display:block; margin-bottom:8px; font-weight:600; color:#0b2340;">Zona</label>
+    <input id="anadir-local-zona" type="text" placeholder="Ej: 21 (opcional)" style="width:100%; padding:8px 10px; border:1px solid #d7dee6; border-radius:6px; margin-bottom:20px; box-sizing:border-box; font-size:0.95rem;">
+    <div style="display:flex; gap:10px; justify-content:flex-end;">
+      <button class="btn btn-secundario" onclick="cerrarModalAnadirLocal()">Cancelar</button>
+      <button class="btn btn-primario" onclick="confirmarAnadirLocal()">✅ Añadir</button>
+    </div>
+  </div>
+</div>
+
 <div id="modal-prueba" style="display:none; position:fixed; inset:0; background:rgba(11,35,64,0.55); z-index:1100; align-items:center; justify-content:center; padding:16px;">
   <div style="background:#fff; border-radius:12px; max-width:440px; width:100%; box-shadow:0 12px 40px rgba(0,0,0,0.3);">
     <div style="background:var(--azul-oscuro); color:#fff; padding:14px 20px; border-radius:12px 12px 0 0; display:flex; align-items:center; justify-content:space-between;">
@@ -1030,6 +1091,33 @@
   </div>
 </div>
 
+<div id="modal-editar-local" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:1000; align-items:center; justify-content:center; padding:20px;">
+  <div style="background:#fff; border-radius:12px; max-width:420px; width:100%; box-shadow:0 10px 40px rgba(0,0,0,0.3);">
+    <div style="background:var(--azul-oscuro); color:#fff; padding:16px 20px; border-radius:12px 12px 0 0; display:flex; justify-content:space-between; align-items:center;">
+      <strong>Editar local</strong>
+      <button onclick="cerrarModalEditarLocal()" style="background:none; border:none; color:#fff; font-size:1.4rem; cursor:pointer; line-height:1;">&times;</button>
+    </div>
+    <div style="padding:20px; display:flex; flex-direction:column; gap:14px;">
+      <div>
+        <label style="display:block; font-weight:600; margin-bottom:4px;">Número del local</label>
+        <input type="text" id="edit-local-numero" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:6px;">
+      </div>
+      <div>
+        <label style="display:block; font-weight:600; margin-bottom:4px;">Nombre del local</label>
+        <input type="text" id="edit-local-nombre" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:6px;">
+      </div>
+      <div>
+        <label style="display:block; font-weight:600; margin-bottom:4px;">Zona</label>
+        <input type="text" id="edit-local-zona" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:6px;">
+      </div>
+    </div>
+    <div style="padding:0 20px 20px; display:flex; gap:10px; flex-wrap:wrap;">
+      <button class="btn btn-primario btn-chico" onclick="guardarEdicionLocal()">💾 Guardar</button>
+      <button class="btn btn-secundario btn-chico" onclick="cerrarModalEditarLocal()">Cancelar</button>
+    </div>
+  </div>
+</div>
+
 <script>
 const CLAVE_STORAGE = 'krause_pendientes_camaras_v1';
 let pendientes = [];
@@ -1066,6 +1154,10 @@ const CATALOGO_LOCALES = {"Villa Club": [{"numeroLocal": "1A", "nombreLocal": "P
 const CATALOGO_LOCALES_ORIGINAL = JSON.parse(JSON.stringify(CATALOGO_LOCALES));
 Object.keys(CATALOGO_LOCALES_ORIGINAL).forEach(pz => {
   CATALOGO_LOCALES_ORIGINAL[pz].forEach((loc, i) => { loc._idxOriginal = i; });
+});
+// También asignar _idxOriginal al catálogo activo para que editarLocalSeleccionado lo encuentre
+Object.keys(CATALOGO_LOCALES).forEach(pz => {
+  CATALOGO_LOCALES[pz].forEach((loc, i) => { loc._idxOriginal = i; });
 });
 
 const ESTADOS_POR_TIPO = {
@@ -1519,6 +1611,7 @@ function guardarCatalogoOverride(ov){
   else catalogoOverrides.push(ov);
   aplicarCatalogoOverrides();
   localStorage.setItem(CLAVE_STORAGE_CATALOGO_OVERRIDES, JSON.stringify(catalogoOverrides));
+  registrarEventoBitacora('catalogo', ov.eliminado ? 'Local eliminado del catálogo' : 'Local editado en catálogo', ov.piazza, ov.eliminado ? `Local ${ov.idxOriginal}` : `Nuevo: ${ov.numeroNuevo} - ${ov.nombreNuevo}`);
   if(window._firebaseOverrides){
     const { coleccionOverrides, doc, setDoc } = window._firebaseOverrides;
     setDoc(doc(coleccionOverrides, id), ov).catch(err => console.error('Error guardando override:', err));
@@ -1890,9 +1983,14 @@ function poblarLocalPruebas(){
 
 function obtenerLocalesParaGrilla(piazza){
   const catalogo = obtenerLocalesCombinadosPiazza(piazza);
+  // Ordenar por número de local (alfanumérico natural)
+  const ordenados = [...catalogo].sort((a,b) => {
+    const na = a.numeroLocal || '', nb = b.numeroLocal || '';
+    return na.localeCompare(nb, 'es', {numeric:true, sensitivity:'base'});
+  });
   const idxLocal = document.getElementById('pruebas-local').value;
   if(idxLocal !== '' && catalogo[idxLocal]) return [catalogo[idxLocal]];
-  return catalogo;
+  return ordenados;
 }
 
 let _localesGrillaActual = [];
@@ -1902,10 +2000,12 @@ let _notasPruebasActual = []; // { numero, numeroLocal, nombreLocal, semana, com
 function renderPruebas(){
   const piazza = document.getElementById('pruebas-piazza').value;
   const anio = parseInt(document.getElementById('pruebas-anio').value, 10) || new Date().getFullYear();
-  const wrap = document.getElementById('pruebas-tabla-wrap');
+  const theadWrap = document.getElementById('pruebas-thead-wrap');
+  const bodyWrap = document.getElementById('pruebas-body-wrap');
 
   if(!piazza){
-    wrap.innerHTML = '<div class="vacio" id="pruebas-vacio">Selecciona una Piazza para ver la cuadrícula de pruebas semanales.</div>';
+    theadWrap.innerHTML = '';
+    bodyWrap.innerHTML = '<div class="vacio" id="pruebas-vacio">Selecciona una Piazza para ver la cuadrícula de pruebas semanales.</div>';
     return;
   }
 
@@ -1914,7 +2014,12 @@ function renderPruebas(){
   const locales = obtenerLocalesParaGrilla(piazza);
   _localesGrillaActual = locales;
   if(!locales.length){
-    wrap.innerHTML = '<div class="vacio">Esta Piazza no tiene catálogo de locales cargado. Los botones de esta Piazza se registran manualmente en "Registrar".</div>';
+    theadWrap.innerHTML = '';
+    bodyWrap.innerHTML = `<div class="vacio" style="padding:32px; text-align:center;">
+      <div style="font-size:2.5rem; margin-bottom:12px;">📋</div>
+      <strong>No hay locales registrados para ${piazza}</strong><br>
+      <span style="color:#8a97a5;">Los botones de esta Piazza se registran manualmente desde "➕ Registrar". Una vez registrado el primer botón, aparecerá aquí automáticamente.</span>
+    </div>`;
     return;
   }
 
@@ -1955,7 +2060,9 @@ function renderPruebas(){
     }).join('');
     return `
       <tr>
-        <td class="col-eliminar"><button type="button" class="btn-x-eliminar" onclick="eliminarLocalDesdeGrilla(${idxLoc})" title="Eliminar este local">✕</button></td>
+        <td class="col-eliminar">
+          <button type="button" class="btn-x-eliminar" onclick="editarLocalDesdeGrilla(${idxLoc})" title="Editar este local" style="background:#0b2340; margin-right:2px;">✎</button><button type="button" class="btn-x-eliminar" onclick="eliminarLocalDesdeGrilla(${idxLoc})" title="Eliminar este local">✕</button>
+        </td>
         <td class="col-fija">${loc.numeroLocal}</td>
         <td class="col-nombre">${loc.nombreLocal}</td>
         <td class="col-zona">${loc.zona || ''}</td>
@@ -1971,24 +2078,43 @@ function renderPruebas(){
       </div>
     </div>` : '';
 
-  wrap.innerHTML = `
+  // Leyenda dentro del card sticky
+  const leyendaFija = document.getElementById('pruebas-leyenda-fija');
+  if(leyendaFija) leyendaFija.innerHTML = `
     <div class="leyenda-pruebas">
       <span><i style="background:#28a745;"></i> Sí llegó</span>
-      <span><i style="background:#dc3545;"></i> No llegó (el número indica el comentario, ver abajo)</span>
+      <span><i style="background:#dc3545;"></i> No llegó</span>
       <span><i style="background:#8a97a5;"></i> Local cerrado</span>
       <span><i style="background:#0dcaf0;"></i> Local vacío</span>
-      <span><i style="background:#8a5acf;"></i> Otro (el número indica el comentario, ver abajo)</span>
-      <span><i style="background:#ffc107;"></i> Sin sistema de botón de pánico</span>
-      <span><i style="background:#f4f6f9; border:1px solid #d7dee6;"></i> — Sin prueba esta semana</span>
-    </div>
-    <table class="tabla-pruebas">
+      <span><i style="background:#8a5acf;"></i> Otro</span>
+      <span><i style="background:#ffc107;"></i> Sin sistema de BP</span>
+      <span><i style="background:#f4f6f9; border:1px solid #d7dee6;"></i> — Sin prueba</span>
+    </div>`;
+
+  // Tabla de encabezado fija (sin scroll propio)
+  theadWrap.innerHTML = `
+    <table class="tabla-pruebas" style="width:max-content;">
       <thead>
-        <tr class="fila-mes"><th class="col-eliminar" rowspan="2"></th><th class="col-fija" rowspan="2">N°</th><th class="col-nombre" rowspan="2">Local</th><th class="col-zona" rowspan="2">Zona</th>${filaMesHTML}</tr>
-        <tr>${filaSemanaHTML}</tr>
+        <tr class="fila-mes"><th class="col-eliminar"></th><th class="col-fija">N°</th><th class="col-nombre">Local</th><th class="col-zona">Zona</th>${filaMesHTML}</tr>
+        <tr class="fila-semana"><th class="col-eliminar"></th><th class="col-fija"></th><th class="col-nombre"></th><th class="col-zona"></th>${filaSemanaHTML}</tr>
       </thead>
+    </table>`;
+
+  // Tabla de datos con scroll
+  bodyWrap.innerHTML = `
+    <table class="tabla-pruebas" style="width:max-content;">
       <tbody>${filasLocales}</tbody>
     </table>
     ${notasHTML}`;
+
+  // Sincronizar scroll horizontal
+  bodyWrap.onscroll = () => { theadWrap.scrollLeft = bodyWrap.scrollLeft; };
+
+  // Calcular altura disponible
+  requestAnimationFrame(() => {
+    const rect = bodyWrap.getBoundingClientRect();
+    document.documentElement.style.setProperty('--pruebas-wrap-top', rect.top + 'px');
+  });
 }
 
 let _celdaPruebaActual = null;
@@ -2129,6 +2255,7 @@ function guardarPrueba(){
   else pruebasSemanales.push(registro);
 
   guardarDatosPruebas();
+  registrarEventoBitacora('prueba', `Prueba semanal: ${NOMBRES_ESTADO_PRUEBA[estado]||estado}`, piazza, `${nombreLocal} (Local ${numeroLocal}) — Sem ${semana}/${anio} — ${quien||'—'}`);
   sincronizarPendienteDesdePrueba(piazza, numeroLocal, nombreLocal, estado, quien, fecha, comentario);
   cerrarModalPrueba();
   renderPruebas();
@@ -2250,10 +2377,8 @@ function eliminarLocalObjeto(piazza, loc){
   const pruebasAEliminar = pruebasSemanales.filter(p => p.piazza === piazza && p.numeroLocal === loc.numeroLocal && p.nombreLocal === loc.nombreLocal);
   pruebasAEliminar.forEach(p => {
     if(window._firebasePruebas){
-      const { coleccionPruebas, doc } = window._firebasePruebas;
-      import("https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js").then(mod => {
-        mod.deleteDoc(doc(coleccionPruebas, p.id)).catch(err => console.error('Error eliminando prueba:', err));
-      });
+      const { coleccionPruebas, doc, deleteDoc } = window._firebasePruebas;
+      deleteDoc(doc(coleccionPruebas, p.id)).catch(err => console.error('Error eliminando prueba:', err));
     }
   });
   pruebasSemanales = pruebasSemanales.filter(p => !(p.piazza === piazza && p.numeroLocal === loc.numeroLocal && p.nombreLocal === loc.nombreLocal));
@@ -2264,6 +2389,8 @@ function eliminarLocalObjeto(piazza, loc){
   pendientesAEliminar.forEach(p => eliminarDeFirestore(p.id));
   pendientes = pendientes.filter(p => !(p.tipo === 'Boton' && p.piazza === piazza && p.numeroLocal === loc.numeroLocal && p.nombreLocal === loc.nombreLocal));
   guardarDatos();
+
+  registrarEventoBitacora('catalogo', 'Local eliminado del catálogo', piazza, `${loc.numeroLocal} - ${loc.nombreLocal} (${cuentaPruebas} prueba(s), ${cuentaPendientes} registro(s) eliminado(s))`);
 
   alert('Local eliminado de forma permanente junto con ' + cuentaPruebas + ' prueba(s) y ' + cuentaPendientes + ' registro(s).');
   return true;
@@ -2285,6 +2412,43 @@ function eliminarLocalSeleccionado(){
     renderPruebas();
     refrescarTodasLasVistas();
   }
+}
+
+function editarLocalDesdeGrilla(idxLoc){
+  const piazza = document.getElementById('pruebas-piazza').value;
+  const loc = _localesGrillaActual[idxLoc];
+  if(!loc) return;
+  const nuevoNumero = prompt('Número del local:', loc.numeroLocal || '');
+  if(nuevoNumero === null) return;
+  const nuevoNombre = prompt('Nombre del local:', loc.nombreLocal || '');
+  if(nuevoNombre === null) return;
+  const nuevaZona = prompt('Zona:', loc.zona || '');
+  if(nuevaZona === null) return;
+  const numeroNuevo = nuevoNumero.trim(), nombreNuevo = nuevoNombre.trim(), zonaNueva = nuevaZona.trim();
+  if(loc.numeroLocal === numeroNuevo && loc.nombreLocal === nombreNuevo && (loc.zona||'') === zonaNueva){ alert('No hubo cambios.'); return; }
+  if(loc._idxOriginal === undefined){ alert('Este local no pertenece al catálogo base. Editalo desde "✎ Editar local" arriba.'); return; }
+  guardarCatalogoOverride({ piazza, idxOriginal: loc._idxOriginal, numeroNuevo, nombreNuevo, zonaNueva });
+  // Migrar pruebas y pendientes que referencien el nombre viejo
+  let migradas = 0;
+  pruebasSemanales.forEach(p => {
+    if(p.piazza === piazza && p.numeroLocal === loc.numeroLocal && p.nombreLocal === loc.nombreLocal){
+      p.numeroLocal = numeroNuevo; p.nombreLocal = nombreNuevo;
+      p.id = 'ps_' + piazza.replace(/\s+/g,'_') + '_' + numeroNuevo + '_' + p.anio + '_' + p.semana;
+      migradas++;
+    }
+  });
+  if(migradas > 0) guardarDatosPruebas();
+  let pAct = 0;
+  pendientes.forEach(p => {
+    if(p.tipo === 'Boton' && p.piazza === piazza && p.numeroLocal === loc.numeroLocal && p.nombreLocal === loc.nombreLocal){
+      p.numeroLocal = numeroNuevo; p.nombreLocal = nombreNuevo; p.zona = zonaNueva; pAct++;
+    }
+  });
+  if(pAct > 0) guardarDatos();
+  alert('Local actualizado. Se migraron ' + migradas + ' prueba(s) y ' + pAct + ' pendiente(s).');
+  poblarLocalPruebas();
+  renderPruebas();
+  refrescarTodasLasVistas();
 }
 
 function eliminarLocalDesdeGrilla(idxLoc){
@@ -2999,6 +3163,7 @@ function guardarPendiente(){
       if(operador) activo.operador = operador;
       activo.modificado = new Date().toISOString();
       guardarDatos();
+      registrarEventoBitacora('pendiente', 'Pendiente resuelto', piazza, `${NOMBRES_TIPO[tipo]||tipo} — ${detalleRegistro(activo)} — Técnico: ${tecnico||'—'}`);
       limpiarForm();
       renderTabla();
       renderEstadistica();
@@ -3025,6 +3190,7 @@ function guardarPendiente(){
         tipo, fecha, piazza, dvr, dvrPuertos, camara, numeroLocal, nombreLocal, zona, pruebaSemanal, identificador, novedad, estado, pendienteEstado, reporte, tecnico, operador, ubicacion, foto,
         modificado: new Date().toISOString()
       };
+      registrarEventoBitacora('pendiente', 'Pendiente editado', piazza, `${NOMBRES_TIPO[tipo]||tipo} — ${dvr||''} ${camara||nombreLocal||identificador||''} — Estado: ${estado}`);
     }
   } else {
     pendientes.push({
@@ -3034,6 +3200,7 @@ function guardarPendiente(){
       creado: new Date().toISOString(),
       modificado: new Date().toISOString()
     });
+    registrarEventoBitacora('pendiente', 'Pendiente creado', piazza, `${NOMBRES_TIPO[tipo]||tipo} — ${dvr||''} ${camara||nombreLocal||identificador||''} — Estado: ${estado}`);
 
     // Copiar el mismo trabajo a las cámaras adicionales seleccionadas (cada una guarda su propia entrada de historial)
     camarasExtra.forEach((camExtra, i) => {
@@ -3045,6 +3212,7 @@ function guardarPendiente(){
         modificado: new Date().toISOString()
       });
     });
+    if(camarasExtra.length > 0) registrarEventoBitacora('pendiente', `Pendientes creados en lote (${camarasExtra.length+1} cámaras)`, piazza, `${dvr||''} — Estado: ${estado}`);
   }
 
   guardarDatos();
@@ -3198,9 +3366,11 @@ function eliminarPendiente(id){
 function marcarResuelto(id){
   const p = pendientes.find(x => x.id === id);
   if(!p) return;
-  p.pendienteEstado = esPendienteActivo(p) ? 'Resuelto' : 'Pendiente';
+  const nuevoEstado = esPendienteActivo(p) ? 'Resuelto' : 'Pendiente';
+  p.pendienteEstado = nuevoEstado;
   p.modificado = new Date().toISOString();
   guardarDatos();
+  registrarEventoBitacora('pendiente', `Pendiente marcado como ${nuevoEstado}`, p.piazza, `${NOMBRES_TIPO[p.tipo]||p.tipo} — ${detalleRegistro(p)}`);
   renderTabla();
   renderEstadistica();
   renderConsulta();
@@ -3593,7 +3763,7 @@ function dibujarSeccionEstadisticaPDF(doc, opciones){
     });
     const equipos = Object.values(mapaEq);
     const total = equipos.length;
-    const funcionando = equipos.filter(p => p.pendienteEstado && p.pendienteEstado !== 'Pendiente').length;
+    const funcionando = equipos.filter(p => p.pendienteEstado && p.pendienteEstado !== 'Pendiente' && p.estado !== 'Puerto libre').length;
     const pendientesCount = total - funcionando;
     const pct = total ? Math.round((funcionando / total) * 100) : 0;
     return { ...t, total, funcionando, pendientes: pendientesCount, pct };
@@ -3725,7 +3895,9 @@ function exportarConsolidadoPDF(){
 function exportarTodosTrabajosRealizados(docExterno, opciones){
   const esStandalone = !docExterno;
   const compacto = !!(opciones && opciones.compacto);
-  const lista = esStandalone ? obtenerRealizadosFiltrados() : pendientes.filter(p => p.origen === 'trabajo' || p.pendienteEstado === 'Resuelto');
+  const solopiazza = (opciones && opciones.solopiazza) || null;
+  let lista = esStandalone ? obtenerRealizadosFiltrados() : pendientes.filter(p => p.origen === 'trabajo' || p.pendienteEstado === 'Resuelto');
+  if(solopiazza) lista = lista.filter(p => p.piazza === solopiazza);
   if(!lista.length){ if(esStandalone) alert('No hay trabajos realizados para exportar con estos filtros.'); return compacto ? opciones.startY : undefined; }
 
   const { jsPDF } = window.jspdf;
@@ -3853,7 +4025,10 @@ function renderRealizados(){
 
     return `
       <details class="piazza-folder">
-        <summary>📁 ${pz} <span class="conteo-chip">${itemsPz.length} trabajo(s)</span></summary>
+        <summary>📁 ${pz} <span class="conteo-chip">${itemsPz.length} trabajo(s)</span>
+          <button class="btn btn-primario btn-chico" style="margin-left:12px; font-size:0.78rem; padding:3px 10px;"
+            onclick="event.stopPropagation(); event.preventDefault(); pedirDatosReporte(() => exportarTodosTrabajosRealizados(null, {solopiazza:'${pz.replace(/'/g,"\\'")}'}))">📄 Exportar Piazza</button>
+        </summary>
         ${porTipo}
       </details>`;
   }).join('');
@@ -3891,7 +4066,7 @@ function renderEstadistica(){
     });
     const equipos = Object.values(mapaEq);
     const totalEquipos = equipos.length;
-    const funcionando = equipos.filter(p => p.pendienteEstado && p.pendienteEstado !== 'Pendiente').length;
+    const funcionando = equipos.filter(p => p.pendienteEstado && p.pendienteEstado !== 'Pendiente' && p.estado !== 'Puerto libre').length;
     const pct = totalEquipos ? Math.round((funcionando / totalEquipos) * 100) : 0;
     const colorOk = 'var(--verde)';
     const colorMal = 'var(--rojo)';
@@ -3941,6 +4116,7 @@ function cambiarTab(nombre){
   if(nombre === 'pruebas'){ poblarLocalPruebas(); renderPruebas(); }
   if(nombre === 'grabacion'){ renderGrabacion(); }
   if(nombre === 'exportar'){ poblarSelectoresExportar(); }
+  if(nombre === 'bitacora'){ renderBitacora(); }
 }
 
 document.querySelectorAll('nav button').forEach(btn => {
@@ -4253,20 +4429,195 @@ function exportarPDF(docExterno, opciones){
   return y;
 }
 
+function abrirModalAnadirLocal(){
+  const piazza = document.getElementById('pruebas-piazza').value;
+  if(!piazza){ alert('Seleccioná primero una Piazza.'); return; }
+  document.getElementById('anadir-local-numero').value = '';
+  document.getElementById('anadir-local-nombre').value = '';
+  document.getElementById('anadir-local-zona').value = '';
+  const modal = document.getElementById('modal-anadir-local');
+  modal.style.display = 'flex';
+  setTimeout(() => document.getElementById('anadir-local-numero').focus(), 100);
+}
+
+function cerrarModalAnadirLocal(){
+  document.getElementById('modal-anadir-local').style.display = 'none';
+}
+
+function confirmarAnadirLocal(){
+  const piazza = document.getElementById('pruebas-piazza').value;
+  const numero = document.getElementById('anadir-local-numero').value.trim();
+  const nombre = document.getElementById('anadir-local-nombre').value.trim();
+  const zona   = document.getElementById('anadir-local-zona').value.trim();
+  if(!numero || !nombre){ alert('El número y el nombre del local son obligatorios.'); return; }
+
+  // Agregar al catálogo como override en la posición siguiente libre
+  const catActual = CATALOGO_LOCALES[piazza] || [];
+  const originalActual = CATALOGO_LOCALES_ORIGINAL[piazza] || [];
+  // Buscar si ya existe un local con ese número
+  if(catActual.some(l => l.numeroLocal === numero)){
+    alert('Ya existe un local con ese número en esta Piazza.'); return;
+  }
+  // Agregar al catálogo en memoria y al ORIGINAL para que tenga _idxOriginal
+  const nuevoIdxOriginal = originalActual.length; // posición nueva al final del catálogo original
+  const nuevoLocal = { numeroLocal: numero, nombreLocal: nombre, zona, _idxOriginal: nuevoIdxOriginal };
+  CATALOGO_LOCALES_ORIGINAL[piazza] = [...originalActual, { ...nuevoLocal }];
+  CATALOGO_LOCALES[piazza] = [...catActual, nuevoLocal];
+  // Guardar como override permanente para que persista entre sesiones
+  guardarCatalogoOverride({ piazza, idxOriginal: nuevoIdxOriginal, numeroNuevo: numero, nombreNuevo: nombre, zonaNueva: zona });
+  registrarEventoBitacora('catalogo', 'Local añadido al catálogo', piazza, `${numero} - ${nombre} (Zona: ${zona||'—'})`);
+
+  cerrarModalAnadirLocal();
+  poblarLocalPruebas();
+  renderPruebas(); // renderPruebas ordena por número automáticamente
+}
+
+// ==================== BITÁCORA ====================
+let bitacoraEventos = [];
+const CLAVE_STORAGE_BITACORA = 'krause_bitacora_v1';
+
+function cargarBitacora(){
+  try{
+    const guardado = localStorage.getItem(CLAVE_STORAGE_BITACORA);
+    bitacoraEventos = guardado ? JSON.parse(guardado) : [];
+  }catch(e){ bitacoraEventos = []; }
+
+  const intentarConectar = () => {
+    if(!window._firebase){ setTimeout(intentarConectar, 300); return; }
+    const { db } = window._firebase;
+    import("https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js").then(mod => {
+      const colBitacora = mod.collection(db, "bitacora_cambios");
+      window._firebaseBitacora = { colBitacora, doc: mod.doc, addDoc: mod.addDoc };
+      let primera = true;
+      mod.onSnapshot(colBitacora, snap => {
+        const nueva = [];
+        snap.forEach(d => nueva.push({ ...d.data(), _fireId: d.id }));
+        if(primera && nueva.length === 0 && bitacoraEventos.length > 0){
+          bitacoraEventos.forEach(ev => mod.addDoc(colBitacora, ev).catch(e => console.error(e)));
+        } else {
+          bitacoraEventos = nueva;
+          localStorage.setItem(CLAVE_STORAGE_BITACORA, JSON.stringify(bitacoraEventos));
+        }
+        primera = false;
+        if(document.getElementById('tab-bitacora') && document.getElementById('tab-bitacora').classList.contains('activo')) renderBitacora();
+      }, e => console.error('Error bitácora Firebase:', e));
+    });
+  };
+  intentarConectar();
+}
+
+function registrarEventoBitacora(tipo, descripcion, piazza, detalle){
+  const ev = {
+    tipo,          // 'pendiente' | 'trabajo' | 'prueba' | 'catalogo'
+    descripcion,   // texto corto ej: "Pendiente creado"
+    piazza: piazza || '',
+    detalle: detalle || '',
+    fecha: new Date().toISOString(),
+    fechaLegible: new Date().toLocaleString('es-EC', {dateStyle:'short', timeStyle:'short'})
+  };
+  bitacoraEventos.push(ev);
+  localStorage.setItem(CLAVE_STORAGE_BITACORA, JSON.stringify(bitacoraEventos));
+  if(window._firebaseBitacora){
+    window._firebaseBitacora.addDoc(window._firebaseBitacora.colBitacora, ev).catch(e => console.error(e));
+  }
+  if(document.getElementById('tab-bitacora') && document.getElementById('tab-bitacora').classList.contains('activo')) renderBitacora();
+}
+
+function renderBitacora(){
+  const filtroPiazza = document.getElementById('bitacora-filtro-piazza')?.value || '';
+  const filtroTipo   = document.getElementById('bitacora-filtro-tipo')?.value || '';
+  const buscar       = (document.getElementById('bitacora-buscar')?.value || '').toLowerCase();
+
+  let eventos = [...bitacoraEventos].sort((a,b) => (b.fecha || '').localeCompare(a.fecha || ''));
+  if(filtroPiazza) eventos = eventos.filter(e => e.piazza === filtroPiazza);
+  if(filtroTipo)   eventos = eventos.filter(e => e.tipo === filtroTipo);
+  if(buscar)       eventos = eventos.filter(e =>
+    (e.descripcion||'').toLowerCase().includes(buscar) ||
+    (e.detalle||'').toLowerCase().includes(buscar) ||
+    (e.piazza||'').toLowerCase().includes(buscar)
+  );
+
+  const cont = document.getElementById('bitacora-contenido');
+  const vacio = document.getElementById('bitacora-vacio');
+
+  if(!eventos.length){ cont.innerHTML = ''; vacio.style.display = 'block'; return; }
+  vacio.style.display = 'none';
+
+  const ICONO_TIPO = { pendiente:'📋', trabajo:'🛠️', prueba:'📅', catalogo:'✎' };
+  const COLOR_TIPO = { pendiente:'#0b2340', trabajo:'#198754', prueba:'#f29228', catalogo:'#6f42c1' };
+
+  cont.innerHTML = `
+    <table style="width:100%; border-collapse:collapse; font-size:0.875rem;">
+      <thead>
+        <tr style="background:#0b2340; color:#fff;">
+          <th style="padding:8px 10px; text-align:left; width:140px;">Fecha</th>
+          <th style="padding:8px 10px; text-align:left; width:110px;">Tipo</th>
+          <th style="padding:8px 10px; text-align:left; width:130px;">Piazza</th>
+          <th style="padding:8px 10px; text-align:left;">Descripción</th>
+          <th style="padding:8px 10px; text-align:left;">Detalle</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${eventos.map((ev, i) => `
+          <tr style="background:${i%2===0?'#fff':'#f4f6f9'}; border-bottom:1px solid #e0e5eb;">
+            <td style="padding:7px 10px; color:#5a6b7b; white-space:nowrap;">${ev.fechaLegible || ev.fecha?.slice(0,16).replace('T',' ') || ''}</td>
+            <td style="padding:7px 10px;">
+              <span style="background:${COLOR_TIPO[ev.tipo]||'#888'}; color:#fff; border-radius:4px; padding:2px 7px; font-size:0.78rem;">
+                ${ICONO_TIPO[ev.tipo]||'•'} ${ev.tipo||''}
+              </span>
+            </td>
+            <td style="padding:7px 10px; color:#0b2340; font-weight:600;">${ev.piazza||'—'}</td>
+            <td style="padding:7px 10px; font-weight:500;">${ev.descripcion||''}</td>
+            <td style="padding:7px 10px; color:#5a6b7b;">${ev.detalle||''}</td>
+          </tr>`).join('')}
+      </tbody>
+    </table>`;
+}
+
+// ==================== FIN BITÁCORA ====================
+
 // Inicialización
 document.getElementById('fecha-actual').textContent = new Date().toLocaleDateString('es-EC', {weekday:'long', year:'numeric', month:'long', day:'numeric'});
 cargarCatalogoOverrides();
 cargarDatos();
 cargarDatosPruebas();
 cargarDatosGrabacion();
+cargarBitacora();
 poblarSelectorAnioPruebas();
 poblarSelectsPiazza();
+// Poblar el select de Piazza de la bitácora
+(function(){
+  const sel = document.getElementById('bitacora-filtro-piazza');
+  if(sel) PIAZZAS.forEach(pz => {
+    const op = document.createElement('option');
+    op.value = pz; op.textContent = pz;
+    sel.appendChild(op);
+  });
+})();
 poblarDVREstadistica();
 poblarFiltroEstado();
 limpiarForm();
 renderTabla();
 renderEstadistica();
 renderConsulta();
+// Registro del Service Worker (actualización automática de la PWA)
+// Solo activo en producción (Netlify), no en previsualizaciones
+if('serviceWorker' in navigator && (location.hostname.includes('netlify.app') || location.hostname.includes('krause'))){
+  navigator.serviceWorker.register('/sw.js').then(reg => {
+    reg.update();
+    reg.addEventListener('updatefound', () => {
+      const nuevoSW = reg.installing;
+      nuevoSW.addEventListener('statechange', () => {
+        if(nuevoSW.state === 'installed' && navigator.serviceWorker.controller){
+          navigator.serviceWorker.addEventListener('controllerchange', () => {
+            window.location.reload();
+          });
+          nuevoSW.postMessage({ tipo: 'SKIP_WAITING' });
+        }
+      });
+    });
+  }).catch(err => console.warn('SW no disponible:', err));
+}
 </script>
 
 </body>
