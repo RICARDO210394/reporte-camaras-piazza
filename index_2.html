@@ -116,17 +116,17 @@
   .tabla-pruebas thead .fila-semana th{background:var(--azul-oscuro); color:#fff; padding:6px 4px; position:sticky; top:28px; z-index:4; min-width:52px; width:52px; font-size:0.88rem; box-sizing:border-box;}
   .tabla-pruebas thead .fila-mes th.col-fija-head,
   .tabla-pruebas thead .fila-semana th.col-fija-head{z-index:6;}
-  .tabla-grabacion{border-collapse:collapse; width:100%; font-size:0.85rem;}
-  .tabla-grabacion th, .tabla-grabacion td{border:1px solid #d7dee6; padding:8px 10px; text-align:center; vertical-align:middle;}
+  .tabla-grabacion{border-collapse:collapse; width:100%; font-size:0.85rem; table-layout:fixed;}
+  .tabla-grabacion th, .tabla-grabacion td{border:1px solid #d7dee6; padding:8px 10px; text-align:center; vertical-align:middle; word-break:break-word;}
   .tabla-grabacion .titulo-grabacion{background:var(--azul-oscuro); color:#fff; font-size:1rem; font-weight:700; padding:10px;}
   .tabla-grabacion thead tr:last-child th{background:#f4a94b; color:#0b2340; font-weight:700;}
-  .tabla-grabacion .col-piazza-grabacion{background:#eef1f5; font-weight:700; text-align:left; min-width:150px;}
-  .tabla-grabacion .celda-dvr{cursor:pointer; line-height:1.35;}
+  .tabla-grabacion .col-piazza-grabacion{background:#eef1f5; font-weight:700; text-align:left; width:13%;}
+  .tabla-grabacion .celda-dvr{cursor:pointer; line-height:1.35; width:22%;}
   .tabla-grabacion .celda-dvr:hover{background:#f4f6f9;}
   .tabla-grabacion .celda-dvr.con-problema{color:#c00000; font-weight:600;}
   .tabla-grabacion .celda-dvr .nota-dvr{color:#c00000; font-weight:700; display:inline-block; margin-top:4px;}
-  .tabla-grabacion .celda-dvr-dias{font-weight:700; min-width:55px;}
-  .tabla-grabacion .celda-dvr-vacia{cursor:pointer; color:#b7c0cb; font-style:italic;}
+  .tabla-grabacion .celda-dvr-dias{font-weight:700; width:7%;}
+  .tabla-grabacion .celda-dvr-vacia{cursor:pointer; color:#b7c0cb; font-style:italic; width:22%;}
   .tabla-grabacion .celda-dvr-vacia:hover{background:#f4f6f9; color:#5a6b7b;}
   .tabla-pruebas th, .tabla-pruebas td{border:1px solid var(--gris-borde); padding:0; text-align:center;}
   .tabla-pruebas thead.thead-semanas .col-eliminar,
@@ -147,7 +147,8 @@
   .tabla-pruebas thead.thead-meses .col-nombre,.tabla-pruebas thead.thead-semanas .col-nombre{z-index:5;}
   .tabla-pruebas .col-zona{position:sticky; left:332px; background:#fff; z-index:3; text-align:center; padding:6px 8px; width:60px; min-width:60px; max-width:60px;}
   .tabla-pruebas thead.thead-meses .col-zona,.tabla-pruebas thead.thead-semanas .col-zona{z-index:5;}
-  #tab-pruebas .card:first-child{position:sticky; top:56px; z-index:10; background:#fff; box-shadow:0 2px 8px rgba(0,0,0,0.08);}
+  #pruebas-controles{background:#fff;}
+  #pruebas-controles summary{display:none;}
   #pruebas-tabla-wrap{overflow:auto; max-height:calc(100vh - var(--pruebas-wrap-top, 300px));}
   .celda-semana{width:52px; min-width:52px; height:34px; cursor:pointer; font-weight:700; font-size:0.88rem; user-select:none; text-align:center; box-sizing:border-box;}
   .celda-semana:hover{outline:2px solid var(--naranja); outline-offset:-2px;}
@@ -835,11 +836,11 @@
 
   <!-- TAB PRUEBAS SEMANALES DE BOTONES DE PÁNICO -->
   <div class="tab" id="tab-pruebas">
-    <div class="card">
+    <div class="card" id="pruebas-controles">
       <h2>📅 BP Pruebas Semanales de Botones de Pánico</h2>
       <p style="color:#5a6b7b; margin-top:-8px;">Registro semanal (52 semanas del año) de si llegó la señal de prueba de cada botón de pánico.</p>
       <div class="filtros">
-        <select id="pruebas-piazza" onchange="poblarLocalPruebas(); renderPruebas();">
+        <select id="pruebas-piazza" onchange="poblarLocalPruebas(); renderPruebas(); actualizarSummaryPiazza();">
           <option value="">Seleccionar Piazza...</option>
         </select>
         <select id="pruebas-local" onchange="renderPruebas()">
@@ -852,7 +853,7 @@
       </div>
       <div id="pruebas-leyenda-fija"></div>
     </div>
-    <div class="card" style="padding:0; overflow:hidden;">
+    <div class="card" style="padding:0; overflow:hidden; margin-top:8px;">
       <div id="pruebas-wrap">
         <div class="vacio" id="pruebas-vacio">Selecciona una Piazza para ver la cuadrícula de pruebas semanales.</div>
       </div>
@@ -982,28 +983,62 @@
 </div>
 
 <div id="modal-grabacion" style="display:none; position:fixed; inset:0; background:rgba(11,35,64,0.55); z-index:1100; align-items:center; justify-content:center; padding:16px;">
-  <div style="background:#fff; border-radius:12px; max-width:460px; width:100%; box-shadow:0 12px 40px rgba(0,0,0,0.3);">
+  <div style="background:#fff; border-radius:12px; max-width:480px; width:100%; box-shadow:0 12px 40px rgba(0,0,0,0.3);">
     <div style="background:var(--azul-oscuro); color:#fff; padding:14px 20px; border-radius:12px 12px 0 0; display:flex; align-items:center; justify-content:space-between;">
       <strong id="modal-grabacion-titulo" style="font-size:1rem;">DVR</strong>
       <button onclick="cerrarModalGrabacion()" style="background:none; border:none; color:#fff; font-size:1.4rem; cursor:pointer; line-height:1;">×</button>
     </div>
     <div style="padding:20px; display:flex; flex-direction:column; gap:14px;">
       <div class="campo">
-        <label>Fecha "Desde"</label>
+        <label>Fecha de inicio de grabación</label>
         <input type="date" id="mg-desde" onchange="recalcularDiasModalGrabacion()">
       </div>
-      <div class="campo">
-        <label>Fecha "Hasta"</label>
-        <input type="date" id="mg-hasta" onchange="recalcularDiasModalGrabacion()">
-        <button type="button" class="btn btn-secundario btn-chico" onclick="ponerHastaHoyModalGrabacion()" style="align-self:flex-start; margin-top:6px;">📅 Poner hoy</button>
+
+      <!-- Toggle: con o sin problema -->
+      <div style="display:flex; align-items:center; gap:10px; padding:10px; background:#fff7ed; border-radius:8px; border:1px solid #f2911c;">
+        <input type="checkbox" id="mg-tiene-problema" onchange="toggleProblemaGrabacion()" style="width:18px;height:18px; cursor:pointer; accent-color:#dc3545;">
+        <label for="mg-tiene-problema" style="cursor:pointer; font-weight:600; color:#c00000;">⚠️ Tiene observación / problema</label>
       </div>
+
+      <!-- Sección normal (sin problema) -->
+      <div id="mg-seccion-normal">
+        <div class="campo">
+          <label>Fecha "Hasta" <span style="color:#5a6b7b; font-size:0.82rem;">(graba hasta esta fecha)</span></label>
+          <input type="date" id="mg-hasta" onchange="recalcularDiasModalGrabacion()">
+          <button type="button" class="btn btn-secundario btn-chico" onclick="ponerHastaHoyModalGrabacion()" style="align-self:flex-start; margin-top:6px;">📅 Poner hoy</button>
+        </div>
+      </div>
+
+      <!-- Sección con problema -->
+      <div id="mg-seccion-problema" style="display:none; border:1px solid #dc3545; border-radius:8px; padding:14px; background:#fff5f5; display:none; flex-direction:column; gap:12px;">
+        <div class="campo">
+          <label style="color:#c00000;">Fecha en que comenzó a fallar</label>
+          <input type="date" id="mg-desde-fallo" onchange="recalcularDiasModalGrabacion()">
+        </div>
+        <div class="campo">
+          <label style="color:#c00000;">Observación / descripción del problema</label>
+          <textarea id="mg-nota" placeholder="Ej: No está grabando por intermitencia de señal..." style="border-color:#dc3545;"></textarea>
+        </div>
+        <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+          <span style="font-weight:600; color:#c00000;">¿Se solucionó?</span>
+          <label style="display:flex; align-items:center; gap:6px; cursor:pointer;">
+            <input type="radio" name="mg-solucion" value="pendiente" checked onchange="toggleSolucionGrabacion()"> 
+            <span style="color:#c00000; font-weight:700;">Pendiente</span>
+          </label>
+          <label style="display:flex; align-items:center; gap:6px; cursor:pointer;">
+            <input type="radio" name="mg-solucion" value="solucionado" onchange="toggleSolucionGrabacion()"> 
+            <span style="color:#198754; font-weight:700;">Solucionado</span>
+          </label>
+        </div>
+        <div id="mg-fecha-solucion-wrap" style="display:none;" class="campo">
+          <label style="color:#198754;">Fecha de solución</label>
+          <input type="date" id="mg-fecha-solucion" onchange="recalcularDiasModalGrabacion()">
+        </div>
+      </div>
+
       <div class="campo">
         <label>Días (calculado automáticamente)</label>
         <input type="text" id="mg-dias" readonly style="background:#f4f6f9; font-weight:700;">
-      </div>
-      <div class="campo">
-        <label>Observación</label>
-        <textarea id="mg-nota" placeholder="Ej: No está grabando por intermitencia de señal, retirado por remodelación, transmite por Nube..."></textarea>
       </div>
     </div>
     <div style="padding:0 20px 20px; display:flex; gap:10px; flex-wrap:wrap;">
@@ -1730,19 +1765,53 @@ function diasEntre(desde, hasta){
   return Math.round((d2 - d1) / 86400000);
 }
 
+function toggleProblemaGrabacion(){
+  const tieneProblema = document.getElementById('mg-tiene-problema').checked;
+  document.getElementById('mg-seccion-normal').style.display = tieneProblema ? 'none' : 'block';
+  document.getElementById('mg-seccion-problema').style.display = tieneProblema ? 'flex' : 'none';
+  recalcularDiasModalGrabacion();
+}
+
+function toggleSolucionGrabacion(){
+  const solucionado = document.querySelector('input[name="mg-solucion"]:checked')?.value === 'solucionado';
+  document.getElementById('mg-fecha-solucion-wrap').style.display = solucionado ? 'block' : 'none';
+  recalcularDiasModalGrabacion();
+}
+
 function abrirModalGrabacion(piazza, dvr){
   _celdaGrabacionActual = { piazza, dvr };
   document.getElementById('modal-grabacion-titulo').textContent = piazza + ' — ' + dvr;
   const existente = registrosGrabacion.find(r => claveGrabacion(r.piazza, r.dvr) === claveGrabacion(piazza, dvr));
+
+  // Reset
+  document.getElementById('mg-desde').value = '';
+  document.getElementById('mg-hasta').value = hoyISO();
+  document.getElementById('mg-nota').value = '';
+  document.getElementById('mg-desde-fallo').value = '';
+  document.getElementById('mg-fecha-solucion').value = '';
+  document.getElementById('mg-tiene-problema').checked = false;
+  document.querySelectorAll('input[name="mg-solucion"]')[0].checked = true; // pendiente
+  document.getElementById('mg-fecha-solucion-wrap').style.display = 'none';
+
   if(existente){
     document.getElementById('mg-desde').value = existente.desde || '';
-    document.getElementById('mg-hasta').value = existente.hasta || '';
-    document.getElementById('mg-nota').value = existente.nota || '';
-  } else {
-    document.getElementById('mg-desde').value = '';
-    document.getElementById('mg-hasta').value = hoyISO();
-    document.getElementById('mg-nota').value = '';
+    if(existente.tieneProblema){
+      document.getElementById('mg-tiene-problema').checked = true;
+      document.getElementById('mg-desde-fallo').value = existente.desdeFallo || '';
+      document.getElementById('mg-nota').value = existente.nota || '';
+      const solucionado = existente.solucion === 'solucionado';
+      document.querySelectorAll('input[name="mg-solucion"]')[solucionado ? 1 : 0].checked = true;
+      if(solucionado){
+        document.getElementById('mg-fecha-solucion-wrap').style.display = 'block';
+        document.getElementById('mg-fecha-solucion').value = existente.fechaSolucion || '';
+      }
+    } else {
+      document.getElementById('mg-hasta').value = existente.hasta || hoyISO();
+      document.getElementById('mg-nota').value = existente.nota || '';
+    }
   }
+
+  toggleProblemaGrabacion();
   recalcularDiasModalGrabacion();
   document.getElementById('modal-grabacion').style.display = 'flex';
 }
@@ -1753,10 +1822,20 @@ function ponerHastaHoyModalGrabacion(){
 }
 
 function recalcularDiasModalGrabacion(){
-  const desde = document.getElementById('mg-desde').value;
-  const hasta = document.getElementById('mg-hasta').value;
-  const dias = diasEntre(desde, hasta);
-  document.getElementById('mg-dias').value = dias !== null ? dias + ' día(s)' : '—';
+  const tieneProblema = document.getElementById('mg-tiene-problema').checked;
+  let desde, hasta, dias;
+  if(tieneProblema){
+    desde = document.getElementById('mg-desde-fallo').value;
+    const solucionado = document.querySelector('input[name="mg-solucion"]:checked')?.value === 'solucionado';
+    hasta = solucionado ? document.getElementById('mg-fecha-solucion').value : hoyISO();
+    dias = diasEntre(desde, hasta);
+    document.getElementById('mg-dias').value = dias !== null ? dias + ' día(s) con problema' : '—';
+  } else {
+    desde = document.getElementById('mg-desde').value;
+    hasta = document.getElementById('mg-hasta').value;
+    dias = diasEntre(desde, hasta);
+    document.getElementById('mg-dias').value = dias !== null ? dias + ' día(s)' : '—';
+  }
 }
 
 function cerrarModalGrabacion(){
@@ -1768,15 +1847,30 @@ function guardarGrabacion(){
   if(!_celdaGrabacionActual) return;
   const { piazza, dvr } = _celdaGrabacionActual;
   const desde = document.getElementById('mg-desde').value;
-  const hasta = document.getElementById('mg-hasta').value;
-  const nota = document.getElementById('mg-nota').value.trim();
+  const tieneProblema = document.getElementById('mg-tiene-problema').checked;
 
-  if(!desde){ alert('Por favor ingresa la fecha "Desde".'); return; }
-  if(!hasta){ alert('Por favor ingresa la fecha "Hasta".'); return; }
+  if(!desde){ alert('Por favor ingresa la fecha de inicio de grabación.'); return; }
 
   const id = 'gr_' + piazza.replace(/\s+/g,'_') + '_' + dvr.replace(/\s+/g,'_');
   const idx = registrosGrabacion.findIndex(r => claveGrabacion(r.piazza, r.dvr) === claveGrabacion(piazza, dvr));
-  const registro = { id, piazza, dvr, desde, hasta, nota };
+
+  let registro;
+  if(tieneProblema){
+    const desdeFallo = document.getElementById('mg-desde-fallo').value;
+    const nota = document.getElementById('mg-nota').value.trim();
+    const solucion = document.querySelector('input[name="mg-solucion"]:checked')?.value || 'pendiente';
+    const fechaSolucion = solucion === 'solucionado' ? document.getElementById('mg-fecha-solucion').value : '';
+    if(!desdeFallo){ alert('Por favor ingresa la fecha en que comenzó a fallar.'); return; }
+    if(!nota){ alert('Por favor ingresa una descripción del problema.'); return; }
+    const hasta = solucion === 'solucionado' ? fechaSolucion : 'pendiente';
+    registro = { id, piazza, dvr, desde, hasta, nota, tieneProblema:true, desdeFallo, solucion, fechaSolucion };
+  } else {
+    const hasta = document.getElementById('mg-hasta').value;
+    const nota = document.getElementById('mg-nota')?.value?.trim() || '';
+    if(!hasta){ alert('Por favor ingresa la fecha "Hasta".'); return; }
+    registro = { id, piazza, dvr, desde, hasta, nota, tieneProblema:false };
+  }
+
   if(idx !== -1) registrosGrabacion[idx] = registro;
   else registrosGrabacion.push(registro);
 
@@ -1830,10 +1924,25 @@ function renderGrabacion(){
         celdas.push(`<td class="celda-dvr-vacia" onclick="abrirModalGrabacion('${pz.replace(/'/g,"\\'")}','${dvr}')"><strong>${dvr}</strong><br>+ Agregar fechas</td><td></td>`);
         continue;
       }
-      const dias = diasEntre(reg.desde, reg.hasta);
-      const conNota = !!reg.nota;
-      const textoFechas = `<strong>${dvr}</strong><br>Desde ${formatearFechaCorta(reg.desde)}<br>Hasta ${formatearFechaCorta(reg.hasta)}` + (conNota ? `<br><span class="nota-dvr">${reg.nota.replace(/</g,'&lt;')}</span>` : '');
-      celdas.push(`<td class="celda-dvr ${conNota ? 'con-problema' : ''}" onclick="abrirModalGrabacion('${pz.replace(/'/g,"\\'")}','${dvr}')">${textoFechas}</td><td class="celda-dvr-dias">${dias !== null ? dias : ''}</td>`);
+
+      let textoFechas, diasTexto, claseExtra = '';
+      if(reg.tieneProblema){
+        const pendiente = reg.solucion !== 'solucionado';
+        const diasConProblema = diasEntre(reg.desdeFallo, pendiente ? hoyISO() : (reg.fechaSolucion || hoyISO()));
+        const estadoTexto = pendiente
+          ? '<span class="nota-dvr">⚠️ PENDIENTE</span>'
+          : '<span style="color:#198754; font-weight:700;">✅ SOLUCIONADO ' + formatearFechaCorta(reg.fechaSolucion) + '</span>';
+        textoFechas = `<strong>${dvr}</strong><br>Grabando desde: ${formatearFechaCorta(reg.desde)}<br>Fallo desde: ${formatearFechaCorta(reg.desdeFallo)}<br><span class="nota-dvr">${reg.nota.replace(/</g,'&lt;')}</span><br>${estadoTexto}`;
+        diasTexto = diasConProblema !== null ? diasConProblema : '';
+        claseExtra = 'con-problema';
+      } else {
+        const dias = diasEntre(reg.desde, reg.hasta);
+        const conNota = !!reg.nota;
+        textoFechas = `<strong>${dvr}</strong><br>Desde ${formatearFechaCorta(reg.desde)}<br>Hasta ${formatearFechaCorta(reg.hasta)}` + (conNota ? `<br><span class="nota-dvr">${reg.nota.replace(/</g,'&lt;')}</span>` : '');
+        diasTexto = dias !== null ? dias : '';
+        claseExtra = conNota ? 'con-problema' : '';
+      }
+      celdas.push(`<td class="celda-dvr ${claseExtra}" onclick="abrirModalGrabacion('${pz.replace(/'/g,"\\'")}','${dvr}')">${textoFechas}</td><td class="celda-dvr-dias">${diasTexto}</td>`);
     }
     return `<tr><td class="col-piazza-grabacion">${pz}</td>${celdas.join('')}</tr>`;
   }).join('');
@@ -1857,9 +1966,9 @@ function formatearFechaCorta(iso){
 
 function exportarGrabacionPDF(docExterno, opciones){
   const { jsPDF } = window.jspdf;
-  const doc = docExterno || new jsPDF({orientation:'portrait'});
   const esStandalone = !docExterno;
   const compacto = !!(opciones && opciones.compacto);
+  const doc = docExterno || new jsPDF({orientation:'portrait'});
   const hoy = hoyISO();
   const anchoPagina = doc.internal.pageSize.getWidth();
   let y;
@@ -1884,7 +1993,7 @@ function exportarGrabacionPDF(docExterno, opciones){
     doc.setTextColor(0,0,0);
 
     y = dibujarEncabezadoReporte(doc, 'Tiempo de Grabación de DVR/NVR', 20);
-    activarEncabezadoEnTodasLasPaginas(doc, 'Tiempo de Grabación de DVR/NVR');
+    // Sin encabezado repetido en páginas siguientes para grabación
   }
   const yTrasEncabezadoGrab = y;
 
@@ -1897,54 +2006,111 @@ function exportarGrabacionPDF(docExterno, opciones){
   const head = [['PIAZZAS']];
   for(let i = 0; i < maxDvrs; i++){ head[0].push('Grabador ' + (i+1)); head[0].push('DÍAS'); }
 
-  const body = PIAZZAS.map(pz => {
+  // Construir body con didDrawCell para colorear celdas con problema
+  const bodyData = PIAZZAS.map(pz => {
     const dvrsDeEstaPiazza = DVRS_POR_PIAZZA[pz] || DVRS || [];
-    const fila = [pz];
+    const fila = [{ content: pz, styles:{fontStyle:'bold', halign:'left', fillColor:[238,241,245]} }];
     for(let i = 0; i < maxDvrs; i++){
       const dvr = dvrsDeEstaPiazza[i];
-      if(!dvr){ fila.push(''); fila.push(''); continue; }
+      if(!dvr){ fila.push({ content:'', colSpan:1 }); fila.push(''); continue; }
       const reg = registrosGrabacion.find(r => claveGrabacion(r.piazza, r.dvr) === claveGrabacion(pz, dvr));
-      if(!reg){ fila.push(dvr); fila.push(''); continue; }
-      const dias = diasEntre(reg.desde, reg.hasta);
-      fila.push(dvr);
-      fila.push(dias !== null ? String(dias) : '');
+      if(!reg){
+        fila.push({ content: dvr + '\n+ Agregar fechas', styles:{textColor:[180,190,200], fontStyle:'italic'} });
+        fila.push('');
+        continue;
+      }
+      if(reg.tieneProblema){
+        // En la tabla principal se muestra igual que un grabador normal (desde de grabación)
+        const dias = diasEntre(reg.desde, hoyISO());
+        const texto = dvr + '\nDesde: ' + formatearFechaCorta(reg.desde) + '\nHasta: Hoy';
+        fila.push({ content: texto, styles:{textColor:[30,60,100]} });
+        fila.push({ content: dias !== null ? String(dias) : '', styles:{fontStyle:'bold'} });
+      } else {
+        const dias = diasEntre(reg.desde, reg.hasta);
+        const texto = dvr + '\nDesde: ' + formatearFechaCorta(reg.desde) + '\nHasta: ' + formatearFechaCorta(reg.hasta);
+        fila.push({ content: texto, styles:{textColor:[30,60,100]} });
+        fila.push({ content: dias !== null ? String(dias) : '', styles:{fontStyle:'bold'} });
+      }
     }
     return fila;
   });
 
   doc.autoTable({
     startY: yTrasEncabezadoGrab,
-    margin:{top:66, left:10, right:10},
+    margin:{top:15, left:10, right:10},
     head,
-    body,
-    styles:{fontSize:7.5, cellPadding:2.5, valign:'middle', halign:'center'},
-    headStyles:{fillColor:[11,35,64], textColor:255, halign:'center'},
-    columnStyles:{0:{fontStyle:'bold', halign:'left'}},
-    alternateRowStyles:{fillColor:[244,246,249]}
+    body: bodyData,
+    styles:{fontSize:7.5, cellPadding:3, valign:'middle', halign:'center', lineColor:[215,222,230], lineWidth:0.3},
+    headStyles:{fillColor:[11,35,64], textColor:255, halign:'center', fontSize:8},
+    columnStyles:{0:{fontStyle:'bold', halign:'left', fillColor:[238,241,245]}},
+    alternateRowStyles:{fillColor:[249,251,253]},
+    theme:'grid'
   });
 
   let yTrasTabla = doc.lastAutoTable.finalY + 8;
 
-  // Detalle de notas/observaciones (si existen), como sección aparte legible
-  const conNota = registrosGrabacion.filter(r => r.nota);
-  if(conNota.length){
-    if(yTrasTabla > 250){ doc.addPage('a4','portrait'); yTrasTabla = 60; }
+  // Tabla de observaciones/problemas — siempre en página nueva si no cabe bien
+  const conProblema = registrosGrabacion.filter(r => r.nota || r.tieneProblema);
+  if(conProblema.length){
+    // Si queda poco espacio O si la tabla principal ocupó más de una página, saltar
+    const alturaDisponible = doc.internal.pageSize.getHeight() - yTrasTabla;
+    if(alturaDisponible < 60){
+      doc.addPage('a4','portrait');
+      yTrasTabla = 15;
+    }
     doc.setFontSize(9.5);
     doc.setFont(undefined, 'bold');
-    doc.setTextColor(11,35,64);
-    doc.text('Observaciones', 10, yTrasTabla);
+    doc.setTextColor(192,0,0);
+    doc.text('OBSERVACIONES Y PROBLEMAS', 10, yTrasTabla);
     doc.setFont(undefined, 'normal');
+    doc.setTextColor(0,0,0);
     yTrasTabla += 5;
 
-    const filasNotas = conNota.map(r => [r.piazza, r.dvr, formatearFechaCorta(r.desde), formatearFechaCorta(r.hasta), r.nota]);
+    const filasObs = conProblema.map(r => {
+      if(r.tieneProblema){
+        const pendiente = r.solucion !== 'solucionado';
+        const hastaTexto = pendiente ? 'PENDIENTE' : formatearFechaCorta(r.fechaSolucion);
+        return [
+          { content: r.piazza, styles:{fontStyle:'bold'} },
+          r.dvr,
+          formatearFechaCorta(r.desdeFallo),
+          { content: hastaTexto, styles:{ textColor: pendiente ? [192,0,0] : [25,135,84], fontStyle:'bold' } },
+          { content: r.nota, styles:{textColor:[192,0,0]} }
+        ];
+      } else {
+        return [
+          { content: r.piazza, styles:{fontStyle:'bold'} },
+          r.dvr,
+          formatearFechaCorta(r.desde),
+          formatearFechaCorta(r.hasta),
+          { content: r.nota, styles:{textColor:[192,0,0]} }
+        ];
+      }
+    });
+
     doc.autoTable({
       startY: yTrasTabla,
-      margin:{top:66, left:10, right:10},
-      head: [['Piazza','Grabador','Desde','Hasta','Observación']],
-      body: filasNotas,
-      styles:{fontSize:7.5, cellPadding:2.5, textColor:[200,0,0]},
-      headStyles:{fillColor:[220,53,69], textColor:255}
+      margin:{top:15, left:10, right:10},
+      head: [[
+        { content:'Piazza', styles:{fillColor:[192,0,0], textColor:255} },
+        { content:'Grabador', styles:{fillColor:[192,0,0], textColor:255} },
+        { content:'Desde (fallo)', styles:{fillColor:[192,0,0], textColor:255} },
+        { content:'Hasta / Estado', styles:{fillColor:[192,0,0], textColor:255} },
+        { content:'Observación', styles:{fillColor:[192,0,0], textColor:255} }
+      ]],
+      body: filasObs,
+      styles:{fontSize:8, cellPadding:3, valign:'middle', lineColor:[215,222,230], lineWidth:0.3},
+      columnStyles:{
+        0:{fontStyle:'bold', halign:'left'},
+        1:{halign:'center'},
+        2:{halign:'center'},
+        3:{halign:'center'},
+        4:{halign:'left'}
+      },
+      alternateRowStyles:{fillColor:[255,245,245]},
+      theme:'grid'
     });
+    yTrasTabla = doc.lastAutoTable.finalY + 8;
   }
 
   if(esStandalone) doc.save('Tiempo_Grabacion_DVR_NVR_' + hoy + '.pdf');
@@ -2511,82 +2677,93 @@ function exportarPruebasPDF(docExterno, piazzaExterna, anioExterno){
   doc.setTextColor(0,0,0);
 
   const yTrasEncabezado = dibujarEncabezadoReporte(doc, 'BP Pruebas Semanales', 22);
-  activarEncabezadoEnTodasLasPaginas(doc, 'BP Pruebas Semanales');
 
-  // Leyenda de colores / nomenclatura (misma que se ve en pantalla)
-  let xLeyenda = 14;
-  const yLeyenda = yTrasEncabezado;
+  // Leyenda de colores centrada
   doc.setFontSize(7.5);
   const itemsLeyenda = [
     { color:[40,167,69], texto:'Sí llegó' },
-    { color:[220,53,69], texto:'No llegó (el número indica el comentario, ver abajo)' },
+    { color:[220,53,69], texto:'No llegó (N° = comentario)' },
     { color:[138,151,165], texto:'Local cerrado' },
     { color:[13,202,240], texto:'Local vacío' },
-    { color:[138,90,207], texto:'Otro (el número indica el comentario, ver abajo)' },
-    { color:[255,193,7], texto:'Sin sistema de botón de pánico' },
-    { color:[244,246,249], texto:'— Sin prueba esta semana' }
+    { color:[138,90,207], texto:'Otro (N° = comentario)' },
+    { color:[255,193,7], texto:'Sin sistema BP' },
+    { color:[244,246,249], texto:'— Sin prueba' }
   ];
+  const yLeyenda = yTrasEncabezado;
+  const anchoPagina = doc.internal.pageSize.getWidth(); // 297mm landscape
+  const GAP = 8; // espacio entre items
+  const CUADRO = 3.5;
+  // Calcular ancho total de la leyenda
+  let anchoTotal = 0;
+  itemsLeyenda.forEach((item, i) => {
+    anchoTotal += CUADRO + 2.5 + doc.getTextWidth(item.texto) + (i < itemsLeyenda.length - 1 ? GAP : 0);
+  });
+  // Empezar desde el x centrado
+  let xLeyenda = (anchoPagina - anchoTotal) / 2;
   itemsLeyenda.forEach(item => {
     doc.setFillColor(item.color[0], item.color[1], item.color[2]);
-    doc.rect(xLeyenda, yLeyenda - 3, 3, 3, 'F');
+    doc.rect(xLeyenda, yLeyenda - CUADRO, CUADRO, CUADRO, 'F');
     doc.setTextColor(0,0,0);
-    doc.text(item.texto, xLeyenda + 5, yLeyenda);
-    xLeyenda += doc.getTextWidth(item.texto) + 12;
+    doc.text(item.texto, xLeyenda + CUADRO + 2.5, yLeyenda);
+    xLeyenda += CUADRO + 2.5 + doc.getTextWidth(item.texto) + GAP;
   });
 
-  // Dividir en dos tandas de 26 semanas para que quepan legibles
-  const tandas = [ {desde:0, hasta:26}, {desde:26, hasta:52} ];
+  // Una sola tabla con las 52 semanas en landscape (297mm de ancho disponible)
   let y = yTrasEncabezado + 8;
+  // Márgenes: left=8, right=8 → 281mm útiles
+  const encabezado52 = ['N°','Local','Zona', ...Array.from({length:52}, (_,i) => String(i+1))];
+  const filas52 = locales.map((loc, rIdx) => [
+    loc.numeroLocal, loc.nombreLocal, loc.zona || '',
+    ...matriz[rIdx].map(c => c.texto)
+  ]);
 
-  tandas.forEach((tanda, idxTanda) => {
-    if(idxTanda > 0){ doc.addPage(); y = 60; }
-    const encabezado = ['N°','Local','Zona', ...Array.from({length: tanda.hasta - tanda.desde}, (_, i) => String(tanda.desde + i + 1))];
-    const filas = locales.map((loc, rIdx) => [
-      loc.numeroLocal, loc.nombreLocal, loc.zona || '',
-      ...matriz[rIdx].slice(tanda.desde, tanda.hasta).map(c => c.texto)
-    ]);
-
-    doc.autoTable({
-      startY: y,
-      head: [encabezado],
-      body: filas,
-      styles:{fontSize:6.5, cellPadding:1.5, halign:'center'},
-      headStyles:{fillColor:[11,35,64], textColor:255, fontSize:6.5},
-      columnStyles:{0:{cellWidth:9}, 1:{cellWidth:34, halign:'left'}, 2:{cellWidth:12}},
-      didParseCell: function(data){
-        if(data.section === 'body' && data.column.index >= 3){
-          const rIdx = data.row.index;
-          const cIdx = tanda.desde + (data.column.index - 3);
-          const celda = matriz[rIdx][cIdx];
-          if(celda){
-            data.cell.styles.fillColor = COLOR_ESTADO_PDF[celda.estado] || COLOR_ESTADO_PDF['-'];
-            data.cell.styles.textColor = COLOR_TEXTO_ESTADO_PDF[celda.estado] || COLOR_TEXTO_ESTADO_PDF['-'];
-            data.cell.styles.fontStyle = 'bold';
-          }
+  doc.autoTable({
+    startY: y,
+    margin:{top:15, left:8, right:8},
+    head: [encabezado52],
+    body: filas52,
+    styles:{fontSize:5.5, cellPadding:1.2, halign:'center'},
+    headStyles:{fillColor:[11,35,64], textColor:255, fontSize:5.5},
+    columnStyles:{0:{cellWidth:8}, 1:{cellWidth:32, halign:'left'}, 2:{cellWidth:8}},
+    didParseCell: function(data){
+      if(data.section === 'body' && data.column.index >= 3){
+        const rIdx = data.row.index;
+        const cIdx = data.column.index - 3;
+        const celda = matriz[rIdx] && matriz[rIdx][cIdx];
+        if(celda){
+          data.cell.styles.fillColor = COLOR_ESTADO_PDF[celda.estado] || COLOR_ESTADO_PDF['-'];
+          data.cell.styles.textColor = COLOR_TEXTO_ESTADO_PDF[celda.estado] || COLOR_TEXTO_ESTADO_PDF['-'];
+          data.cell.styles.fontStyle = 'bold';
         }
       }
-    });
-    y = doc.lastAutoTable.finalY + 10;
+    }
   });
+  y = doc.lastAutoTable.finalY + 10;
 
   // Sección de comentarios, con la MISMA numeración que aparece en las celdas rojas
   if(notas.length){
-    doc.addPage();
-    doc.setFillColor(11,35,64);
-    doc.rect(0,0,297,18,'F');
-    doc.setTextColor(255,255,255);
-    doc.setFontSize(14);
-    doc.text('Comentarios ("No llegó" / "Otro") - ' + piazza + ' (' + anio + ')', 14, 12);
+    // Calcular altura estimada de la tabla de comentarios (~8mm por fila + 12mm encabezado)
+    const alturaEstimada = 12 + notas.length * 10;
+    const alturaDisponible = doc.internal.pageSize.getHeight() - y - 10;
+    if(alturaEstimada > alturaDisponible){ doc.addPage(); y = 15; }
+
+    doc.setFontSize(9);
+    doc.setFont(undefined, 'bold');
+    doc.setTextColor(50,50,50);
+    doc.text('Comentarios ("No llegó" / "Otro")', 8, y);
+    doc.setFont(undefined, 'normal');
     doc.setTextColor(0,0,0);
+    y += 4;
 
     const filasNotas = notas.map(n => [String(n.numero), n.nombreLocal + ' (Local ' + n.numeroLocal + ')', 'Semana ' + n.semana, n.comentario]);
     doc.autoTable({
-      startY: 60,
+      startY: y,
+      margin:{top:15, left:8, right:8},
       head: [['N°','Local','Semana','Comentario']],
       body: filasNotas,
-      styles:{fontSize:9, cellPadding:4},
+      styles:{fontSize:8, cellPadding:3},
       headStyles:{fillColor:[70,70,70], textColor:255},
-      columnStyles:{0:{cellWidth:12, halign:'center', fontStyle:'bold'}, 3:{cellWidth:150}},
+      columnStyles:{0:{cellWidth:10, halign:'center', fontStyle:'bold'}, 2:{cellWidth:18, halign:'center'}, 3:{halign:'left'}},
       didParseCell: function(data){
         if(data.section === 'body' && data.column.index === 0){
           const nota = notas[data.row.index];
@@ -3749,7 +3926,6 @@ function dibujarSeccionEstadisticaPDF(doc, opciones){
     doc.setFontSize(13);
     doc.text('Estadística por Piazza y Tipo de Equipo - Krause Negocios', 10, 11);
     doc.setTextColor(0,0,0);
-    activarEncabezadoEnTodasLasPaginas(doc, 'Estadística por Piazza y Tipo de Equipo');
     y = dibujarEncabezadoReporte(doc, 'Estadística por Piazza y Tipo de Equipo', 20);
   }
 
@@ -3934,7 +4110,6 @@ function exportarTodosTrabajosRealizados(docExterno, opciones){
     doc.text('Generado: ' + new Date().toLocaleString('es-EC') + '   |   Total: ' + lista.length, 10, 20);
 
     y = dibujarEncabezadoReporte(doc, 'Trabajos Realizados', 24);
-    activarEncabezadoEnTodasLasPaginas(doc, 'Trabajos Realizados');
   }
 
   const anchoContenido = anchoPagina - 20;
@@ -4188,7 +4363,7 @@ function exportarHistorialCompletoEquipo(){
   doc.text('Piazza: ' + (ref.piazza || '') + '   |   Generado: ' + new Date().toLocaleString('es-EC'), 10, 20);
 
   const yTrasEncabezadoHist = dibujarEncabezadoReporte(doc, 'Historial de Trabajos - ' + detalleRegistro(ref), 24);
-  activarEncabezadoEnTodasLasPaginas(doc, 'Historial de Trabajos - ' + detalleRegistro(ref));
+
 
   const filas = historial.map((p, idx) => {
     const dias = diasParaSolucion(historial, idx);
@@ -4230,7 +4405,6 @@ function exportarTrabajoIndividual(id){
 
   doc.setTextColor(0,0,0);
   let y = dibujarEncabezadoReporte(doc, 'Trabajo Realizado', 26);
-  activarEncabezadoEnTodasLasPaginas(doc, 'Trabajo Realizado');
   const hist = historialDeEquipo(claveDe(p));
   const dias = diasParaSolucion(hist, hist.indexOf(p));
 
@@ -4301,7 +4475,6 @@ function exportarPDF(docExterno, opciones){
     doc.text('Generado: ' + new Date().toLocaleString('es-EC'), 14, y);
     doc.setTextColor(0,0,0);
     y += 4;
-    activarEncabezadoEnTodasLasPaginas(doc, tituloTipos);
   }
 
   const total = lista.length;
@@ -4477,6 +4650,13 @@ function confirmarAnadirLocal(){
   poblarLocalPruebas();
   renderPruebas(); // renderPruebas ordena por número automáticamente
 }
+
+function actualizarSummaryPiazza(){
+  const piazza = document.getElementById('pruebas-piazza').value;
+  const el = document.getElementById('pruebas-summary-piazza');
+  if(el) el.textContent = piazza ? '— ' + piazza : '';
+}
+
 
 // ==================== BITÁCORA ====================
 let bitacoraEventos = [];
