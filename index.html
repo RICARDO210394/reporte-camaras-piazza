@@ -1473,7 +1473,8 @@ function migrarCamposRegistro(p){
     if(p.operador === undefined) p.operador = '';
     if(p.ubicacion === undefined) p.ubicacion = '';
     if(p.foto === undefined) p.foto = '';
-  if(p.origen === undefined) p.origen = 'registrar';
+  // NOTA: p.origen NO se asigna aquí para no sobreescribir el valor real.
+  // Se asigna en onSnapshot preservando el valor de localStorage si Firebase no lo tiene.
   return p;
 }
 
@@ -1518,9 +1519,13 @@ function cargarDatos(){
       snapshot.forEach(docSnap => {
         const data = docSnap.data();
         const teniaSinOrigen = data.origen === undefined;
-        // Si Firebase no tiene origen pero localStorage sí lo tiene, preservar el local
-        if(teniaSinOrigen && mapaLocal[docSnap.id] && mapaLocal[docSnap.id].origen){
-          data.origen = mapaLocal[docSnap.id].origen;
+        // Preservar origen: Firebase > localStorage > 'registrar' (último recurso)
+        if(teniaSinOrigen){
+          if(mapaLocal[docSnap.id] && mapaLocal[docSnap.id].origen){
+            data.origen = mapaLocal[docSnap.id].origen;
+          } else {
+            data.origen = 'registrar'; // default solo si nadie sabe el origen
+          }
         }
         const p = migrarCamposRegistro({ ...data, id: docSnap.id });
         nuevaLista.push(p);
@@ -3948,11 +3953,7 @@ function obtenerRealizadosFiltrados(){
   const filtroPiazza = document.getElementById('realizados-filtro-piazza').value;
   const buscar = document.getElementById('realizados-buscar').value.trim().toLowerCase();
 
-  // Un registro es un "trabajo realizado" si:
-  // 1. Su origen es 'trabajo' (registrado desde el tab Registrar Trabajo), O
-  // 2. Tiene técnico registrado (fue atendido), O
-  // 3. Está marcado como Resuelto
-  let lista = pendientes.filter(p => p.origen === 'trabajo' || (p.tecnico && p.tecnico.trim() !== '') || p.pendienteEstado === 'Resuelto');
+  let lista = pendientes.filter(p => p.origen === 'trabajo' || p.pendienteEstado === 'Resuelto');
   if(filtroTipo) lista = lista.filter(p => p.tipo === filtroTipo);
   if(filtroPiazza) lista = lista.filter(p => p.piazza === filtroPiazza);
   if(buscar){
@@ -4140,7 +4141,7 @@ function exportarTodosTrabajosRealizados(docExterno, opciones){
   const esStandalone = !docExterno;
   const compacto = !!(opciones && opciones.compacto);
   const solopiazza = (opciones && opciones.solopiazza) || null;
-  let lista = esStandalone ? obtenerRealizadosFiltrados() : pendientes.filter(p => p.origen === 'trabajo' || (p.tecnico && p.tecnico.trim() !== '') || p.pendienteEstado === 'Resuelto');
+  let lista = esStandalone ? obtenerRealizadosFiltrados() : pendientes.filter(p => p.origen === 'trabajo' || p.pendienteEstado === 'Resuelto');
   if(solopiazza) lista = lista.filter(p => p.piazza === solopiazza);
   if(!lista.length){ if(esStandalone) alert('No hay trabajos realizados para exportar con estos filtros.'); return compacto ? opciones.startY : undefined; }
 
