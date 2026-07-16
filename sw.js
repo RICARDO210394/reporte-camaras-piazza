@@ -1,11 +1,5 @@
-// Service Worker - Cámaras Piazza
-// VERSION: 20260716204047
-const CACHE_NAME = 'camaras-piazza-20260716204047';
-self.addEventListener('install', event => { self.skipWaiting(); });
-self.addEventListener('activate', event => {
-  event.waitUntil(caches.keys().then(keys => Promise.all(keys.map(k => caches.delete(k)))).then(() => self.clients.claim()));
-});
-self.addEventListener('fetch', event => {
-  if (!event.request.url.startsWith(self.location.origin)) return;
-  event.respondWith(fetch(event.request).catch(() => caches.match(event.request)));
-});
+// SW VERSION: 20260716223119
+const CACHE_NAME = 'camaras-20260716223119';
+self.addEventListener('install', e => { self.skipWaiting(); });
+self.addEventListener('activate', e => { e.waitUntil(caches.keys().then(k=>Promise.all(k.map(x=>caches.delete(x)))).then(()=>self.clients.claim())); });
+self.addEventListener('fetch', e => { if(!e.request.url.startsWith(self.location.origin))return; e.respondWith(fetch(e.request).catch(()=>caches.match(e.request))); });

@@ -33,6 +33,7 @@
   const coleccion = collection(db, "pendientes_camaras");
   const coleccionTrabajos = collection(db, "trabajos_realizados");
 
+  window._coleccionTrabajos = coleccionTrabajos;
   window._firebase = { db, coleccion, coleccionTrabajos, doc, setDoc, deleteDoc, onSnapshot };
   window._firebaseListo = true;
   // Indicador visual de conexión Firebase
@@ -818,26 +819,86 @@
     <div id="estadistica-graficos"></div>
   </div>
 
-  <!-- TAB TRABAJOS REALIZADOS (solo entradas ya resueltas / cerradas) -->
+  <!-- TAB REGISTRAR TRABAJO -->
+  <div class="tab" id="tab-items">
+    <div class="card">
+      <h2>🛠️ Registrar Trabajo Realizado</h2>
+      <p style="color:#5a6b7b;margin-top:-8px;">Registra trabajos de técnicos/proveedores.</p>
+      <div class="grid-form">
+        <div class="campo"><label>Fecha *</label><input type="date" id="rt-fecha"></div>
+        <div class="campo"><label>Piazza *</label><select id="rt-piazza" onchange="rtCambiarPiazza()"><option value="">Seleccionar...</option></select></div>
+        <div class="campo"><label>Tipo *</label><select id="rt-tipo" onchange="rtCambiarTipo()"><option value="Camara">📹 Cámara</option><option value="Boton">🔴 Botón de Pánico</option><option value="Incendio">🔥 SCI</option><option value="Otro">🛠️ Otros</option></select></div>
+        <div class="campo" id="rt-wrap-dvr"><label>DVR/NVR *</label><select id="rt-dvr" onchange="rtPoblarCamaras()"><option value="">Seleccionar...</option></select></div>
+        <div class="campo" id="rt-wrap-camara" style="position:relative;">
+          <label>Número de cámara *</label>
+          <div id="rt-camara-display" onclick="rtToggleCamaraPanel()" tabindex="0"
+               style="border:1px solid #ced7e0; border-radius:8px; padding:9px 12px; cursor:pointer; background:#eef1f4; color:#9aa5b1; user-select:none; display:flex; justify-content:space-between; align-items:center;">
+            <span id="rt-camara-texto">Selecciona primero el DVR/NVR</span>
+            <span>▾</span>
+          </div>
+          <div id="rt-camara-panel" style="display:none; position:absolute; z-index:50; top:100%; left:0; right:0; background:#fff; border:1px solid #ced7e0; border-radius:8px; max-height:260px; overflow-y:auto; box-shadow:0 8px 20px rgba(0,0,0,0.12); margin-top:4px;">
+          </div>
+          <input type="hidden" id="rt-camara">
+        </div>
+        <div class="campo" id="rt-wrap-local" style="display:none;"><label>Local *</label><select id="rt-local" onchange="rtCambiarLocal()"><option value="">Seleccionar...</option></select></div>
+        <div class="campo" id="rt-wrap-local-manual" style="display:none;"><label>Nombre del local (manual)</label><input type="text" id="rt-local-manual"></div>
+        <div class="campo" id="rt-wrap-numero-local" style="display:none;"><label>Número del local</label><input type="text" id="rt-numero-local" readonly style="background:#f0f4f8;cursor:not-allowed;color:#5a6b7b;"></div>
+        <div class="campo" id="rt-wrap-zona" style="display:none;"><label>Zona</label><input type="text" id="rt-zona" readonly style="background:#f0f4f8;cursor:not-allowed;color:#5a6b7b;"></div>
+        <div class="campo" id="rt-wrap-componente" style="display:none;"><label>Componente / Zona SCI *</label><input type="text" id="rt-componente" placeholder="Ej: Panel central, Sensor zona 2"></div>
+        <div class="campo full" id="rt-wrap-novedad" style="display:none;"><label>Descripción *</label><input type="text" id="rt-novedad" placeholder="Descripción del trabajo..."></div>
+        <div class="campo" id="rt-wrap-estado"><label>Estado del equipo *</label><select id="rt-estado"><option value="">Seleccionar...</option></select></div>
+        <div class="campo"><label>Situación *</label><select id="rt-situacion"><option value="Pendiente">🔴 Pendiente</option><option value="Resuelto">✅ Solucionado</option><option value="Sin Novedad">✔️ Sin Novedad</option></select></div>
+        <div class="campo"><label>Técnico / Proveedor *</label><input type="text" id="rt-tecnico" placeholder="Nombre del técnico o empresa"></div>
+        <div class="campo"><label>Operador que registra *</label><input type="text" id="rt-operador" placeholder="Tu nombre"></div>
+        <div class="campo full"><label>Reporte del trabajo</label><textarea id="rt-reporte" rows="3" placeholder="Detalle del trabajo realizado..."></textarea></div>
+        <div class="campo"><label>Foto (opcional)</label>
+          <input type="file" id="rt-foto" accept="image/*" onchange="rtSeleccionarFoto(event)">
+          <div id="rt-foto-wrap" style="display:none;margin-top:8px;">
+            <img id="rt-foto-img" style="max-width:140px;max-height:110px;border-radius:6px;border:1px solid #d7dee6;">
+            <button type="button" class="btn btn-peligro btn-chico" onclick="rtQuitarFoto()" style="margin-left:8px;">🗑 Quitar</button>
+          </div>
+        </div>
+      </div>
+      <div class="acciones-form" style="margin-top:16px;">
+        <button class="btn btn-primario" onclick="rtGuardar()">💾 Guardar Trabajo</button>
+        <button class="btn btn-secundario" onclick="rtLimpiar()">🗑 Limpiar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB TRABAJOS REALIZADOS -->
   <div class="tab" id="tab-realizados">
     <div class="card">
-      <h2>✅ Trabajos Realizados</h2>
-      <p style="color:#5a6b7b; margin-top:-8px;">Muestra únicamente lo ingresado desde "🛠️ Registrar Trabajo". No incluye lo ingresado desde "➕ Registrar".</p>
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:8px;margin-bottom:4px;">
+        <div>
+          <h2 style="margin:0;">✅ Trabajos Realizados</h2>
+          <p style="color:#5a6b7b;margin:4px 0 0;">Historial de todos los trabajos registrados por técnicos y proveedores.</p>
+        </div>
+        <button class="btn btn-primario" onclick="pedirDatosReporte(()=>exportarTrabajosRealizadosPDF())" style="white-space:nowrap;">📄 Exportar PDF</button>
+      </div>
       <div class="filtros">
-        <select id="realizados-filtro-tipo" onchange="renderRealizados()">
+        <select id="tr-filtro-tipo" onchange="trRenderizar()">
           <option value="">Todos los tipos</option>
           <option value="Camara">📹 Cámara</option>
           <option value="Boton">🔴 Botón de Pánico</option>
-          <option value="Incendio">🔥 Sistema Contra Incendio</option>
-          <option value="Otro">🛠️ Otros Trabajos</option>
+          <option value="Incendio">🔥 SCI</option>
+          <option value="Otro">🛠️ Otros</option>
         </select>
-        <select id="realizados-filtro-piazza" onchange="renderRealizados()">
+        <select id="tr-filtro-piazza" onchange="trRenderizar()">
           <option value="">Todas las Piazzas</option>
         </select>
-        <input type="text" id="realizados-buscar" placeholder="Buscar (técnico, detalle, reporte)..." oninput="renderRealizados()" style="min-width:220px;">
-        <button class="btn btn-primario" onclick="pedirDatosReporte(() => exportarTodosTrabajosRealizados())">📄 Exportar todo (PDF)</button>
-        <button class="btn btn-secundario" onclick="exportarJSON()">💾 Respaldo JSON</button>
+        <select id="tr-filtro-sit" onchange="trRenderizar()">
+          <option value="">Todas las situaciones</option>
+          <option value="Pendiente">🔴 Pendiente</option>
+          <option value="Resuelto">✅ Solucionado</option>
+          <option value="Sin Novedad">✔️ Sin Novedad</option>
+        </select>
+        <input type="text" id="tr-buscar" placeholder="Buscar técnico, equipo, reporte..." oninput="trRenderizar()" style="min-width:200px;">
       </div>
+    </div>
+    <div id="tr-contenido"></div>
+    <div class="vacio" id="tr-vacio" style="display:none;">No hay trabajos registrados aún.</div>
+  </div>
     </div>
     <div id="arbol-realizados"></div>
     <div class="vacio" id="realizados-mensaje-vacio" style="display:none;">Aún no hay trabajos ingresados desde "🛠️ Registrar Trabajo" que coincidan con estos filtros.</div>
@@ -1164,9 +1225,6 @@ const CLAVE_STORAGE = 'krause_pendientes_camaras_v1';
 let pendientes = [];
 
 // ===== TRABAJOS REALIZADOS — array separado, colección Firebase propia =====
-const CLAVE_STORAGE_TRABAJOS = 'krause_trabajos_realizados_v1';
-let trabajosRealizados = []; // solo registros de "Registrar Trabajo"
-let _sincronizandoTrabajosDesdeFirestore = false;
 
 const PIAZZAS = ["Bosques","Ceibos","Ciudad Celeste","Curía","FCG","La Joya","Murano","Palmar","Samborondón","Villa Club","Villas del Rey"];
 const DVRS = ["DVR1","DVR2","DVR3","DVR4"];
@@ -1494,46 +1552,6 @@ function refrescarTodasLasVistas(){
     poblarLocalPruebas();
     renderPruebas();
   }
-}
-
-function cargarTrabajos(){
-  try{
-    const guardado = localStorage.getItem(CLAVE_STORAGE_TRABAJOS);
-    trabajosRealizados = guardado ? JSON.parse(guardado) : [];
-  }catch(e){ trabajosRealizados = []; }
-
-  const intentar = () => {
-    if(!window._firebase){ setTimeout(intentar, 300); return; }
-    const { coleccionTrabajos, onSnapshot } = window._firebase;
-    onSnapshot(coleccionTrabajos, (snapshot) => {
-      _sincronizandoTrabajosDesdeFirestore = true;
-      trabajosRealizados = [];
-      snapshot.forEach(docSnap => {
-        trabajosRealizados.push({ ...docSnap.data(), id: docSnap.id });
-      });
-      localStorage.setItem(CLAVE_STORAGE_TRABAJOS, JSON.stringify(trabajosRealizados));
-      _sincronizandoTrabajosDesdeFirestore = false;
-      renderRealizados(); // siempre actualizar, no solo si el tab está activo
-      console.log('✅ Trabajos sincronizados desde Firebase: ' + trabajosRealizados.length);
-    }, err => console.error('Error onSnapshot trabajos:', err));
-  };
-  intentar();
-}
-
-function guardarTrabajo(trabajo){
-  // Guardar en array local y localStorage
-  const idx = trabajosRealizados.findIndex(t => t.id === trabajo.id);
-  if(idx !== -1) trabajosRealizados[idx] = trabajo;
-  else trabajosRealizados.push(trabajo);
-  localStorage.setItem(CLAVE_STORAGE_TRABAJOS, JSON.stringify(trabajosRealizados));
-
-  // Guardar en Firebase colección trabajos_realizados
-  if(_sincronizandoTrabajosDesdeFirestore || !window._firebase) return;
-  const { coleccionTrabajos, doc, setDoc } = window._firebase;
-  const { foto, ...tSinFoto } = trabajo;
-  setDoc(doc(coleccionTrabajos, trabajo.id), tSinFoto)
-    .then(() => console.log('✅ Trabajo guardado en Firebase ID=' + trabajo.id))
-    .catch(err => console.error('❌ Error guardando trabajo en Firebase:', err));
 }
 
 function cargarDatos(){
@@ -4021,25 +4039,6 @@ function renderConsulta(){
   contenedor.innerHTML = cajaContador + secciones;
 }
 
-function obtenerRealizadosFiltrados(){
-  const filtroTipo = document.getElementById('realizados-filtro-tipo').value;
-  const filtroPiazza = document.getElementById('realizados-filtro-piazza').value;
-  const buscar = document.getElementById('realizados-buscar').value.trim().toLowerCase();
-
-  // Fuente única: array trabajosRealizados (colección Firebase propia, no depende del campo origen)
-  let lista = [...trabajosRealizados];
-  if(filtroTipo) lista = lista.filter(p => p.tipo === filtroTipo);
-  if(filtroPiazza) lista = lista.filter(p => p.piazza === filtroPiazza);
-  if(buscar){
-    lista = lista.filter(p =>
-      (p.tecnico || '').toLowerCase().includes(buscar) ||
-      (p.reporte || '').toLowerCase().includes(buscar) ||
-      detalleRegistro(p).toLowerCase().includes(buscar)
-    );
-  }
-  return lista;
-}
-
 function dibujarSeccionEstadisticaPDF(doc, opciones){
   const compacto = !!(opciones && opciones.compacto);
   const anchoPagina = doc.internal.pageSize.getWidth();
@@ -4211,147 +4210,6 @@ function exportarConsolidadoPDF(){
   doc.save('Reporte_Consolidado_' + hoy + '.pdf');
 }
 
-function exportarTodosTrabajosRealizados(docExterno, opciones){
-  const esStandalone = !docExterno;
-  const compacto = !!(opciones && opciones.compacto);
-  const solopiazza = (opciones && opciones.solopiazza) || null;
-  let lista = esStandalone ? obtenerRealizadosFiltrados() : [...trabajosRealizados];
-  if(solopiazza) lista = lista.filter(p => p.piazza === solopiazza);
-  if(!lista.length){ if(esStandalone) alert('No hay trabajos realizados para exportar con estos filtros.'); return compacto ? opciones.startY : undefined; }
-
-  const { jsPDF } = window.jspdf;
-  const doc = docExterno || new jsPDF({orientation:'portrait'});
-  const anchoPagina = doc.internal.pageSize.getWidth();
-  let y;
-
-  if(compacto){
-    y = opciones.startY;
-    if(y > 250){ doc.addPage('a4','portrait'); y = 20; }
-    doc.setFillColor(11,35,64);
-    doc.rect(10, y, anchoPagina - 20, 8, 'F');
-    doc.setTextColor(255,255,255);
-    doc.setFontSize(11);
-    doc.text('TRABAJOS REALIZADOS', 13, y + 5.5);
-    doc.setTextColor(0,0,0);
-    y += 12;
-  } else {
-    if(!esStandalone) doc.addPage('a4','portrait');
-    doc.setFillColor(11,35,64);
-    doc.rect(0,0,anchoPagina,16,'F');
-    doc.setTextColor(255,255,255);
-    doc.setFontSize(12);
-    doc.text('Trabajos Realizados - Krause Negocios', 10, 11);
-
-    doc.setTextColor(0,0,0);
-    doc.setFontSize(9);
-    doc.text('Generado: ' + new Date().toLocaleString('es-EC') + '   |   Total: ' + lista.length, 10, 20);
-
-    y = dibujarEncabezadoReporte(doc, 'Trabajos Realizados', 24);
-  }
-
-  const anchoContenido = anchoPagina - 20;
-  const piazzasConDatos = PIAZZAS.filter(pz => lista.some(p => p.piazza === pz));
-
-  piazzasConDatos.forEach((pz, idxPz) => {
-    const itemsPz = lista.filter(p => p.piazza === pz).sort((a,b) => (b.fecha || '').localeCompare(a.fecha || ''));
-    if(!compacto && idxPz > 0){ doc.addPage('a4','portrait'); y = 60; }
-    else if(y > 250){ doc.addPage('a4','portrait'); y = 20; }
-
-    doc.setFillColor(242,145,28);
-    doc.rect(10, y, anchoContenido, 7, 'F');
-    doc.setTextColor(255,255,255);
-    doc.setFontSize(10);
-    doc.setFont(undefined, 'bold');
-    doc.text(pz, 13, y + 5);
-    doc.setFont(undefined, 'normal');
-    y += 9;
-
-    const filas = itemsPz.map(p => {
-      const hist = historialDeEquipo(claveDe(p));
-      const dias = diasParaSolucion(hist, hist.indexOf(p));
-      return [
-        p.fecha || '',
-        NOMBRES_TIPO[p.tipo] || p.tipo,
-        detalleRegistro(p),
-        p.tecnico || '—',
-        p.estado || '',
-        p.pendienteEstado || '',
-        p.reporte || '',
-        dias !== null ? dias + ' día(s)' : '—'
-      ];
-    });
-
-    doc.autoTable({
-      startY: y,
-      margin:{top:66, left:10, right:10},
-      head: [['Fecha','Tipo','Detalle','Técnico','Estado','Situación','Reporte','Días sol.']],
-      body: filas,
-      styles:{fontSize:6.5, cellPadding:1.8, overflow:'linebreak'},
-      headStyles:{fillColor:[11,35,64], textColor:255},
-      alternateRowStyles:{fillColor:[244,246,249]},
-      columnStyles:{
-        0:{cellWidth:16}, 1:{cellWidth:15}, 2:{cellWidth:26}, 3:{cellWidth:20},
-        4:{cellWidth:16}, 5:{cellWidth:16}, 6:{cellWidth:'auto'}, 7:{cellWidth:16}
-      }
-    });
-    y = doc.lastAutoTable.finalY + 10;
-  });
-
-  if(esStandalone) doc.save('trabajos_realizados_' + hoyISO() + '.pdf');
-  return y;
-}
-
-function renderRealizados(){
-  const lista = obtenerRealizadosFiltrados();
-
-  const cont = document.getElementById('arbol-realizados');
-  document.getElementById('realizados-mensaje-vacio').style.display = lista.length ? 'none' : 'block';
-  if(!lista.length){ cont.innerHTML = ''; return; }
-
-  const piazzasConDatos = PIAZZAS.filter(pz => lista.some(p => p.piazza === pz));
-
-  cont.innerHTML = piazzasConDatos.map(pz => {
-    const itemsPz = lista.filter(p => p.piazza === pz).sort((a,b) => (b.fecha || '').localeCompare(a.fecha || ''));
-
-    const porTipo = TIPOS_ORDEN.map(t => {
-      const itemsTipo = itemsPz.filter(p => p.tipo === t.clave);
-      if(!itemsTipo.length) return '';
-      const filas = itemsTipo.map(p => {
-        const hist = historialDeEquipo(claveDe(p));
-        const idxEnHist = hist.indexOf(p);
-        const dias = diasParaSolucion(hist, idxEnHist);
-        return `
-          <tr>
-            <td>${p.fecha || ''}</td>
-            <td>${detalleRegistro(p)}</td>
-            <td>${p.tecnico || '—'}</td>
-            <td>${t.clave === 'Otro' ? '—' : `<span class="badge ${claseBadgeEstado(p.estado)}">${p.estado || ''}</span>`}</td>
-            <td><span class="badge ${claseBadgePendiente(p.pendienteEstado)}">${p.pendienteEstado}</span></td>
-            <td>${(p.reporte || '').replace(/</g,'&lt;')}</td>
-            <td>${dias !== null ? dias + ' día(s)' : '—'}</td>
-            <td style="white-space:nowrap;"><button class="btn btn-secundario btn-chico" onclick="verDetalle('${p.id}')" title="Ver">👁</button></td>
-          </tr>`;
-      }).join('');
-      return `
-        <details class="dvr-folder">
-          <summary>${ICONOS_TIPO[t.clave]} ${NOMBRES_TIPO[t.clave]} <span class="chip-ter">${itemsTipo.length}</span></summary>
-          <div class="tabla-wrap">
-            <table><thead><tr><th>Fecha</th><th>Detalle</th><th>Técnico</th><th>Estado</th><th>Situación</th><th>Reporte</th><th>Días solución</th><th>Acciones</th></tr></thead><tbody>${filas}</tbody></table>
-          </div>
-        </details>`;
-    }).join('');
-
-    return `
-      <details class="piazza-folder">
-        <summary>📁 ${pz} <span class="conteo-chip">${itemsPz.length} trabajo(s)</span>
-          <button class="btn btn-primario btn-chico" style="margin-left:12px; font-size:0.78rem; padding:3px 10px;"
-            onclick="event.stopPropagation(); event.preventDefault(); pedirDatosReporte(() => exportarTodosTrabajosRealizados(null, {solopiazza:'${pz.replace(/'/g,"\\'")}'}))">📄 Exportar Piazza</button>
-        </summary>
-        ${porTipo}
-      </details>`;
-  }).join('');
-}
-
 function poblarDVREstadistica(){
   const piazza = document.getElementById('estadistica-filtro-piazza').value;
   const sel = document.getElementById('estadistica-filtro-dvr');
@@ -4417,7 +4275,7 @@ function cambiarTab(nombre){
   document.querySelectorAll('nav button').forEach(b => b.classList.remove('activo'));
   document.querySelector(`nav button[data-tab="${nombre}"]`).classList.add('activo');
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('activo'));
-  const tabReal = (nombre === 'items') ? 'registrar' : nombre;
+  const tabReal = nombre;
   document.getElementById('tab-' + tabReal).classList.add('activo');
   if(nombre === 'lista') renderTabla();
   if(nombre === 'consultar') renderConsulta();
@@ -4427,10 +4285,9 @@ function cambiarTab(nombre){
   }
   if(nombre === 'items'){
     _origenFormulario = 'trabajo';
-    limpiarForm();
-    document.getElementById('titulo-form').textContent = 'Trabajos Realizados';
+    rtInicializar();
   }
-  if(nombre === 'realizados') renderRealizados();
+  if(nombre === 'realizados'){ const fp=document.getElementById('tr-filtro-piazza'); if(fp&&fp.options.length<=1) fp.innerHTML='<option value="">Todas las Piazzas</option>'+PIAZZAS.map(p=>`<option>${p}</option>`).join(''); trRenderizar(); }
   if(nombre === 'pruebas'){ poblarLocalPruebas(); renderPruebas(); }
   if(nombre === 'grabacion'){ renderGrabacion(); }
   if(nombre === 'exportar'){ poblarSelectoresExportar(); }
@@ -4526,46 +4383,6 @@ function exportarHistorialCompletoEquipo(){
   });
 
   doc.save('historial_' + (ref.piazza || '').replace(/\s+/g,'_') + '_' + hoyISO() + '.pdf');
-}
-
-function exportarTrabajoIndividual(id){
-  const p = pendientes.find(x => x.id === id);
-  if(!p) return;
-  const { jsPDF } = window.jspdf;
-  const doc = new jsPDF();
-
-  doc.setFillColor(11,35,64);
-  doc.rect(0,0,210,20,'F');
-  doc.setTextColor(255,255,255);
-  doc.setFontSize(15);
-  doc.text('Trabajo Realizado - Krause Negocios', 14, 13);
-
-  doc.setTextColor(0,0,0);
-  let y = dibujarEncabezadoReporte(doc, 'Trabajo Realizado', 26);
-  const hist = historialDeEquipo(claveDe(p));
-  const dias = diasParaSolucion(hist, hist.indexOf(p));
-
-  const campos = [
-    ['Tipo', `${NOMBRES_TIPO[p.tipo] || p.tipo}`],
-    ['Piazza', p.piazza || ''],
-    ['Equipo', detalleRegistro(p)],
-    ['Fecha', p.fecha || ''],
-    ['Técnico', p.tecnico || '—'],
-    ['Estado', p.estado || '—'],
-    ['Situación', p.pendienteEstado || 'Pendiente'],
-    ['Días para solución', dias !== null ? dias + ' día(s)' : '—'],
-    ['Reporte', p.reporte || '']
-  ];
-
-  doc.autoTable({
-    startY: y,
-    body: campos,
-    theme: 'plain',
-    styles:{fontSize:11, cellPadding:4},
-    columnStyles:{0:{fontStyle:'bold', cellWidth:45}, 1:{cellWidth:140}}
-  });
-
-  doc.save('trabajo_' + (p.fecha || hoyISO()) + '_' + p.id + '.pdf');
 }
 
 function exportarPDF(docExterno, opciones){
@@ -4901,10 +4718,621 @@ function renderBitacora(){
 
 // Inicialización
 document.getElementById('fecha-actual').textContent = new Date().toLocaleDateString('es-EC', {weekday:'long', year:'numeric', month:'long', day:'numeric'});
+// Event listeners navegación
+document.querySelectorAll('nav button[data-tab]').forEach(btn => {
+  btn.addEventListener('click', () => cambiarTab(btn.dataset.tab));
+});
+
+// ============================================================
+// TRABAJOS REALIZADOS — NUEVO SISTEMA LIMPIO
+// ============================================================
+const CLAVE_TR = 'krause_trabajos_v2';
+let trabajos = [];
+
+function trCargar(){
+  try{ const g=localStorage.getItem(CLAVE_TR); trabajos=g?JSON.parse(g):[]; }catch(e){ trabajos=[]; }
+  const intentar = () => {
+    if(!window._firebase || !window._coleccionTrabajos){ setTimeout(intentar,300); return; }
+    const { onSnapshot } = window._firebase;
+    onSnapshot(window._coleccionTrabajos, snap => {
+      trabajos=[];
+      snap.forEach(d=>trabajos.push({...d.data(),id:d.id}));
+      localStorage.setItem(CLAVE_TR, JSON.stringify(trabajos));
+      trRenderizar();
+      console.log('✅ Trabajos sincronizados:', trabajos.length);
+    }, e=>console.error('Error trabajos Firebase:',e));
+  };
+  intentar();
+}
+
+function trGuardarFirebase(t){
+  localStorage.setItem(CLAVE_TR, JSON.stringify(trabajos));
+  if(!window._firebase||!window._coleccionTrabajos) return;
+  const {doc,setDoc}=window._firebase;
+  const {foto,...sinFoto}=t;
+  setDoc(doc(window._coleccionTrabajos,t.id),sinFoto)
+    .then(()=>console.log('✅ Firebase trabajo:',t.id))
+    .catch(e=>console.error('❌ Error Firebase trabajo:',e));
+}
+
+let _rtFoto='';
+
+function rtInicializar(){
+  const sel=document.getElementById('rt-piazza'); if(!sel) return;
+  sel.innerHTML='<option value="">Seleccionar...</option>'+PIAZZAS.map(p=>`<option value="${p}">${p}</option>`).join('');
+  const fd=document.getElementById('rt-fecha'); if(fd) fd.value=hoyISO();
+  rtCambiarTipo();
+  // Poblar cámaras con default (16)
+  rtPoblarCamaras();
+}
+
+function rtCambiarPiazza(){
+  const piazza=(document.getElementById('rt-piazza')||{}).value||'';
+  const tipo=(document.getElementById('rt-tipo')||{}).value||'Camara';
+  if(tipo==='Camara'){
+    const dvrs=piazza?(DVRS_POR_PIAZZA[piazza]||DVRS):DVRS;
+    document.getElementById('rt-dvr').innerHTML='<option value="">Seleccionar...</option>'+dvrs.map(d=>`<option>${d}</option>`).join('');
+    _rtCamarasSeleccionadas=[];
+    rtPoblarCamaras(true);
+  }
+  if(tipo==='Boton'){
+    const locs=piazza&&CATALOGO_LOCALES[piazza]?CATALOGO_LOCALES[piazza]:[];
+    document.getElementById('rt-local').innerHTML='<option value="">Seleccionar local...</option>'+
+      locs.map((l,i)=>`<option value="${i}">${l.numeroLocal} — ${l.nombreLocal}</option>`).join('')+
+      '<option value="__manual__">✏️ Escribir manualmente</option>';
+    document.getElementById('rt-numero-local').value='';
+    document.getElementById('rt-zona').value='';
+  }
+}
+
+function rtCambiarTipo(){
+  const tipo=(document.getElementById('rt-tipo')||{}).value||'Camara';
+  const show=(id,v)=>{const el=document.getElementById(id);if(el)el.style.display=v?'':'none';};
+  show('rt-wrap-dvr',tipo==='Camara'); show('rt-wrap-camara',tipo==='Camara');
+  show('rt-wrap-local',tipo==='Boton'); show('rt-wrap-numero-local',tipo==='Boton');
+  show('rt-wrap-zona',tipo==='Boton'); show('rt-wrap-local-manual',false);
+  show('rt-wrap-componente',tipo==='Incendio'); show('rt-wrap-novedad',tipo==='Otro');
+  const se=document.getElementById('rt-estado');
+  if(se) se.innerHTML='<option value="">Seleccionar...</option>'+(ESTADOS_POR_TIPO[tipo]||[]).map(e=>`<option>${e}</option>`).join('');
+  // Estado Operativo → Situación Solucionado automático (onchange directo)
+  if(se) se.setAttribute('onchange','rtOnEstadoCambio()');
+  rtCambiarPiazza();
+}
+
+function rtCambiarLocal(){
+  const piazza=(document.getElementById('rt-piazza')||{}).value||'';
+  const val=(document.getElementById('rt-local')||{}).value||'';
+  const manual=document.getElementById('rt-wrap-local-manual');
+  if(val==='__manual__'){
+    if(manual)manual.style.display='';
+    document.getElementById('rt-numero-local').value='';
+    document.getElementById('rt-zona').value='';
+  } else if(val!==''&&CATALOGO_LOCALES[piazza]&&CATALOGO_LOCALES[piazza][val]){
+    if(manual)manual.style.display='none';
+    const loc=CATALOGO_LOCALES[piazza][val];
+    document.getElementById('rt-numero-local').value=loc.numeroLocal||'';
+    document.getElementById('rt-zona').value=loc.zona||'';
+  } else { if(manual)manual.style.display='none'; }
+}
+
+
+let _rtCamarasSeleccionadas = [];
+
+function rtPoblarCamaras(resetear){
+  const panel = document.getElementById('rt-camara-panel');
+  if(!panel) return;
+  const piazza = (document.getElementById('rt-piazza')||{}).value||'';
+  const dvr = (document.getElementById('rt-dvr')||{}).value||'';
+  const cantidad = puertosCamaraDePiazza(piazza);
+  if(resetear) _rtCamarasSeleccionadas = [];
+  _rtCamarasSeleccionadas = _rtCamarasSeleccionadas.filter(v => {
+    const n = parseInt(v.replace(/\D/g,''),10);
+    return n >= 1 && n <= cantidad;
+  });
+  panel.innerHTML = '';
+  for(let i=1; i<=cantidad; i++){
+    const valor = 'Cam ' + i;
+    const marcado = _rtCamarasSeleccionadas.includes(valor);
+    // Buscar si existe pendiente activo para mostrar estado
+    const existente = pendientes.find(p => p.tipo==='Camara' && p.piazza===piazza && p.dvr===dvr && p.camara===valor);
+    let chip = '';
+    if(existente){
+      const clase = claseBadgeEstado(existente.estado);
+      chip = `<span class="badge ${clase}" style="font-size:0.72rem;padding:2px 8px;">${existente.estado||''}</span>`;
+    }
+    panel.innerHTML += `<label style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 14px;cursor:pointer;border-bottom:1px solid #f0f2f5;">
+      <span style="display:flex;align-items:center;gap:8px;"><input type="checkbox" value="${valor}" ${marcado?'checked':''} style="width:auto;" onchange="rtToggleCamaraSeleccion('${valor}',this.checked)"> ${valor}</span>
+      ${chip}
+    </label>`;
+  }
+  rtActualizarDisplayCamaras();
+  // Actualizar bloqueo del display según si hay DVR
+  const display = document.getElementById('rt-camara-display');
+  if(display){
+    display.style.background = dvr ? '#fff' : '#eef1f4';
+    display.style.color = dvr ? 'inherit' : '#9aa5b1';
+    display.style.pointerEvents = dvr ? 'auto' : 'none';
+  }
+  if(!dvr){
+    document.getElementById('rt-camara-texto').textContent = 'Selecciona primero el DVR/NVR';
+    if(panel) panel.style.display = 'none';
+  }
+}
+
+function rtActualizarDisplayCamaras(){
+  const txt = document.getElementById('rt-camara-texto');
+  const ordenadas = _rtCamarasSeleccionadas.slice().sort((a,b) => (parseInt(a.replace(/\D/g,''),10)||0)-(parseInt(b.replace(/\D/g,''),10)||0));
+  if(txt) txt.textContent = ordenadas.length ? ordenadas.join(', ') : 'Seleccionar...';
+  const hidden = document.getElementById('rt-camara');
+  if(hidden) hidden.value = ordenadas.join(', ') || '';
+}
+
+function rtToggleCamaraSeleccion(valor, marcado){
+  if(marcado){
+    if(!_rtCamarasSeleccionadas.includes(valor)) _rtCamarasSeleccionadas.push(valor);
+  } else {
+    _rtCamarasSeleccionadas = _rtCamarasSeleccionadas.filter(v => v !== valor);
+  }
+  rtActualizarDisplayCamaras();
+}
+
+function rtToggleCamaraPanel(){
+  const dvr = (document.getElementById('rt-dvr')||{}).value||'';
+  if(!dvr) return;
+  const panel = document.getElementById('rt-camara-panel');
+  if(panel) panel.style.display = panel.style.display === 'block' ? 'none' : 'block';
+}
+
+// Cerrar panel al hacer click fuera
+document.addEventListener('click', function(e){
+  const display = document.getElementById('rt-camara-display');
+  const panel = document.getElementById('rt-camara-panel');
+  if(panel && display && !display.contains(e.target) && !panel.contains(e.target)){
+    panel.style.display = 'none';
+  }
+});
+
+function rtOnEstadoCambio(){
+  const estado=(document.getElementById('rt-estado')||{}).value||'';
+  const sit=document.getElementById('rt-situacion');
+  if(!sit) return;
+  if(estado==='Operativo') sit.value='Resuelto';
+  else if(estado==='No Operativo'||estado==='Sin imagen'||estado==='Falla de sensor'||estado==='Sin señal'||estado==='Batería baja'||estado==='Requiere mantenimiento'||estado==='Desconectado'||estado==='Blanco y negro'||estado==='Intermitencia'||estado==='Interferencia'||estado==='Otro') sit.value='Pendiente';
+}
+function rtSeleccionarFoto(event){
+  const file=event.target.files[0]; if(!file) return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    const img=new Image();
+    img.onload=()=>{
+      const canvas=document.createElement('canvas');
+      let w=img.width,h=img.height;
+      if(w>800){h=Math.round(h*800/w);w=800;} if(h>600){w=Math.round(w*600/h);h=600;}
+      canvas.width=w;canvas.height=h;canvas.getContext('2d').drawImage(img,0,0,w,h);
+      _rtFoto=canvas.toDataURL('image/jpeg',0.7);
+      document.getElementById('rt-foto-img').src=_rtFoto;
+      document.getElementById('rt-foto-wrap').style.display='block';
+    };
+    img.src=e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+function rtQuitarFoto(){
+  _rtFoto='';
+  const fi=document.getElementById('rt-foto');if(fi)fi.value='';
+  const fw=document.getElementById('rt-foto-wrap');if(fw)fw.style.display='none';
+}
+
+function rtLimpiar(){
+  const val=(id,v='')=>{const el=document.getElementById(id);if(el)el.value=v;};
+  val('rt-fecha',hoyISO()); val('rt-piazza'); val('rt-tipo','Camara');
+  val('rt-dvr'); val('rt-camara');
+  _rtCamarasSeleccionadas=[];
+  rtPoblarCamaras(true);
+  const rtPanel=document.getElementById('rt-camara-panel'); if(rtPanel) rtPanel.style.display='none';
+  val('rt-local'); val('rt-local-manual');
+  val('rt-numero-local'); val('rt-zona'); val('rt-componente'); val('rt-novedad');
+  val('rt-estado'); val('rt-situacion','Pendiente');
+  val('rt-tecnico'); val('rt-operador'); val('rt-reporte');
+  rtQuitarFoto(); rtCambiarTipo();
+}
+
+function rtGuardar(){
+  const g=id=>((document.getElementById(id)||{}).value||'').trim();
+  const fecha=g('rt-fecha'); const piazza=g('rt-piazza'); const tipo=g('rt-tipo')||'Camara';
+  if(!fecha){alert('⚠️ Por favor ingresa la Fecha.');return;}
+  if(!piazza){alert('⚠️ Por favor selecciona la Piazza.');return;}
+  // Validaciones por tipo
+  if(tipo==='Camara'){
+    if(!g('rt-dvr')){alert('⚠️ Selecciona el DVR/NVR.');return;}
+    if(!g('rt-camara')){alert('⚠️ Selecciona al menos una cámara.');return;}
+  }
+  if(tipo==='Boton'){
+    const loc=g('rt-local');
+    if(!loc){alert('⚠️ Selecciona el Local.');return;}
+    if(loc==='__manual__'&&!g('rt-local-manual')){alert('⚠️ Escribe el nombre del local.');return;}
+    if(!g('rt-numero-local')){alert('⚠️ Ingresa el Número de Local.');return;}
+    if(!g('rt-zona')){alert('⚠️ Ingresa la Zona.');return;}
+  }
+  if(tipo==='Incendio'&&!g('rt-componente')){alert('⚠️ Ingresa el Componente / Zona SCI.');return;}
+  if(tipo==='Otro'&&!g('rt-novedad')){alert('⚠️ Ingresa la Descripción del trabajo.');return;}
+  if(!g('rt-estado')){alert('⚠️ Selecciona el Estado del equipo.');return;}
+  if(!g('rt-tecnico')){alert('⚠️ Ingresa el Técnico / Proveedor.');return;}
+  if(!g('rt-operador')){alert('⚠️ Ingresa el Operador que registra.');return;}
+
+  const dvr=tipo==='Camara'?g('rt-dvr'):'';
+  const camara=tipo==='Camara'?g('rt-camara'):'';
+  const comp=tipo==='Incendio'?g('rt-componente'):'';
+  const novedad=tipo==='Otro'?g('rt-novedad'):'';
+  let nombreLocal='',numeroLocal='',zona='';
+  if(tipo==='Boton'){
+    const sel=g('rt-local');
+    if(sel==='__manual__'){ nombreLocal=g('rt-local-manual'); }
+    else if(sel!==''&&CATALOGO_LOCALES[piazza]&&CATALOGO_LOCALES[piazza][sel]){
+      const loc=CATALOGO_LOCALES[piazza][sel]; nombreLocal=loc.nombreLocal||'';
+    }
+    numeroLocal=g('rt-numero-local'); zona=g('rt-zona');
+  }
+  const estado=g('rt-estado');
+  const situacion=g('rt-situacion')||'Pendiente';
+  const tecnico=g('rt-tecnico'); const operador=g('rt-operador');
+  const reporte=g('rt-reporte'); const foto=_rtFoto||'';
+
+  const trabajo={
+    id:'tr_'+Date.now()+'_'+Math.floor(Math.random()*9999),
+    tipo,fecha,piazza,dvr,camara,nombreLocal,numeroLocal,zona,
+    identificador:comp,novedad,estado,pendienteEstado:situacion,
+    tecnico,operador,reporte,foto,
+    origen:'trabajo',pruebaSemanal:'',dvrPuertos:'',ubicacion:'',
+    creado:new Date().toISOString(),modificado:new Date().toISOString()
+  };
+
+  // Verificar si estamos editando un trabajo existente
+  const btnGuardar=document.querySelector('#tab-items .btn-primario');
+  const editandoId=btnGuardar&&btnGuardar.dataset.editandoId;
+  if(editandoId){
+    // Actualizar existente
+    trabajo.id=editandoId;
+    trabajo.creado=trabajos.find(t=>t.id===editandoId)?.creado||trabajo.creado;
+    trabajos=trabajos.map(t=>t.id===editandoId?trabajo:t);
+    trGuardarFirebase(trabajo);
+    // Limpiar modo edición
+    btnGuardar.textContent='💾 Guardar Trabajo';
+    delete btnGuardar.dataset.editandoId;
+    registrarEventoBitacora('trabajo','Trabajo editado',piazza,NOMBRES_TIPO[tipo]||tipo);
+  } else {
+    trabajos.push(trabajo);
+    trGuardarFirebase(trabajo);
+  }
+
+  if(situacion==='Pendiente'){
+    const pend=Object.assign({},trabajo,{id:'p_'+(Date.now()+1)+'_'+Math.floor(Math.random()*9999),origen:'registrar'});
+    pendientes.push(pend); guardarDatos([pend.id]);
+    registrarEventoBitacora('trabajo','Trabajo registrado — Pendiente',piazza,NOMBRES_TIPO[tipo]||tipo);
+  }
+  if(situacion==='Resuelto'||situacion==='Sin Novedad'){
+    const clave=tipo==='Camara'?`Camara|${piazza}|${dvr}|${camara}`:
+               tipo==='Boton'?`Boton|${piazza}|${numeroLocal}|${nombreLocal}`:
+               tipo==='Incendio'?`Incendio|${piazza}|${comp}`:null;
+    if(clave){
+      const activo=pendientes.find(p=>claveDe(p)===clave&&p.pendienteEstado==='Pendiente');
+      if(activo){
+        activo.estado=estado||activo.estado; activo.pendienteEstado=situacion;
+        activo.tecnico=tecnico||activo.tecnico;
+        activo.reporte=(activo.reporte?activo.reporte+'\n\n':'')+
+          'RESUELTO ('+fecha+')'+(tecnico?' — '+tecnico:'')+(reporte?': '+reporte:'');
+        activo.modificado=new Date().toISOString(); guardarDatos([activo.id]);
+      }
+    }
+    registrarEventoBitacora('trabajo','Trabajo registrado — Solucionado',piazza,NOMBRES_TIPO[tipo]||tipo);
+  }
+
+  rtLimpiar();
+  // Resetear botón si estaba en modo edición
+  const btnG=document.querySelector('#tab-items .btn-primario');
+  if(btnG){btnG.textContent='💾 Guardar Trabajo';delete btnG.dataset.editandoId;}
+  trRenderizar(); renderTabla(); renderEstadistica();
+  cambiarTab('realizados');
+  const notif=document.createElement('div');
+  notif.textContent='✅ Trabajo guardado correctamente';
+  notif.style.cssText='position:fixed;bottom:24px;right:24px;background:#198754;color:#fff;padding:14px 22px;border-radius:8px;font-weight:600;z-index:9999;box-shadow:0 4px 16px rgba(0,0,0,.2);';
+  document.body.appendChild(notif); setTimeout(()=>notif.remove(),3000);
+}
+
+function trDetalleTexto(t){
+  if(t.tipo==='Camara') return `DVR ${t.dvr||''} — Cámara ${t.camara||''}`;
+  if(t.tipo==='Boton') return `${t.nombreLocal||''} (Local ${t.numeroLocal||''})`;
+  if(t.tipo==='Incendio') return t.identificador||'';
+  return t.novedad||'';
+}
+
+function trRenderizar(){
+  const cont=document.getElementById('tr-contenido');
+  const vacio=document.getElementById('tr-vacio');
+  if(!cont) return;
+  const g=id=>((document.getElementById(id)||{}).value||'');
+  const filtTipo=g('tr-filtro-tipo'); const filtPiaz=g('tr-filtro-piazza');
+  const filtSit=g('tr-filtro-sit'); const buscar=g('tr-buscar').toLowerCase();
+  let lista=[...trabajos];
+  if(filtTipo) lista=lista.filter(t=>t.tipo===filtTipo);
+  if(filtPiaz) lista=lista.filter(t=>t.piazza===filtPiaz);
+  if(filtSit)  lista=lista.filter(t=>t.pendienteEstado===filtSit);
+  if(buscar)   lista=lista.filter(t=>
+    (t.tecnico||'').toLowerCase().includes(buscar)||(t.reporte||'').toLowerCase().includes(buscar)||
+    (t.piazza||'').toLowerCase().includes(buscar)||(t.nombreLocal||'').toLowerCase().includes(buscar)||
+    (t.camara||'').toLowerCase().includes(buscar)||(t.novedad||'').toLowerCase().includes(buscar)||
+    (t.dvr||'').toLowerCase().includes(buscar)||(t.estado||'').toLowerCase().includes(buscar));
+  lista.sort((a,b)=>(a.piazza||'').localeCompare(b.piazza||'')||(a.tipo||'').localeCompare(b.tipo||'')||(b.fecha||'').localeCompare(a.fecha||''));
+
+  if(vacio) vacio.style.display=lista.length?'none':'block';
+  if(!lista.length){cont.innerHTML='';return;}
+
+  const colorSit=s=>s==='Resuelto'||s==='Sin Novedad'?'#2f9e5c':'#d64545';
+  const iconSit=s=>s==='Resuelto'||s==='Sin Novedad'?'✅':'🔴';
+
+  // Agrupar por Piazza → Tipo
+  const grupos={};
+  lista.forEach(t=>{
+    const pz=t.piazza||'Sin Piazza';
+    const tp=t.tipo||'Otro';
+    if(!grupos[pz]) grupos[pz]={};
+    if(!grupos[pz][tp]) grupos[pz][tp]=[];
+    grupos[pz][tp].push(t);
+  });
+
+  let html='';
+  Object.keys(grupos).sort().forEach(piazza=>{
+    html+=`<div class="card" style="margin-bottom:16px;padding:0;overflow:hidden;">
+      <div style="background:var(--azul-oscuro);color:#fff;padding:10px 16px;font-weight:700;font-size:1rem;letter-spacing:.3px;">
+        🏢 ${piazza} <span style="font-weight:400;font-size:.85rem;opacity:.8;">(${Object.values(grupos[piazza]).flat().length} trabajo${Object.values(grupos[piazza]).flat().length!==1?'s':''})</span>
+      </div>`;
+    Object.keys(grupos[piazza]).sort().forEach(tipo=>{
+      const items=grupos[piazza][tipo];
+      html+=`<div style="padding:10px 16px 4px;background:#eef2f8;border-bottom:1px solid #d7dee6;">
+        <span style="font-weight:700;font-size:.92rem;">${ICONOS_TIPO[tipo]||''} ${NOMBRES_TIPO[tipo]||tipo}</span>
+        <span style="font-size:.8rem;color:#5a6b7b;margin-left:8px;">${items.length} registro${items.length!==1?'s':''}</span>
+      </div>`;
+      items.forEach(t=>{
+        const sit=t.pendienteEstado||'Pendiente';
+        const det=trDetalleTexto(t);
+        html+=`<div style="border-bottom:1px solid #f0f2f5;padding:12px 16px;">
+          <div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;align-items:flex-start;">
+            <div style="flex:1;min-width:0;">
+              <div style="display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-bottom:4px;">
+                <strong style="color:#0b2340;">${t.fecha||''}</strong>
+                ${t.estado?`<span class="badge ${claseBadgeEstado(t.estado)}">${t.estado}</span>`:''}
+                <span style="font-weight:700;color:${colorSit(sit)};font-size:.88rem;">${iconSit(sit)} ${sit}</span>
+              </div>
+              ${det?`<div style="font-weight:600;color:#2d3a4a;margin-bottom:4px;">${det}</div>`:''}
+              <div style="display:flex;flex-wrap:wrap;gap:12px;font-size:.84rem;color:#555;">
+                ${t.tecnico?`<span>👷 ${t.tecnico}</span>`:''}
+                ${t.operador?`<span>👤 ${t.operador}</span>`:''}
+              </div>
+              ${t.reporte?`<div style="margin-top:6px;font-size:.83rem;color:#444;background:#f8f9fa;border-radius:5px;padding:6px 10px;">${(t.reporte||'').replace(/</g,'&lt;').replace(/\n/g,'<br>')}</div>`:''}
+              ${t.foto?`<div style="margin-top:6px;"><img src="${t.foto}" style="max-width:90px;max-height:70px;border-radius:5px;cursor:pointer;border:1px solid #d7dee6;" onclick="window.open(this.src)"></div>`:''}
+            </div>
+            <div style="display:flex;flex-direction:column;gap:6px;flex-shrink:0;">
+              <button class="btn btn-secundario btn-chico" onclick="trVerDetalle('${t.id}')">👁 Ver</button>
+              <button class="btn btn-secundario btn-chico" onclick="trEditar('${t.id}')">✎ Editar</button>
+              <button class="btn btn-peligro btn-chico" onclick="trEliminar('${t.id}')">🗑 Eliminar</button>
+              <button class="btn btn-chico" style="background:#198754;color:#fff;" onclick="pedirDatosReporte(()=>exportarUnTrabajoRealizado('${t.id}'))">📄 PDF</button>
+            </div>
+          </div>
+        </div>`;
+      });
+    });
+    html+='</div>';
+  });
+  cont.innerHTML=html;
+}
+
+// ── Modal detalle de TRABAJO REALIZADO ──────────────────────
+let _trDetalleId = null;
+
+function trVerDetalle(id){
+  const t = trabajos.find(x=>x.id===id);
+  if(!t) return;
+  _trDetalleId = id;
+  const filas=[];
+  const fila=(etq,val)=>{if(val!==undefined&&val!==null&&val!=='')filas.push(`<div style="display:flex;gap:10px;padding:7px 0;border-bottom:1px solid #eef2f6;"><div style="min-width:150px;color:#6b7785;font-weight:600;">${etq}</div><div style="flex:1;">${String(val).replace(/</g,'&lt;').replace(/\n/g,'<br>')}</div></div>`);};
+  fila('Tipo',`${ICONOS_TIPO[t.tipo]||''} ${NOMBRES_TIPO[t.tipo]||t.tipo}`);
+  fila('Fecha',t.fecha); fila('Piazza',t.piazza);
+  if(t.tipo==='Camara'){fila('DVR/NVR',t.dvr);fila('Cámara',t.camara);}
+  else if(t.tipo==='Boton'){fila('Local',t.nombreLocal);fila('Número de Local',t.numeroLocal);fila('Zona',t.zona);}
+  else if(t.tipo==='Incendio'){fila('Componente',t.identificador);}
+  else{fila('Descripción',t.novedad);}
+  fila('Estado del equipo',t.estado);
+  fila('Situación',t.pendienteEstado||'Pendiente');
+  fila('Técnico / Proveedor',t.tecnico);
+  fila('Operador',t.operador);
+  fila('Reporte',t.reporte);
+  if(t.foto) filas.push(`<div style="display:flex;gap:10px;padding:7px 0;border-bottom:1px solid #eef2f6;"><div style="min-width:150px;color:#6b7785;font-weight:600;">Foto</div><div style="flex:1;"><img src="${t.foto}" style="max-width:260px;max-height:200px;border-radius:6px;border:1px solid #d7dee6;cursor:pointer;" onclick="window.open('${t.foto}','_blank')"></div></div>`);
+  document.getElementById('modal-detalle-titulo').textContent=`${ICONOS_TIPO[t.tipo]||''} ${NOMBRES_TIPO[t.tipo]||t.tipo} — ${t.piazza||''}`;
+  document.getElementById('modal-detalle-cuerpo').innerHTML=filas.join('')||'<em>Sin datos.</em>';
+  // Reusar el modal existente pero con acciones de trabajo
+  const btns=document.querySelector('#modal-detalle > div > div:last-child');
+  if(btns) btns.innerHTML=`
+    <button class="btn btn-secundario btn-chico" onclick="trEditarDesdeModal()">✎ Editar</button>
+    <button class="btn btn-peligro btn-chico" onclick="trEliminarDesdeModal()">🗑 Eliminar</button>
+    <button class="btn btn-primario btn-chico" onclick="pedirDatosReporte(()=>exportarUnTrabajoRealizado(_trDetalleId))">📄 Exportar</button>
+    <button class="btn btn-secundario btn-chico" onclick="cerrarDetalle()">Cerrar</button>`;
+  document.getElementById('modal-detalle').style.display='flex';
+}
+
+function trEditarDesdeModal(){
+  const id=_trDetalleId; cerrarDetalle(); if(id) trEditar(id);
+}
+function trEliminarDesdeModal(){
+  const id=_trDetalleId;
+  if(id&&confirm('¿Eliminar este trabajo? Esta acción no se puede deshacer.')){
+    cerrarDetalle(); trEliminar(id,true);
+  }
+}
+
+function trEditar(id){
+  const t=trabajos.find(x=>x.id===id);
+  if(!t){alert('No se encontró el trabajo.');return;}
+  // Ir al formulario de Registrar Trabajo y precargar los datos
+  cambiarTab('items');
+  setTimeout(()=>{
+    const v=(elId,val)=>{const el=document.getElementById(elId);if(el)el.value=val||'';};
+    v('rt-fecha',t.fecha); v('rt-piazza',t.piazza); v('rt-tipo',t.tipo||'Camara');
+    rtCambiarTipo();
+    setTimeout(()=>{
+      v('rt-dvr',t.dvr); rtPoblarCamaras();
+      if(t.tipo==='Camara'&&t.camara){
+        // Marcar cámara(s) en el panel
+        const cams=(t.camara||'').split(',').map(s=>s.trim()).filter(Boolean);
+        _rtCamarasSeleccionadas=[...cams];
+        rtActualizarDisplayCamaras();
+        // Marcar checkboxes visualmente
+        const panel=document.getElementById('rt-camara-panel');
+        if(panel){panel.querySelectorAll('input[type=checkbox]').forEach(cb=>{cb.checked=cams.includes(cb.value);});}
+      }
+      if(t.tipo==='Boton'){
+        const locs=CATALOGO_LOCALES[t.piazza]||[];
+        const idx=locs.findIndex(l=>l.nombreLocal===t.nombreLocal||l.numeroLocal===t.numeroLocal);
+        v('rt-local',idx>=0?String(idx):'__manual__');
+        v('rt-numero-local',t.numeroLocal); v('rt-zona',t.zona);
+        if(idx<0){v('rt-local-manual',t.nombreLocal);document.getElementById('rt-wrap-local-manual').style.display='';}
+      }
+      if(t.tipo==='Incendio') v('rt-componente',t.identificador||'');
+      if(t.tipo==='Otro') v('rt-novedad',t.novedad||'');
+      v('rt-estado',t.estado); v('rt-situacion',t.pendienteEstado||'Pendiente');
+      v('rt-tecnico',t.tecnico); v('rt-operador',t.operador); v('rt-reporte',t.reporte);
+      if(t.foto){
+        _rtFoto=t.foto;
+        document.getElementById('rt-foto-img').src=t.foto;
+        document.getElementById('rt-foto-wrap').style.display='block';
+      }
+      // Marcar que estamos editando
+      const btn=document.querySelector('#tab-items .btn-primario');
+      if(btn){btn.textContent='💾 Actualizar Trabajo';btn.dataset.editandoId=id;}
+    },150);
+  },100);
+}
+
+function trEliminar(id, yaConfirmado){
+  if(!yaConfirmado&&!confirm('¿Eliminar este trabajo? Esta acción no se puede deshacer.')) return;
+  trabajos=trabajos.filter(t=>t.id!==id);
+  localStorage.setItem('krause_trabajos_v2',JSON.stringify(trabajos));
+  // Eliminar de Firebase
+  if(window._firebase&&window._coleccionTrabajos){
+    const {doc,deleteDoc,db}=window._firebase;
+    try{ deleteDoc(doc(db,'trabajos_realizados',id)); }catch(e){console.warn(e);}
+  }
+  trRenderizar();
+  const notif=document.createElement('div');
+  notif.textContent='🗑 Trabajo eliminado';
+  notif.style.cssText='position:fixed;bottom:24px;right:24px;background:#d64545;color:#fff;padding:12px 20px;border-radius:8px;font-weight:600;z-index:9999;';
+  document.body.appendChild(notif); setTimeout(()=>notif.remove(),2500);
+}
+
+// ── Exportar UN trabajo realizado a PDF ──────────────────────
+function exportarUnTrabajoRealizado(id){
+  const t=trabajos.find(x=>x.id===id);
+  if(!t){alert('Trabajo no encontrado.');return;}
+  const {jsPDF}=window.jspdf;
+  const doc=new jsPDF({orientation:'portrait'});
+  const ap=doc.internal.pageSize.getWidth();
+  // Encabezado
+  doc.setFillColor(11,35,64); doc.rect(0,0,ap,16,'F');
+  doc.setTextColor(255,255,255); doc.setFontSize(11);
+  doc.text('Krause Negocios — Trabajo Realizado',10,11);
+  doc.setTextColor(0,0,0);
+  let y=dibujarEncabezadoReporte(doc,`Trabajo: ${NOMBRES_TIPO[t.tipo]||t.tipo} — ${t.piazza||''}`,20);
+  const rows=[];
+  const r=(k,v)=>{if(v)rows.push([k,v]);};
+  r('Fecha',t.fecha); r('Piazza',t.piazza);
+  r('Tipo',`${ICONOS_TIPO[t.tipo]||''} ${NOMBRES_TIPO[t.tipo]||t.tipo}`);
+  if(t.tipo==='Camara'){r('DVR/NVR',t.dvr);r('Cámara',t.camara);}
+  else if(t.tipo==='Boton'){r('Local',t.nombreLocal);r('N° Local',t.numeroLocal);r('Zona',t.zona);}
+  else if(t.tipo==='Incendio'){r('Componente',t.identificador);}
+  else{r('Descripción',t.novedad);}
+  r('Estado del equipo',t.estado);
+  r('Situación',t.pendienteEstado||'Pendiente');
+  r('Técnico / Proveedor',t.tecnico);
+  r('Operador',t.operador);
+  r('Reporte',t.reporte);
+  doc.autoTable({
+    startY:y, margin:{left:10,right:10},
+    body:rows,
+    columnStyles:{0:{cellWidth:55,fontStyle:'bold',fillColor:[238,241,245]},1:{cellWidth:'auto'}},
+    styles:{fontSize:9,cellPadding:4,valign:'middle',lineColor:[215,222,230],lineWidth:0.3},
+    theme:'grid'
+  });
+  if(t.foto){
+    let yf=doc.lastAutoTable.finalY+6;
+    if(yf>240){doc.addPage();yf=15;}
+    try{doc.addImage(t.foto,'JPEG',10,yf,80,60);}catch(e){}
+  }
+  doc.save(`Trabajo_${t.piazza||''}_${t.fecha||''}_${t.tipo||''}.pdf`);
+}
+
+// ── Exportar TODOS los trabajos filtrados a PDF ───────────────
+function exportarTrabajosRealizadosPDF(){
+  const g=id=>((document.getElementById(id)||{}).value||'');
+  const filtTipo=g('tr-filtro-tipo');const filtPiaz=g('tr-filtro-piazza');
+  const filtSit=g('tr-filtro-sit');const buscar=g('tr-buscar').toLowerCase();
+  let lista=[...trabajos];
+  if(filtTipo) lista=lista.filter(t=>t.tipo===filtTipo);
+  if(filtPiaz) lista=lista.filter(t=>t.piazza===filtPiaz);
+  if(filtSit)  lista=lista.filter(t=>t.pendienteEstado===filtSit);
+  if(buscar)   lista=lista.filter(t=>
+    (t.tecnico||'').toLowerCase().includes(buscar)||(t.reporte||'').toLowerCase().includes(buscar)||
+    (t.piazza||'').toLowerCase().includes(buscar)||(t.camara||'').toLowerCase().includes(buscar));
+  lista.sort((a,b)=>(a.piazza||'').localeCompare(b.piazza||'')||(a.tipo||'').localeCompare(b.tipo||'')||(b.fecha||'').localeCompare(a.fecha||''));
+  if(!lista.length){alert('No hay trabajos para exportar con los filtros actuales.');return;}
+  const {jsPDF}=window.jspdf;
+  const doc=new jsPDF({orientation:'portrait'});
+  const ap=doc.internal.pageSize.getWidth();
+  doc.setFillColor(11,35,64); doc.rect(0,0,ap,16,'F');
+  doc.setTextColor(255,255,255); doc.setFontSize(11);
+  doc.text('Krause Negocios — Trabajos Realizados',10,11);
+  doc.setTextColor(0,0,0);
+  let y=dibujarEncabezadoReporte(doc,'Reporte de Trabajos Realizados',20);
+  // Agrupar por piazza
+  const grupos={};
+  lista.forEach(t=>{const pz=t.piazza||'Sin Piazza';if(!grupos[pz])grupos[pz]={};if(!grupos[pz][t.tipo])grupos[pz][t.tipo]=[];grupos[pz][t.tipo].push(t);});
+  Object.keys(grupos).sort().forEach(piazza=>{
+    // Título de Piazza
+    if(y>260){doc.addPage();y=15;}
+    doc.setFillColor(11,35,64); doc.rect(10,y,ap-20,7,'F');
+    doc.setTextColor(255,255,255); doc.setFontSize(10); doc.setFont(undefined,'bold');
+    doc.text(`Piazza: ${piazza}`,13,y+5); doc.setFont(undefined,'normal'); doc.setTextColor(0,0,0);
+    y+=10;
+    Object.keys(grupos[piazza]).sort().forEach(tipo=>{
+      const items=grupos[piazza][tipo];
+      const rows=[];
+      rows.push([{content:`${ICONOS_TIPO[tipo]||''} ${NOMBRES_TIPO[tipo]||tipo}`,colSpan:5,styles:{fontStyle:'bold',fillColor:[238,241,245],fontSize:9}}]);
+      rows.push([{content:'Fecha',styles:{fontStyle:'bold',fillColor:[248,250,252]}},{content:'Detalle',styles:{fontStyle:'bold',fillColor:[248,250,252]}},{content:'Estado',styles:{fontStyle:'bold',fillColor:[248,250,252]}},{content:'Situación',styles:{fontStyle:'bold',fillColor:[248,250,252]}},{content:'Técnico',styles:{fontStyle:'bold',fillColor:[248,250,252]}}]);
+      items.forEach(t=>{
+        const det=t.tipo==='Camara'?`${t.dvr} Cam ${t.camara}`:t.tipo==='Boton'?`${t.nombreLocal} (${t.numeroLocal})`:t.tipo==='Incendio'?(t.identificador||''):t.novedad||'';
+        rows.push([t.fecha||'',det,t.estado||'',t.pendienteEstado||'Pendiente',t.tecnico||'']);
+      });
+      doc.autoTable({
+        startY:y, margin:{left:10,right:10},
+        body:rows,
+        styles:{fontSize:7.5,cellPadding:3,valign:'middle',lineColor:[215,222,230],lineWidth:0.3},
+        theme:'grid',
+        didDrawPage:()=>{y=15;}
+      });
+      y=doc.lastAutoTable.finalY+4;
+    });
+    y+=4;
+  });
+  doc.save(`Trabajos_Realizados_${hoyISO()}.pdf`);
+}
+
+function exportarTodosTrabajosRealizados(){ exportarTrabajosRealizadosPDF(); }
+
+
 cargarCatalogoOverrides();
 cargarDatos();
 cargarDatosPruebas();
 cargarDatosGrabacion();
+trCargar();
 cargarTrabajos();
 cargarBitacora();
 poblarSelectorAnioPruebas();
