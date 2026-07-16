@@ -3,6 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
 <title>Reporte de Cámaras, Botones de Pánico y Sistema Contra Incendio - Krause Negocios</title>
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="icon-192.png">
@@ -106,12 +109,13 @@
   }
   .tab{display:none;}
   .tab.activo{display:block;}
-  .tabla-pruebas{border-collapse:collapse; font-size:0.82rem; white-space:nowrap; table-layout:fixed;}
+  .tabla-pruebas{border-collapse:collapse; font-size:0.82rem; white-space:nowrap; table-layout:auto;}
   .tabla-pruebas th, .tabla-pruebas td{border:1px solid var(--gris-borde); padding:0; text-align:center;}
-  #pruebas-thead-wrap{overflow:hidden; border-bottom:none;}
-  #pruebas-thead-wrap .tabla-pruebas .fila-mes th{background:#f2911c; color:#fff; padding:5px 4px; font-size:0.78rem;}
-  #pruebas-thead-wrap .tabla-pruebas .fila-semana th{background:var(--azul-oscuro); color:#fff; padding:6px 4px;}
-  #pruebas-body-wrap{overflow:auto; max-height:calc(100vh - var(--pruebas-wrap-top, 340px));}
+  #pruebas-wrap{overflow:auto; max-height:calc(100vh - var(--pruebas-wrap-top, 340px)); position:relative;}
+  .tabla-pruebas thead .fila-mes th{background:#f2911c; color:#fff; padding:5px 4px; font-size:0.78rem; position:sticky; top:0; z-index:4;}
+  .tabla-pruebas thead .fila-semana th{background:var(--azul-oscuro); color:#fff; padding:6px 4px; position:sticky; top:28px; z-index:4; min-width:52px; width:52px; font-size:0.88rem; box-sizing:border-box;}
+  .tabla-pruebas thead .fila-mes th.col-fija-head,
+  .tabla-pruebas thead .fila-semana th.col-fija-head{z-index:6;}
   .tabla-grabacion{border-collapse:collapse; width:100%; font-size:0.85rem;}
   .tabla-grabacion th, .tabla-grabacion td{border:1px solid #d7dee6; padding:8px 10px; text-align:center; vertical-align:middle;}
   .tabla-grabacion .titulo-grabacion{background:var(--azul-oscuro); color:#fff; font-size:1rem; font-weight:700; padding:10px;}
@@ -125,9 +129,6 @@
   .tabla-grabacion .celda-dvr-vacia{cursor:pointer; color:#b7c0cb; font-style:italic;}
   .tabla-grabacion .celda-dvr-vacia:hover{background:#f4f6f9; color:#5a6b7b;}
   .tabla-pruebas th, .tabla-pruebas td{border:1px solid var(--gris-borde); padding:0; text-align:center;}
-  .tabla-pruebas thead th{background:var(--azul-oscuro); color:#fff; padding:6px 4px; position:sticky; top:0; z-index:2;}
-  .tabla-pruebas thead.thead-meses .fila-mes th{background:#f2911c; color:#fff; padding:5px 4px; font-size:0.78rem; position:sticky; top:0; z-index:3;}
-  .tabla-pruebas thead.thead-semanas th{position:sticky; top:29px; z-index:2; background:var(--azul-oscuro); color:#fff; padding:6px 4px;}
   .tabla-pruebas thead.thead-semanas .col-eliminar,
   .tabla-pruebas thead.thead-semanas .col-fija,
   .tabla-pruebas thead.thead-semanas .col-nombre,
@@ -148,7 +149,7 @@
   .tabla-pruebas thead.thead-meses .col-zona,.tabla-pruebas thead.thead-semanas .col-zona{z-index:5;}
   #tab-pruebas .card:first-child{position:sticky; top:56px; z-index:10; background:#fff; box-shadow:0 2px 8px rgba(0,0,0,0.08);}
   #pruebas-tabla-wrap{overflow:auto; max-height:calc(100vh - var(--pruebas-wrap-top, 300px));}
-  .celda-semana{width:34px; height:34px; cursor:pointer; font-weight:700; font-size:0.78rem; user-select:none;}
+  .celda-semana{width:52px; min-width:52px; height:34px; cursor:pointer; font-weight:700; font-size:0.88rem; user-select:none; text-align:center; box-sizing:border-box;}
   .celda-semana:hover{outline:2px solid var(--naranja); outline-offset:-2px;}
   .celda-semana.est-guion{background:#f4f6f9; color:#c2c9d1;}
   .celda-semana.est-si{background:#28a745; color:#fff;}
@@ -852,8 +853,7 @@
       <div id="pruebas-leyenda-fija"></div>
     </div>
     <div class="card" style="padding:0; overflow:hidden;">
-      <div id="pruebas-thead-wrap" style="overflow:hidden;"></div>
-      <div id="pruebas-body-wrap">
+      <div id="pruebas-wrap">
         <div class="vacio" id="pruebas-vacio">Selecciona una Piazza para ver la cuadrícula de pruebas semanales.</div>
       </div>
     </div>
@@ -1997,12 +1997,10 @@ let _notasPruebasActual = []; // { numero, numeroLocal, nombreLocal, semana, com
 function renderPruebas(){
   const piazza = document.getElementById('pruebas-piazza').value;
   const anio = parseInt(document.getElementById('pruebas-anio').value, 10) || new Date().getFullYear();
-  const theadWrap = document.getElementById('pruebas-thead-wrap');
-  const bodyWrap = document.getElementById('pruebas-body-wrap');
+  const wrap = document.getElementById('pruebas-wrap');
 
   if(!piazza){
-    theadWrap.innerHTML = '';
-    bodyWrap.innerHTML = '<div class="vacio" id="pruebas-vacio">Selecciona una Piazza para ver la cuadrícula de pruebas semanales.</div>';
+    wrap.innerHTML = '<div class="vacio" id="pruebas-vacio">Selecciona una Piazza para ver la cuadrícula de pruebas semanales.</div>';
     return;
   }
 
@@ -2011,8 +2009,7 @@ function renderPruebas(){
   const locales = obtenerLocalesParaGrilla(piazza);
   _localesGrillaActual = locales;
   if(!locales.length){
-    theadWrap.innerHTML = '';
-    bodyWrap.innerHTML = `<div class="vacio" style="padding:32px; text-align:center;">
+    wrap.innerHTML = `<div class="vacio" style="padding:32px; text-align:center;">
       <div style="font-size:2.5rem; margin-bottom:12px;">📋</div>
       <strong>No hay locales registrados para ${piazza}</strong><br>
       <span style="color:#8a97a5;">Los botones de esta Piazza se registran manualmente desde "➕ Registrar". Una vez registrado el primer botón, aparecerá aquí automáticamente.</span>
@@ -2088,30 +2085,42 @@ function renderPruebas(){
       <span><i style="background:#f4f6f9; border:1px solid #d7dee6;"></i> — Sin prueba</span>
     </div>`;
 
-  // Tabla de encabezado fija (sin scroll propio)
-  theadWrap.innerHTML = `
-    <table class="tabla-pruebas" style="width:max-content;">
+  // Una sola tabla, una sola contenedor con scroll (overflow:auto)
+  // Las columnas de la izquierda son sticky horizontal (position:sticky; left:Xpx)
+  // El thead es sticky vertical (position:sticky; top:0) dentro del mismo contenedor
+  wrap.innerHTML = `
+    <table class="tabla-pruebas" style="border-collapse:collapse;">
       <thead>
-        <tr class="fila-mes"><th class="col-eliminar"></th><th class="col-fija">N°</th><th class="col-nombre">Local</th><th class="col-zona">Zona</th>${filaMesHTML}</tr>
-        <tr class="fila-semana"><th class="col-eliminar"></th><th class="col-fija"></th><th class="col-nombre"></th><th class="col-zona"></th>${filaSemanaHTML}</tr>
+        <tr class="fila-mes">
+          <th class="col-eliminar col-fija-head" style="top:0;"></th>
+          <th class="col-fija col-fija-head" style="top:0;">N°</th>
+          <th class="col-nombre col-fija-head" style="top:0;">Local</th>
+          <th class="col-zona col-fija-head" style="top:0;">Zona</th>
+          ${filaMesHTML}
+        </tr>
+        <tr class="fila-semana">
+          <th class="col-eliminar col-fija-head"></th>
+          <th class="col-fija col-fija-head"></th>
+          <th class="col-nombre col-fija-head"></th>
+          <th class="col-zona col-fija-head"></th>
+          ${filaSemanaHTML}
+        </tr>
       </thead>
-    </table>`;
-
-  // Tabla de datos con scroll
-  bodyWrap.innerHTML = `
-    <table class="tabla-pruebas" style="width:max-content;">
       <tbody>${filasLocales}</tbody>
     </table>
     ${notasHTML}`;
 
-  // Sincronizar scroll horizontal
-  bodyWrap.onscroll = () => { theadWrap.scrollLeft = bodyWrap.scrollLeft; };
-
-  // Calcular altura disponible
+  // Ajustar top de la fila de semanas según altura real de fila de meses
   requestAnimationFrame(() => {
-    const rect = bodyWrap.getBoundingClientRect();
+    const rect = wrap.getBoundingClientRect();
     document.documentElement.style.setProperty('--pruebas-wrap-top', rect.top + 'px');
-  });
+    const filaMesTr = wrap.querySelector('thead tr.fila-mes');
+    const filaSemThs = wrap.querySelectorAll('thead tr.fila-semana th');
+    if(filaMesTr && filaSemThs.length){
+      const h = filaMesTr.offsetHeight;
+      filaSemThs.forEach(th => th.style.top = h + 'px');
+    }
+  })
 }
 
 let _celdaPruebaActual = null;
@@ -4597,6 +4606,24 @@ limpiarForm();
 renderTabla();
 renderEstadistica();
 renderConsulta();
+// Registro del Service Worker (actualización automática de la PWA)
+// Solo activo en producción (Netlify), no en previsualizaciones
+if('serviceWorker' in navigator && (location.hostname.includes('netlify.app') || location.hostname.includes('krause'))){
+  navigator.serviceWorker.register('/sw.js').then(reg => {
+    reg.update();
+    reg.addEventListener('updatefound', () => {
+      const nuevoSW = reg.installing;
+      nuevoSW.addEventListener('statechange', () => {
+        if(nuevoSW.state === 'installed' && navigator.serviceWorker.controller){
+          navigator.serviceWorker.addEventListener('controllerchange', () => {
+            window.location.reload();
+          });
+          nuevoSW.postMessage({ tipo: 'SKIP_WAITING' });
+        }
+      });
+    });
+  }).catch(err => console.warn('SW no disponible:', err));
+}
 </script>
 
 </body>
