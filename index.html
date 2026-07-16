@@ -1567,7 +1567,8 @@ function cargarDatos(){
   intentarConectarFirestore();
 }
 
-function guardarDatos(){
+// guardarDatos(idsModificados) — si se pasan IDs, solo guarda esos en Firebase
+function guardarDatos(idsModificados){
   localStorage.setItem(CLAVE_STORAGE, JSON.stringify(pendientes));
   if(_sincronizandoDesdeFirestore) return;
   if(!window._firebase){
@@ -1575,17 +1576,18 @@ function guardarDatos(){
     return;
   }
   const { coleccion, doc, setDoc } = window._firebase;
-  let guardadosFirebase = 0;
-  const promesas = pendientes.map(p => {
+  const aGuardar = idsModificados
+    ? pendientes.filter(p => idsModificados.includes(p.id))
+    : pendientes;
+  const promesas = aGuardar.map(p => {
     const { foto, ...pSinFoto } = p;
     return setDoc(doc(coleccion, p.id), pSinFoto)
-      .then(() => { guardadosFirebase++; })
-      .catch(err => console.error('Error guardando en Firebase ID=' + p.id + ':', err));
+      .then(() => console.log('✅ Firebase guardado ID=' + p.id + ' origen=' + p.origen))
+      .catch(err => console.error('❌ Error Firebase ID=' + p.id + ':', err));
   });
   Promise.all(promesas).then(() => {
-    console.log('Firebase: ' + guardadosFirebase + '/' + pendientes.length + ' registros guardados OK');
     const ind = document.getElementById('firebase-status');
-    if(ind){ ind.style.background='#198754'; ind.textContent='🟢 Firebase: ' + guardadosFirebase + '/' + pendientes.length + ' guardados'; }
+    if(ind){ ind.style.background='#198754'; ind.textContent='🟢 Firebase: guardado OK (' + aGuardar.length + ')'; }
   });
 }
 
@@ -3415,6 +3417,7 @@ function guardarPendiente(){
     return;
   }
 
+  let idsGuardar = [];
   if(editandoId){
     const idx = pendientes.findIndex(p => p.id === editandoId);
     if(idx !== -1){
@@ -3424,32 +3427,37 @@ function guardarPendiente(){
         origen: pendientes[idx].origen || _origenFormulario,
         modificado: new Date().toISOString()
       };
+      idsGuardar.push(pendientes[idx].id);
       registrarEventoBitacora('pendiente', 'Pendiente editado', piazza, `${NOMBRES_TIPO[tipo]||tipo} — ${dvr||''} ${camara||nombreLocal||identificador||''} — Estado: ${estado}`);
     }
   } else {
+    const nuevoId = 'p_' + Date.now() + '_' + Math.floor(Math.random()*1000);
     pendientes.push({
-      id: 'p_' + Date.now() + '_' + Math.floor(Math.random()*1000),
+      id: nuevoId,
       tipo, fecha, piazza, dvr, dvrPuertos, camara, numeroLocal, nombreLocal, zona, pruebaSemanal, identificador, novedad, estado, pendienteEstado, reporte, tecnico, operador, ubicacion, foto,
       origen: _origenFormulario,
       creado: new Date().toISOString(),
       modificado: new Date().toISOString()
     });
+    idsGuardar.push(nuevoId);
     registrarEventoBitacora('pendiente', 'Pendiente creado', piazza, `${NOMBRES_TIPO[tipo]||tipo} — ${dvr||''} ${camara||nombreLocal||identificador||''} — Estado: ${estado}`);
 
-    // Copiar el mismo trabajo a las cámaras adicionales seleccionadas (cada una guarda su propia entrada de historial)
+    // Copiar el mismo trabajo a las cámaras adicionales seleccionadas
     camarasExtra.forEach((camExtra, i) => {
+      const extraId = 'p_' + (Date.now()+i+1) + '_' + Math.floor(Math.random()*1000);
       pendientes.push({
-        id: 'p_' + (Date.now()+i+1) + '_' + Math.floor(Math.random()*1000),
+        id: extraId,
         tipo, fecha, piazza, dvr, dvrPuertos, camara: camExtra, numeroLocal, nombreLocal, zona, pruebaSemanal, identificador, novedad, estado, pendienteEstado, reporte, tecnico, operador, ubicacion, foto,
         origen: _origenFormulario,
         creado: new Date().toISOString(),
         modificado: new Date().toISOString()
       });
+      idsGuardar.push(extraId);
     });
     if(camarasExtra.length > 0) registrarEventoBitacora('pendiente', `Pendientes creados en lote (${camarasExtra.length+1} cámaras)`, piazza, `${dvr||''} — Estado: ${estado}`);
   }
 
-  guardarDatos();
+  guardarDatos(idsGuardar);
 
   // Notificación de sincronización para trabajos
   if(_origenFormulario === 'trabajo'){
