@@ -3416,6 +3416,7 @@ function guardarPendiente(){
       pendientes[idx] = {
         ...pendientes[idx],
         tipo, fecha, piazza, dvr, dvrPuertos, camara, numeroLocal, nombreLocal, zona, pruebaSemanal, identificador, novedad, estado, pendienteEstado, reporte, tecnico, operador, ubicacion, foto,
+        origen: pendientes[idx].origen || _origenFormulario,
         modificado: new Date().toISOString()
       };
       registrarEventoBitacora('pendiente', 'Pendiente editado', piazza, `${NOMBRES_TIPO[tipo]||tipo} — ${dvr||''} ${camara||nombreLocal||identificador||''} — Estado: ${estado}`);
@@ -3947,9 +3948,11 @@ function obtenerRealizadosFiltrados(){
   const filtroPiazza = document.getElementById('realizados-filtro-piazza').value;
   const buscar = document.getElementById('realizados-buscar').value.trim().toLowerCase();
 
-  // Lo ingresado por "🛠️ Registrar Trabajo" MÁS cualquier registro ya Resuelto
-  // (si algo quedó resuelto, es porque se hizo un trabajo, sin importar dónde se originó el reporte)
-  let lista = pendientes.filter(p => p.origen === 'trabajo' || p.pendienteEstado === 'Resuelto');
+  // Un registro es un "trabajo realizado" si:
+  // 1. Su origen es 'trabajo' (registrado desde el tab Registrar Trabajo), O
+  // 2. Tiene técnico registrado (fue atendido), O
+  // 3. Está marcado como Resuelto
+  let lista = pendientes.filter(p => p.origen === 'trabajo' || (p.tecnico && p.tecnico.trim() !== '') || p.pendienteEstado === 'Resuelto');
   if(filtroTipo) lista = lista.filter(p => p.tipo === filtroTipo);
   if(filtroPiazza) lista = lista.filter(p => p.piazza === filtroPiazza);
   if(buscar){
@@ -4137,7 +4140,7 @@ function exportarTodosTrabajosRealizados(docExterno, opciones){
   const esStandalone = !docExterno;
   const compacto = !!(opciones && opciones.compacto);
   const solopiazza = (opciones && opciones.solopiazza) || null;
-  let lista = esStandalone ? obtenerRealizadosFiltrados() : pendientes.filter(p => p.origen === 'trabajo' || p.pendienteEstado === 'Resuelto');
+  let lista = esStandalone ? obtenerRealizadosFiltrados() : pendientes.filter(p => p.origen === 'trabajo' || (p.tecnico && p.tecnico.trim() !== '') || p.pendienteEstado === 'Resuelto');
   if(solopiazza) lista = lista.filter(p => p.piazza === solopiazza);
   if(!lista.length){ if(esStandalone) alert('No hay trabajos realizados para exportar con estos filtros.'); return compacto ? opciones.startY : undefined; }
 
