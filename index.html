@@ -4742,12 +4742,10 @@ function trCargar(){
     // IGUAL QUE PENDIENTES: usar coleccionTrabajos y onSnapshot de window._firebase directamente
     const { coleccionTrabajos, onSnapshot, doc, setDoc } = window._firebase;
     onSnapshot(coleccionTrabajos, (snapshot) => {
-      _sincronizandoTrabajosDesdeFirestore = true;
       const nueva = [];
       snapshot.forEach(d => nueva.push({ ...d.data(), id: d.id }));
       nueva.sort((a,b)=>(b.fecha||'').localeCompare(a.fecha||'')||(b.creado||'').localeCompare(a.creado||''));
       if(nueva.length === 0 && trabajos.length > 0){
-        // Firebase vacío pero hay locales — subirlos
         trabajos.forEach(t => {
           const { foto, ...sinFoto } = t;
           setDoc(doc(coleccionTrabajos, t.id), sinFoto).catch(e => console.error('Error subiendo trabajo:', e));
@@ -4755,11 +4753,10 @@ function trCargar(){
       } else {
         trabajos = nueva;
         localStorage.setItem(CLAVE_TR, JSON.stringify(trabajos));
+        trRenderizar();
+        const ind = document.getElementById('firebase-status');
+        if(ind){ ind.style.background='#198754'; ind.textContent='🟢 Firebase: ' + trabajos.length + ' registros sincronizados'; }
       }
-      trRenderizar();
-      const ind = document.getElementById('firebase-status');
-      if(ind){ ind.style.background='#198754'; ind.textContent='🟢 Firebase: ' + trabajos.length + ' registros sincronizados'; }
-      _sincronizandoTrabajosDesdeFirestore = false;
     }, (error) => {
       console.error('Error sincronización trabajos:', error);
     });
@@ -5297,18 +5294,25 @@ function trEditar(id){
 
 function trEliminar(id, yaConfirmado){
   if(!yaConfirmado&&!confirm('¿Eliminar este trabajo? Esta acción no se puede deshacer.')) return;
-  trabajos=trabajos.filter(t=>t.id!==id);
-  localStorage.setItem('krause_trabajos_v2',JSON.stringify(trabajos));
-  // Eliminar de Firebase
+  // Eliminar de Firebase — el onSnapshot actualizará la lista automáticamente
   if(window._firebase){
     const {coleccionTrabajos, doc, deleteDoc} = window._firebase;
     deleteDoc(doc(coleccionTrabajos, String(id)))
-      .then(()=>console.log('✅ Trabajo eliminado Firebase:', id))
+      .then(()=>{
+        console.log('✅ Trabajo eliminado Firebase:', id);
+        // También limpiar local por si acaso
+        trabajos = trabajos.filter(t=>t.id!==id);
+        localStorage.setItem(CLAVE_TR, JSON.stringify(trabajos));
+      })
       .catch(e => console.error('❌ Error eliminando trabajo:', e));
+  } else {
+    // Sin Firebase: solo local
+    trabajos = trabajos.filter(t=>t.id!==id);
+    localStorage.setItem(CLAVE_TR, JSON.stringify(trabajos));
+    trRenderizar();
   }
-  trRenderizar();
   const notif=document.createElement('div');
-  notif.textContent='🗑 Trabajo eliminado';
+  notif.textContent='Trabajo eliminado';
   notif.style.cssText='position:fixed;bottom:24px;right:24px;background:#d64545;color:#fff;padding:12px 20px;border-radius:8px;font-weight:600;z-index:9999;';
   document.body.appendChild(notif); setTimeout(()=>notif.remove(),2500);
 }
