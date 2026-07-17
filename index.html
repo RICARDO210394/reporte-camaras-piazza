@@ -4747,10 +4747,10 @@ function trCargar(){
 
 function trGuardarFirebase(t){
   localStorage.setItem(CLAVE_TR, JSON.stringify(trabajos));
-  if(!window._firebase||!window._coleccionTrabajos) return;
-  const {doc,setDoc}=window._firebase;
+  if(!window._firebase) return;
+  const {db,doc,setDoc}=window._firebase;
   const {foto,...sinFoto}=t;
-  setDoc(doc(window._coleccionTrabajos,t.id),sinFoto)
+  setDoc(doc(db,'trabajos_realizados',t.id),sinFoto)
     .then(()=>console.log('✅ Firebase trabajo:',t.id))
     .catch(e=>console.error('❌ Error Firebase trabajo:',e));
 }
@@ -5220,7 +5220,7 @@ function trEliminar(id, yaConfirmado){
   // Eliminar de Firebase
   if(window._firebase&&window._coleccionTrabajos){
     const {doc,deleteDoc,db}=window._firebase;
-    try{ deleteDoc(doc(db,'trabajos_realizados',id)); }catch(e){console.warn(e);}
+    try{ const {db:_db,doc:_doc,deleteDoc:_del}=window._firebase; _del(_doc(_db,'trabajos_realizados',id)); }catch(e){console.warn(e);}
   }
   trRenderizar();
   const notif=document.createElement('div');
