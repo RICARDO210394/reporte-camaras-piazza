@@ -36,31 +36,6 @@
   window._coleccionTrabajos = coleccionTrabajos;
   window._firebase = { db, coleccion, coleccionTrabajos, doc, setDoc, deleteDoc, onSnapshot, collection };
   window._firebaseListo = true;
-
-  // onSnapshot trabajos_realizados — igual que pendientes, dentro del módulo
-  onSnapshot(coleccionTrabajos, snap => {
-    const lista = [];
-    snap.forEach(d => lista.push({ ...d.data(), id: d.id }));
-    lista.sort((a,b)=>(b.fecha||'').localeCompare(a.fecha||'')||(b.creado||'').localeCompare(a.creado||''));
-    window._trabajosFirebase = lista;
-    // Notificar al script global
-    if(typeof window._onTrabajosActualizado === 'function') window._onTrabajosActualizado(lista);
-  }, e => console.error('❌ onSnapshot trabajos:', e));
-
-  // Exponer función de guardado de trabajos directamente desde el módulo
-  window._guardarTrabajoFirebase = (t) => {
-    const { foto, ...sinFoto } = t;
-    return setDoc(doc(db, 'trabajos_realizados', String(t.id)), sinFoto)
-      .then(() => console.log('✅ Trabajo Firebase OK:', t.id))
-      .catch(e => console.error('❌ Error guardando trabajo:', e));
-  };
-
-  // Exponer función de eliminar trabajo
-  window._eliminarTrabajoFirebase = (id) => {
-    return deleteDoc(doc(db, 'trabajos_realizados', String(id)))
-      .then(() => console.log('✅ Trabajo eliminado Firebase:', id))
-      .catch(e => console.error('❌ Error eliminando trabajo:', e));
-  };
   // Indicador visual de conexión Firebase
   document.addEventListener('DOMContentLoaded', () => {
     const ind = document.createElement('div');
@@ -900,6 +875,7 @@
           <p style="color:#5a6b7b;margin:4px 0 0;">Historial de todos los trabajos registrados por técnicos y proveedores.</p>
         </div>
         <button class="btn btn-primario" onclick="pedirDatosReporte(()=>exportarTrabajosRealizadosPDF())" style="white-space:nowrap;">📄 Exportar PDF</button>
+        <button class="btn btn-secundario" onclick="trDiagnostico()" style="white-space:nowrap;font-size:.8rem;">🔍 Diagnóstico</button>
       </div>
       <div class="filtros">
         <select id="tr-filtro-tipo" onchange="trRenderizar()">
@@ -4749,44 +4725,67 @@ document.querySelectorAll('nav button[data-tab]').forEach(btn => {
 });
 
 // ============================================================
-// TRABAJOS REALIZADOS — SINCRONIZACIÓN TIEMPO REAL
+// TRABAJOS REALIZADOS — MISMO PATRÓN QUE GRABACIÓN
 // ============================================================
 const CLAVE_TR = 'krause_trabajos_v2';
 let trabajos = [];
-let _trSincronizando = false;
+let _sincronizandoTrabajosDesdeFirestore = false;
 
 function trCargar(){
-  // Cargar local inmediato
-  try{ const g=localStorage.getItem(CLAVE_TR); trabajos=g?JSON.parse(g):[]; }catch(e){ trabajos=[]; }
-  trRenderizar();
+  try{
+    const g = localStorage.getItem(CLAVE_TR);
+    trabajos = g ? JSON.parse(g) : [];
+  }catch(e){ trabajos = []; }
 
-  // Si Firebase ya trajo datos (módulo cargó primero), usarlos
-  if(window._trabajosFirebase && window._trabajosFirebase.length > 0){
-    trabajos = window._trabajosFirebase;
-    localStorage.setItem(CLAVE_TR, JSON.stringify(trabajos));
-    trRenderizar();
-  }
+  const intentarConectar = () => {
+    if(!window._firebase){ setTimeout(intentarConectar, 300); return; }
+    const { db } = window._firebase;
+    import("https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js").then(mod => {
+      const colTr = mod.collection(db, "trabajos_realizados");
+      window._firebaseTrabajos = { colTr, doc: mod.doc, setDoc: mod.setDoc, deleteDoc: mod.deleteDoc };
+      let primeraCarga = true;
+      mod.onSnapshot(colTr, (snapshot) => {
+        _sincronizandoTrabajosDesdeFirestore = true;
+        const nueva = [];
+        snapshot.forEach(d => nueva.push({ ...d.data(), id: d.id }));
+        nueva.sort((a,b)=>(b.fecha||'').localeCompare(a.fecha||'')||(b.creado||'').localeCompare(a.creado||''));
+        console.log('📦 onSnapshot trabajos — Firebase devolvió:', nueva.length, 'registros');
 
-  // Registrar callback para cuando lleguen actualizaciones de Firebase
-  window._onTrabajosActualizado = (lista) => {
-    trabajos = lista;
-    localStorage.setItem(CLAVE_TR, JSON.stringify(trabajos));
-    trRenderizar();
-    const ind = document.getElementById('firebase-status');
-    if(ind){ ind.style.background='#198754'; ind.textContent='🟢 Firebase: ' + lista.length + ' trabajos'; }
-    console.log('✅ Trabajos actualizados:', lista.length);
+        if(primeraCarga && nueva.length === 0 && trabajos.length > 0){
+          console.log('⬆️ Firebase vacío — subiendo', trabajos.length, 'trabajos locales');
+          trabajos.forEach(t => {
+            const { foto, ...sinFoto } = t;
+            mod.setDoc(mod.doc(colTr, t.id), sinFoto)
+              .then(()=>console.log('✅ Subido:', t.id))
+              .catch(e => console.error('❌ Error subiendo:', e));
+          });
+        } else {
+          trabajos = nueva;
+          localStorage.setItem(CLAVE_TR, JSON.stringify(trabajos));
+        }
+        primeraCarga = false;
+        trRenderizar();
+        const ind = document.getElementById('firebase-status');
+        if(ind){ ind.style.background='#198754'; ind.textContent='🟢 TR Firebase: ' + trabajos.length; }
+        setTimeout(()=>{ _sincronizandoTrabajosDesdeFirestore = false; }, 100);
+      }, (error) => {
+        console.error('❌ Error onSnapshot trabajos:', error);
+        const ind = document.getElementById('firebase-status');
+        if(ind){ ind.style.background='#dc3545'; ind.textContent='🔴 Error TR: ' + error.code; }
+      });
+    });
   };
+  intentarConectar();
 }
 
 function trGuardarFirebase(t){
   localStorage.setItem(CLAVE_TR, JSON.stringify(trabajos));
-  // Usar función expuesta directamente por el módulo Firebase (igual que pendientes)
-  if(typeof window._guardarTrabajoFirebase === 'function'){
-    window._guardarTrabajoFirebase(t);
-  } else {
-    console.warn('Firebase módulo aún no listo, reintentando...');
-    setTimeout(() => trGuardarFirebase(t), 500);
-  }
+  if(_sincronizandoTrabajosDesdeFirestore || !window._firebaseTrabajos) return;
+  const { colTr, doc, setDoc } = window._firebaseTrabajos;
+  const { foto, ...sinFoto } = t;
+  setDoc(doc(colTr, t.id), sinFoto)
+    .then(() => console.log('✅ Trabajo guardado Firebase:', t.id))
+    .catch(e => console.error('❌ Error guardando trabajo:', e));
 }
 
 let _rtFoto='';
@@ -5074,6 +5073,36 @@ function rtGuardar(){
   document.body.appendChild(notif); setTimeout(()=>notif.remove(),3000);
 }
 
+function trDiagnostico(){
+  const lineas = [];
+  lineas.push('=== DIAGNÓSTICO TRABAJOS ===');
+  lineas.push('Firebase listo: ' + (!!window._firebase));
+  lineas.push('_firebaseTrabajos: ' + (!!window._firebaseTrabajos));
+  lineas.push('trabajos en memoria: ' + trabajos.length);
+  lineas.push('localStorage: ' + (localStorage.getItem(CLAVE_TR)||'vacío').length + ' chars');
+  
+  if(window._firebaseTrabajos){
+    const {colTr, doc} = window._firebaseTrabajos;
+    lineas.push('colTr path: ' + (colTr.path || colTr._path?.segments?.join('/') || 'ok'));
+  }
+  
+  const msg = lineas.join('\n');
+  alert(msg);
+  console.log(msg);
+  
+  // Intentar leer directamente
+  if(window._firebase){
+    const {db} = window._firebase;
+    import("https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js").then(mod=>{
+      mod.getDocs(mod.collection(db,'trabajos_realizados')).then(snap=>{
+        alert('✅ Firebase lee OK: ' + snap.size + ' documentos en trabajos_realizados');
+      }).catch(e=>{
+        alert('❌ Firebase NO puede leer: ' + e.code + ' — ' + e.message + '\n\nVe a Firebase Console → Firestore → Reglas y pon:\nallow read, write: if true;');
+      });
+    });
+  }
+}
+
 function trDetalleTexto(t){
   if(t.tipo==='Camara') return `DVR ${t.dvr||''} — Cámara ${t.camara||''}`;
   if(t.tipo==='Boton') return `${t.nombreLocal||''} (Local ${t.numeroLocal||''})`;
@@ -5254,7 +5283,10 @@ function trEliminar(id, yaConfirmado){
   // Eliminar de Firebase
   if(window._firebase&&window._coleccionTrabajos){
     const {doc,deleteDoc,db}=window._firebase;
-    if(typeof window._eliminarTrabajoFirebase==='function') window._eliminarTrabajoFirebase(id);
+    if(window._firebaseTrabajos){
+      const {colTr, doc, deleteDoc} = window._firebaseTrabajos;
+      deleteDoc(doc(colTr, String(id))).catch(e => console.error('Error eliminando trabajo:', e));
+    }
   }
   trRenderizar();
   const notif=document.createElement('div');
