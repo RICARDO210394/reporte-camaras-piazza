@@ -847,7 +847,7 @@
         <div class="campo" id="rt-wrap-componente" style="display:none;"><label>Componente / Zona SCI *</label><input type="text" id="rt-componente" placeholder="Ej: Panel central, Sensor zona 2"></div>
         <div class="campo full" id="rt-wrap-novedad" style="display:none;"><label>Descripción *</label><input type="text" id="rt-novedad" placeholder="Descripción del trabajo..."></div>
         <div class="campo" id="rt-wrap-estado"><label>Estado del equipo *</label><select id="rt-estado"><option value="">Seleccionar...</option></select></div>
-        <div class="campo"><label>Situación *</label><select id="rt-situacion"><option value="Pendiente">🔴 Pendiente</option><option value="Resuelto">✅ Solucionado</option><option value="Sin Novedad">✔️ Sin Novedad</option></select></div>
+        <div class="campo"><label>Situación *</label><select id="rt-situacion"><option value="">Seleccionar...</option><option value="Pendiente">🔴 Pendiente</option><option value="Resuelto">✅ Solucionado</option><option value="Sin Novedad">✔️ Sin Novedad</option></select></div>
         <div class="campo"><label>Técnico / Proveedor *</label><input type="text" id="rt-tecnico" placeholder="Nombre del técnico o empresa"></div>
         <div class="campo"><label>Operador que registra *</label><input type="text" id="rt-operador" placeholder="Tu nombre"></div>
         <div class="campo full"><label>Reporte del trabajo</label><textarea id="rt-reporte" rows="3" placeholder="Detalle del trabajo realizado..."></textarea></div>
@@ -4919,8 +4919,9 @@ function rtOnEstadoCambio(){
   const estado=(document.getElementById('rt-estado')||{}).value||'';
   const sit=document.getElementById('rt-situacion');
   if(!sit) return;
+  if(!estado){ sit.value=''; return; }
   if(estado==='Operativo') sit.value='Resuelto';
-  else if(estado==='No Operativo'||estado==='Sin imagen'||estado==='Falla de sensor'||estado==='Sin señal'||estado==='Batería baja'||estado==='Requiere mantenimiento'||estado==='Desconectado'||estado==='Blanco y negro'||estado==='Intermitencia'||estado==='Interferencia'||estado==='Otro') sit.value='Pendiente';
+  else sit.value='Pendiente';
 }
 function rtSeleccionarFoto(event){
   const file=event.target.files[0]; if(!file) return;
@@ -4956,7 +4957,7 @@ function rtLimpiar(){
   const rtPanel=document.getElementById('rt-camara-panel'); if(rtPanel) rtPanel.style.display='none';
   val('rt-local'); val('rt-local-manual');
   val('rt-numero-local'); val('rt-zona'); val('rt-componente'); val('rt-novedad');
-  val('rt-estado'); val('rt-situacion','Pendiente');
+  val('rt-estado'); val('rt-situacion','');
   val('rt-tecnico'); val('rt-operador'); val('rt-reporte');
   rtQuitarFoto(); rtCambiarTipo();
 }
@@ -5299,12 +5300,11 @@ function trEliminar(id, yaConfirmado){
   trabajos=trabajos.filter(t=>t.id!==id);
   localStorage.setItem('krause_trabajos_v2',JSON.stringify(trabajos));
   // Eliminar de Firebase
-  if(window._firebase&&window._coleccionTrabajos){
-    const {doc,deleteDoc,db}=window._firebase;
-    if(window._firebase){
-      const {coleccionTrabajos, doc, deleteDoc} = window._firebase;
-      deleteDoc(doc(coleccionTrabajos, String(id))).catch(e => console.error('Error eliminando trabajo:', e));
-    }
+  if(window._firebase){
+    const {coleccionTrabajos, doc, deleteDoc} = window._firebase;
+    deleteDoc(doc(coleccionTrabajos, String(id)))
+      .then(()=>console.log('✅ Trabajo eliminado Firebase:', id))
+      .catch(e => console.error('❌ Error eliminando trabajo:', e));
   }
   trRenderizar();
   const notif=document.createElement('div');
@@ -5325,11 +5325,11 @@ function exportarUnTrabajoRealizado(id){
   doc.setTextColor(255,255,255); doc.setFontSize(11);
   doc.text('Krause Negocios — Trabajo Realizado',10,11);
   doc.setTextColor(0,0,0);
-  let y=dibujarEncabezadoReporte(doc,`Trabajo: ${NOMBRES_TIPO[t.tipo]||t.tipo} — ${t.piazza||''}`,20);
+  let y=dibujarEncabezadoReporte(doc,'Trabajo: ' + (NOMBRES_TIPO[t.tipo]||t.tipo) + ' - ' + (t.piazza||''),20);
   const rows=[];
   const r=(k,v)=>{if(v)rows.push([k,v]);};
   r('Fecha',t.fecha); r('Piazza',t.piazza);
-  r('Tipo',`${ICONOS_TIPO[t.tipo]||''} ${NOMBRES_TIPO[t.tipo]||t.tipo}`);
+  r('Tipo', NOMBRES_TIPO[t.tipo]||t.tipo);
   if(t.tipo==='Camara'){r('DVR/NVR',t.dvr);r('Cámara',t.camara);}
   else if(t.tipo==='Boton'){r('Local',t.nombreLocal);r('N° Local',t.numeroLocal);r('Zona',t.zona);}
   else if(t.tipo==='Incendio'){r('Componente',t.identificador);}
