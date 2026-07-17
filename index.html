@@ -4745,18 +4745,11 @@ function trCargar(){
       const nueva = [];
       snapshot.forEach(d => nueva.push({ ...d.data(), id: d.id }));
       nueva.sort((a,b)=>(b.fecha||'').localeCompare(a.fecha||'')||(b.creado||'').localeCompare(a.creado||''));
-      if(nueva.length === 0 && trabajos.length > 0){
-        trabajos.forEach(t => {
-          const { foto, ...sinFoto } = t;
-          setDoc(doc(coleccionTrabajos, t.id), sinFoto).catch(e => console.error('Error subiendo trabajo:', e));
-        });
-      } else {
-        trabajos = nueva;
-        localStorage.setItem(CLAVE_TR, JSON.stringify(trabajos));
-        trRenderizar();
-        const ind = document.getElementById('firebase-status');
-        if(ind){ ind.style.background='#198754'; ind.textContent='🟢 Firebase: ' + trabajos.length + ' registros sincronizados'; }
-      }
+      trabajos = nueva;
+      localStorage.setItem(CLAVE_TR, JSON.stringify(trabajos));
+      trRenderizar();
+      const ind = document.getElementById('firebase-status');
+      if(ind){ ind.style.background='#198754'; ind.textContent='🟢 Firebase: ' + trabajos.length + ' registros sincronizados'; }
     }, (error) => {
       console.error('Error sincronización trabajos:', error);
     });
