@@ -4738,8 +4738,8 @@ function trCargar(){
   // 2. Conectar onSnapshot igual que cargarDatos() para pendientes
   const intentarConectar = () => {
     if(!window._firebase){ setTimeout(intentarConectar, 300); return; }
-    const { coleccionTrabajos, onSnapshot } = window._firebase;
-    onSnapshot(coleccionTrabajos, snap => {
+    const { db, onSnapshot, collection } = window._firebase;
+    onSnapshot(collection(db, 'trabajos_realizados'), snap => {
       _trSincronizando = true;
       trabajos = [];
       snap.forEach(d => trabajos.push({ ...d.data(), id: d.id }));
@@ -4757,13 +4757,22 @@ function trCargar(){
 
 function trGuardarFirebase(t){
   localStorage.setItem(CLAVE_TR, JSON.stringify(trabajos));
-  if(_trSincronizando) return; // evitar loop
+  if(_trSincronizando) return;
   if(!window._firebase){ console.warn('Firebase no listo'); return; }
-  const { coleccionTrabajos, doc, setDoc } = window._firebase;
+  const { db, doc, setDoc } = window._firebase;
   const { foto, ...sinFoto } = t;
-  setDoc(doc(coleccionTrabajos, t.id), sinFoto)
-    .then(() => console.log('✅ Trabajo guardado Firebase:', t.id))
-    .catch(e => console.error('❌ Error guardando trabajo Firebase:', e));
+  // doc() SIEMPRE necesita (db, 'coleccion', id) — nunca una referencia de colección
+  setDoc(doc(db, 'trabajos_realizados', String(t.id)), sinFoto)
+    .then(() => {
+      console.log('✅ Trabajo guardado Firebase:', t.id);
+      const ind = document.getElementById('firebase-status');
+      if(ind){ ind.style.background='#198754'; ind.textContent='🟢 Firebase: trabajo guardado'; }
+    })
+    .catch(e => {
+      console.error('❌ Error guardando trabajo Firebase:', e);
+      const ind = document.getElementById('firebase-status');
+      if(ind){ ind.style.background='#dc3545'; ind.textContent='🔴 Error Firebase: '+e.message; }
+    });
 }
 
 let _rtFoto='';
@@ -5231,7 +5240,7 @@ function trEliminar(id, yaConfirmado){
   // Eliminar de Firebase
   if(window._firebase&&window._coleccionTrabajos){
     const {doc,deleteDoc,db}=window._firebase;
-    try{ const {coleccionTrabajos:_col,doc:_doc,deleteDoc:_del,db:_db}=window._firebase; _del(_doc(_db,'trabajos_realizados',id)); }catch(e){console.warn(e);}
+    try{ const {db:_db,doc:_doc,deleteDoc:_del}=window._firebase; _del(_doc(_db,'trabajos_realizados',String(id))); }catch(e){console.warn('Error eliminar Firebase:',e);}
   }
   trRenderizar();
   const notif=document.createElement('div');
