@@ -34,7 +34,7 @@
   const coleccionTrabajos = collection(db, "trabajos_realizados");
 
   window._coleccionTrabajos = coleccionTrabajos;
-  window._firebase = { db, coleccion, coleccionTrabajos, doc, setDoc, deleteDoc, onSnapshot };
+  window._firebase = { db, coleccion, coleccionTrabajos, doc, setDoc, deleteDoc, onSnapshot, collection };
   window._firebaseListo = true;
   // Indicador visual de conexión Firebase
   document.addEventListener('DOMContentLoaded', () => {
@@ -4724,35 +4724,46 @@ document.querySelectorAll('nav button[data-tab]').forEach(btn => {
 });
 
 // ============================================================
-// TRABAJOS REALIZADOS — NUEVO SISTEMA LIMPIO
+// TRABAJOS REALIZADOS — SINCRONIZACIÓN TIEMPO REAL
 // ============================================================
 const CLAVE_TR = 'krause_trabajos_v2';
 let trabajos = [];
+let _trSincronizando = false;
 
 function trCargar(){
+  // 1. Cargar local inmediato para mostrar algo mientras conecta
   try{ const g=localStorage.getItem(CLAVE_TR); trabajos=g?JSON.parse(g):[]; }catch(e){ trabajos=[]; }
-  const intentar = () => {
-    if(!window._firebase || !window._coleccionTrabajos){ setTimeout(intentar,300); return; }
-    const { onSnapshot } = window._firebase;
-    onSnapshot(window._coleccionTrabajos, snap => {
-      trabajos=[];
-      snap.forEach(d=>trabajos.push({...d.data(),id:d.id}));
+  trRenderizar();
+
+  // 2. Conectar onSnapshot igual que cargarDatos() para pendientes
+  const intentarConectar = () => {
+    if(!window._firebase){ setTimeout(intentarConectar, 300); return; }
+    const { coleccionTrabajos, onSnapshot } = window._firebase;
+    onSnapshot(coleccionTrabajos, snap => {
+      _trSincronizando = true;
+      trabajos = [];
+      snap.forEach(d => trabajos.push({ ...d.data(), id: d.id }));
+      trabajos.sort((a,b)=>(b.fecha||'').localeCompare(a.fecha||'')||(b.creado||'').localeCompare(a.creado||''));
       localStorage.setItem(CLAVE_TR, JSON.stringify(trabajos));
       trRenderizar();
+      const ind = document.getElementById('firebase-status');
+      if(ind) ind.textContent = '🟢 Firebase: sincronizado (' + trabajos.length + ' trabajos)';
       console.log('✅ Trabajos sincronizados:', trabajos.length);
-    }, e=>console.error('Error trabajos Firebase:',e));
+      _trSincronizando = false;
+    }, e => console.error('❌ Error onSnapshot trabajos:', e));
   };
-  intentar();
+  intentarConectar();
 }
 
 function trGuardarFirebase(t){
   localStorage.setItem(CLAVE_TR, JSON.stringify(trabajos));
-  if(!window._firebase) return;
-  const {db,doc,setDoc}=window._firebase;
-  const {foto,...sinFoto}=t;
-  setDoc(doc(db,'trabajos_realizados',t.id),sinFoto)
-    .then(()=>console.log('✅ Firebase trabajo:',t.id))
-    .catch(e=>console.error('❌ Error Firebase trabajo:',e));
+  if(_trSincronizando) return; // evitar loop
+  if(!window._firebase){ console.warn('Firebase no listo'); return; }
+  const { coleccionTrabajos, doc, setDoc } = window._firebase;
+  const { foto, ...sinFoto } = t;
+  setDoc(doc(coleccionTrabajos, t.id), sinFoto)
+    .then(() => console.log('✅ Trabajo guardado Firebase:', t.id))
+    .catch(e => console.error('❌ Error guardando trabajo Firebase:', e));
 }
 
 let _rtFoto='';
@@ -5220,7 +5231,7 @@ function trEliminar(id, yaConfirmado){
   // Eliminar de Firebase
   if(window._firebase&&window._coleccionTrabajos){
     const {doc,deleteDoc,db}=window._firebase;
-    try{ const {db:_db,doc:_doc,deleteDoc:_del}=window._firebase; _del(_doc(_db,'trabajos_realizados',id)); }catch(e){console.warn(e);}
+    try{ const {coleccionTrabajos:_col,doc:_doc,deleteDoc:_del,db:_db}=window._firebase; _del(_doc(_db,'trabajos_realizados',id)); }catch(e){console.warn(e);}
   }
   trRenderizar();
   const notif=document.createElement('div');
@@ -5333,7 +5344,6 @@ cargarDatos();
 cargarDatosPruebas();
 cargarDatosGrabacion();
 trCargar();
-cargarTrabajos();
 cargarBitacora();
 poblarSelectorAnioPruebas();
 poblarSelectsPiazza();
