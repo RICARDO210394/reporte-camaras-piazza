@@ -3681,6 +3681,8 @@ function editarDesdeDetalle(){
 function eliminarDesdeDetalle(){
   const id = _detalleActualId;
   if(id && confirm('¿Eliminar este registro? Esta acción no se puede deshacer.')){
+    const pDel = pendientes.find(p=>p.id===id);
+    if(pDel) registrarEventoBitacora('pendiente','Pendiente eliminado',pDel.piazza,(NOMBRES_TIPO[pDel.tipo]||pDel.tipo)+' — '+detalleRegistro(pDel));
     pendientes = pendientes.filter(p => p.id !== id);
     eliminarDeFirestore(id);
     guardarDatos();
@@ -3693,6 +3695,8 @@ function eliminarDesdeDetalle(){
 
 function eliminarPendiente(id){
   if(!confirm('¿Eliminar este pendiente? Esta acción no se puede deshacer.')) return;
+  const pDel = pendientes.find(p=>p.id===id);
+  if(pDel) registrarEventoBitacora('pendiente','Pendiente eliminado',pDel.piazza,(NOMBRES_TIPO[pDel.tipo]||pDel.tipo)+' — '+detalleRegistro(pDel));
   pendientes = pendientes.filter(p => p.id !== id);
   eliminarDeFirestore(id);
   guardarDatos();
@@ -5304,6 +5308,7 @@ function trEliminar(id, yaConfirmado){
     localStorage.setItem(CLAVE_TR, JSON.stringify(trabajos));
     trRenderizar();
   }
+  registrarEventoBitacora('trabajo', 'Trabajo eliminado', '', 'ID: ' + id);
   const notif=document.createElement('div');
   notif.textContent='Trabajo eliminado';
   notif.style.cssText='position:fixed;bottom:24px;right:24px;background:#d64545;color:#fff;padding:12px 20px;border-radius:8px;font-weight:600;z-index:9999;';
