@@ -745,7 +745,7 @@
         <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
           <span class="contador-resultados" id="contador-resultados"></span>
           <button class="btn btn-secundario btn-chico" onclick="pedirDatosReporte(() => exportarPDF())">📄 Exportar PDF</button>
-          <button class="btn btn-secundario btn-chico" onclick="exportarJSON()">💾 Respaldo JSON</button>
+          <button class="btn btn-secundario btn-chico" onclick="exportarJSON()" title="Exportar respaldo completo (pendientes, trabajos, pruebas, grabación)">💾 Exportar Respaldo</button>
           <label class="btn btn-secundario btn-chico" style="margin:0; cursor:pointer;">
             📂 Importar JSON
             <input type="file" id="input-json" accept=".json" style="display:none" onchange="importarJSON(event)">
@@ -951,9 +951,29 @@
       <div style="display:flex; flex-direction:column; gap:16px; margin-top:10px;">
 
         <label style="display:flex; align-items:center; gap:10px; cursor:pointer;">
-          <input type="checkbox" id="exp-check-lista" style="width:18px; height:18px;">
-          <span>📋 <strong>Lista de Pendientes</strong> — todos los pendientes activos, agrupados por Piazza.</span>
+          <input type="checkbox" id="exp-check-lista" onchange="expToggleTipos()" style="width:18px; height:18px;">
+          <span>📋 <strong>Lista de Pendientes</strong> — pendientes activos agrupados por Piazza y sección.</span>
         </label>
+
+        <!-- Filtros de tipo para Lista de Pendientes -->
+        <div id="exp-tipos-wrap" style="display:none; margin-left:28px; background:#f4f7fa; border-radius:8px; padding:12px 16px; border:1px solid #d7dee6;">
+          <p style="margin:0 0 10px;font-size:.88rem;color:#4a5a6b;font-weight:600;">¿Qué secciones incluir en el reporte?</p>
+          <div style="display:flex;flex-wrap:wrap;gap:12px;">
+            <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
+              <input type="checkbox" id="exp-tipo-camara" checked style="width:16px;height:16px;">
+              <span>📹 Cámaras</span>
+            </label>
+            <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
+              <input type="checkbox" id="exp-tipo-boton" checked style="width:16px;height:16px;">
+              <span>🔔 Botones de Pánico</span>
+            </label>
+            <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
+              <input type="checkbox" id="exp-tipo-incendio" checked style="width:16px;height:16px;">
+              <span>🔥 Sistema Contra Incendio</span>
+            </label>
+          </div>
+          <p style="margin:10px 0 0;font-size:.8rem;color:#7a8a9b;">Si seleccionas más de uno, el PDF se divide por secciones.</p>
+        </div>
 
         <label style="display:flex; align-items:center; gap:10px; cursor:pointer; margin-left:28px;">
           <input type="checkbox" id="exp-check-fotos" style="width:18px; height:18px;">
@@ -961,14 +981,56 @@
         </label>
 
         <label style="display:flex; align-items:center; gap:10px; cursor:pointer;">
-          <input type="checkbox" id="exp-check-estadistica" style="width:18px; height:18px;">
+          <input type="checkbox" id="exp-check-estadistica" onchange="expToggleTiposEstadistica()" style="width:18px; height:18px;">
           <span>📊 <strong>Estadística</strong> — % operativo por Piazza y tipo de equipo.</span>
         </label>
 
+        <div id="exp-tipos-estadistica-wrap" style="display:none; margin-left:28px; background:#f4f7fa; border-radius:8px; padding:12px 16px; border:1px solid #d7dee6;">
+          <p style="margin:0 0 10px;font-size:.88rem;color:#4a5a6b;font-weight:600;">¿Qué tipos incluir en la estadística?</p>
+          <div style="display:flex;flex-wrap:wrap;gap:12px;">
+            <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
+              <input type="checkbox" id="exp-est-camara" checked style="width:16px;height:16px;">
+              <span>📹 Cámaras</span>
+            </label>
+            <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
+              <input type="checkbox" id="exp-est-boton" checked style="width:16px;height:16px;">
+              <span>🔔 Botones de Pánico</span>
+            </label>
+            <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
+              <input type="checkbox" id="exp-est-incendio" checked style="width:16px;height:16px;">
+              <span>🔥 Sistema Contra Incendio</span>
+            </label>
+          </div>
+        </div>
+
         <label style="display:flex; align-items:center; gap:10px; cursor:pointer;">
-          <input type="checkbox" id="exp-check-realizados" style="width:18px; height:18px;">
-          <span>✅ <strong>Trabajos Realizados</strong> — historial completo de trabajos y resoluciones.</span>
+          <input type="checkbox" id="exp-check-realizados" onchange="expToggleTiposRealizados()" style="width:18px; height:18px;">
+          <span>✅ <strong>Trabajos Realizados</strong> — historial de trabajos agrupados por Piazza y tipo.</span>
         </label>
+
+        <!-- Filtros de tipo para Trabajos Realizados -->
+        <div id="exp-tipos-realizados-wrap" style="display:none; margin-left:28px; background:#f4f7fa; border-radius:8px; padding:12px 16px; border:1px solid #d7dee6;">
+          <p style="margin:0 0 10px;font-size:.88rem;color:#4a5a6b;font-weight:600;">¿Qué tipos de trabajo incluir?</p>
+          <div style="display:flex;flex-wrap:wrap;gap:12px;">
+            <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
+              <input type="checkbox" id="exp-tr-camara" checked style="width:16px;height:16px;">
+              <span>📹 Cámaras</span>
+            </label>
+            <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
+              <input type="checkbox" id="exp-tr-boton" checked style="width:16px;height:16px;">
+              <span>🔔 Botones de Pánico</span>
+            </label>
+            <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
+              <input type="checkbox" id="exp-tr-incendio" checked style="width:16px;height:16px;">
+              <span>🔥 Sistema Contra Incendio</span>
+            </label>
+            <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
+              <input type="checkbox" id="exp-tr-otro" checked style="width:16px;height:16px;">
+              <span>🔧 Otros</span>
+            </label>
+          </div>
+          <p style="margin:10px 0 0;font-size:.8rem;color:#7a8a9b;">Si seleccionas más de uno, el reporte se divide en secciones por tipo.</p>
+        </div>
 
         <div>
           <label style="display:flex; align-items:center; gap:10px; cursor:pointer;">
@@ -989,8 +1051,14 @@
         </label>
 
       </div>
-      <div style="margin-top:24px;">
+      <div style="margin-top:24px; display:flex; flex-wrap:wrap; gap:12px; align-items:center;">
         <button class="btn btn-primario" onclick="pedirDatosReporte(() => exportarConsolidadoPDF())">📄 Generar PDF con lo seleccionado</button>
+        <div style="border-left:2px solid #d7dee6; height:36px; margin:0 4px;"></div>
+        <button class="btn btn-secundario" onclick="exportarJSON()" title="Descarga un archivo JSON con todos los datos del sistema">💾 Exportar Respaldo JSON</button>
+        <label class="btn btn-secundario" style="cursor:pointer;" title="Importa un archivo de respaldo JSON">
+          📂 Importar Respaldo JSON
+          <input type="file" accept=".json" style="display:none" onchange="importarJSON(event)">
+        </label>
       </div>
     </div>
   </div>
@@ -3184,6 +3252,59 @@ function actualizarCamposPorTipo(){
 const CLAVE_STORAGE_DATOS_REPORTE = 'krause_datos_reporte_v1';
 let _accionExportarPendiente = null;
 
+function expToggleTipos(){
+  const wrap = document.getElementById('exp-tipos-wrap');
+  const chk = document.getElementById('exp-check-lista');
+  if(wrap) wrap.style.display = chk && chk.checked ? 'block' : 'none';
+}
+
+function expToggleTiposEstadistica(){
+  const wrap = document.getElementById('exp-tipos-estadistica-wrap');
+  const chk = document.getElementById('exp-check-estadistica');
+  if(wrap) wrap.style.display = chk && chk.checked ? 'block' : 'none';
+}
+
+function expGetTiposEstadistica(){
+  const camara = document.getElementById('exp-est-camara');
+  const boton = document.getElementById('exp-est-boton');
+  const incendio = document.getElementById('exp-est-incendio');
+  const tipos = [];
+  if(camara && camara.checked) tipos.push('Camara');
+  if(boton && boton.checked) tipos.push('Boton');
+  if(incendio && incendio.checked) tipos.push('Incendio');
+  return tipos.length > 0 ? tipos : ['Camara','Boton','Incendio'];
+}
+
+function expToggleTiposRealizados(){
+  const wrap = document.getElementById('exp-tipos-realizados-wrap');
+  const chk = document.getElementById('exp-check-realizados');
+  if(wrap) wrap.style.display = chk && chk.checked ? 'block' : 'none';
+}
+
+function expGetTiposRealizados(){
+  const camara = document.getElementById('exp-tr-camara');
+  const boton = document.getElementById('exp-tr-boton');
+  const incendio = document.getElementById('exp-tr-incendio');
+  const otro = document.getElementById('exp-tr-otro');
+  const tipos = [];
+  if(camara && camara.checked) tipos.push('Camara');
+  if(boton && boton.checked) tipos.push('Boton');
+  if(incendio && incendio.checked) tipos.push('Incendio');
+  if(otro && otro.checked) tipos.push('Otro');
+  return tipos.length > 0 ? tipos : ['Camara','Boton','Incendio','Otro'];
+}
+
+function expGetTiposSeleccionados(){
+  const camara = document.getElementById('exp-tipo-camara');
+  const boton = document.getElementById('exp-tipo-boton');
+  const incendio = document.getElementById('exp-tipo-incendio');
+  const tipos = [];
+  if(camara && camara.checked) tipos.push('Camara');
+  if(boton && boton.checked) tipos.push('Boton');
+  if(incendio && incendio.checked) tipos.push('Incendio');
+  return tipos.length > 0 ? tipos : ['Camara','Boton','Incendio']; // si ninguno, todos
+}
+
 function pedirDatosReporte(callback){
   _accionExportarPendiente = callback;
   try{
@@ -3740,7 +3861,9 @@ function obtenerFiltrados(){
 }
 
 function renderTabla(){
-  const lista = obtenerFiltrados();
+  const filtroTipoOpc = opciones && opciones.filtroTipo;
+  let lista = obtenerFiltrados();
+  if(filtroTipoOpc) lista = lista.filter(p => p.tipo === filtroTipoOpc);
   const cont = document.getElementById('arbol-pendientes');
   cont.innerHTML = '';
 
@@ -4071,11 +4194,13 @@ function dibujarSeccionEstadisticaPDF(doc, opciones){
     y = dibujarEncabezadoReporte(doc, 'Estadística por Piazza y Tipo de Equipo', 20);
   }
 
-  const tipos = [
+  const todosTipos = [
     {clave:'Camara', nombre:'Cámara'},
     {clave:'Boton', nombre:'Botón de Pánico'},
     {clave:'Incendio', nombre:'Sistema Contra Incendio'}
   ];
+  const filtroTipos = opciones && opciones.filtroTipos ? opciones.filtroTipos : ['Camara','Boton','Incendio'];
+  const tipos = todosTipos.filter(t => filtroTipos.includes(t.clave));
 
   // Resumen global por tipo (igual que las tarjetas de donas en pantalla)
   const resumen = tipos.map(t => {
@@ -4188,7 +4313,12 @@ function exportarConsolidadoPDF(){
 
   // ---------- Secciones, una tras otra, SIN repetir el encabezado, con espacios mínimos entre bloques ----------
   if(incluirLista){
-    y = exportarPDF(doc, {compacto:true, startY:y});
+    const tiposSel = expGetTiposSeleccionados();
+    // Generar una sección por cada tipo seleccionado — igual formato que Consultas
+    tiposSel.forEach(tipo => {
+      y = exportarPDF(doc, {compacto:true, startY:y, filtroTipo:tipo});
+      y += 4;
+    });
     y += 2;
   }
   if(incluirGrabacion){
@@ -4196,7 +4326,8 @@ function exportarConsolidadoPDF(){
     y += 2;
   }
   if(incluirRealizados){
-    y = exportarTodosTrabajosRealizados(doc, {compacto:true, startY:y});
+    const tiposTR = expGetTiposRealizados();
+    y = exportarTodosTrabajosRealizados(doc, {compacto:true, startY:y, filtroTipos:tiposTR});
     y += 2;
   }
   if(incluirPruebas){
@@ -4209,8 +4340,9 @@ function exportarConsolidadoPDF(){
     });
   }
   if(incluirEstadistica){
-    doc.addPage('a4','portrait'); // Estadística siempre va al final del reporte
-    dibujarSeccionEstadisticaPDF(doc, {compacto:true, startY:20});
+    // Solo saltar página si no hay suficiente espacio (mínimo 80mm para estadística)
+    if(y > 180){ doc.addPage('a4','portrait'); y = 15; }
+    dibujarSeccionEstadisticaPDF(doc, {compacto:true, startY:y, filtroTipos:expGetTiposEstadistica()});
   }
 
   doc.save('Reporte_Consolidado_' + hoy + '.pdf');
@@ -4305,13 +4437,22 @@ document.querySelectorAll('nav button').forEach(btn => {
 });
 
 function exportarJSON(){
-  const blob = new Blob([JSON.stringify(pendientes, null, 2)], {type:'application/json'});
+  const respaldo = {
+    version: '2.0',
+    fecha: new Date().toISOString(),
+    pendientes: pendientes,
+    trabajos: trabajos,
+    pruebas: pruebasSemanales,
+    grabacion: registrosGrabacion
+  };
+  const blob = new Blob([JSON.stringify(respaldo, null, 2)], {type:'application/json'});
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = 'pendientes_backup_' + hoyISO() + '.json';
+  a.download = 'respaldo_krause_' + hoyISO() + '.json';
   a.click();
   URL.revokeObjectURL(url);
+  registrarEventoBitacora('sistema','Respaldo exportado','','Pendientes:'+pendientes.length+' Trabajos:'+trabajos.length+' Pruebas:'+pruebasSemanales.length);
 }
 
 function importarJSON(event){
@@ -4321,20 +4462,67 @@ function importarJSON(event){
   lector.onload = function(e){
     try{
       const datos = JSON.parse(e.target.result);
-      if(!Array.isArray(datos)) throw new Error('Formato inválido');
-      if(!confirm(`Se encontraron ${datos.length} registros. ¿Deseas reemplazar los datos actuales?`)) return;
-      pendientes = datos;
-      pendientes.forEach(p => {
-        if(!p.id) p.id = 'p_' + Date.now() + '_' + Math.floor(Math.random()*100000);
-        migrarCamposRegistro(p);
-      });
-      guardarDatos();
-      renderTabla();
-      renderEstadistica();
-      renderConsulta();
-      alert('Datos importados correctamente.');
+      // Detectar formato nuevo (objeto con version) o viejo (array de pendientes)
+      const esFormatoNuevo = datos && datos.version && typeof datos === 'object' && !Array.isArray(datos);
+      const esFormatoViejo = Array.isArray(datos);
+      if(!esFormatoNuevo && !esFormatoViejo) throw new Error('Formato inválido');
+
+      if(esFormatoViejo){
+        // Formato viejo — solo pendientes
+        if(!confirm('Se encontraron ' + datos.length + ' pendientes. ¿Reemplazar los datos actuales?')) return;
+        pendientes = datos;
+        pendientes.forEach(p => { if(!p.id) p.id = 'p_'+Date.now()+'_'+Math.floor(Math.random()*100000); migrarCamposRegistro(p); });
+        guardarDatos(); renderTabla(); renderEstadistica(); renderConsulta();
+        alert('✅ Importados ' + pendientes.length + ' pendientes.');
+        return;
+      }
+
+      // Formato nuevo completo
+      const lineas = [];
+      if(datos.pendientes) lineas.push('• ' + datos.pendientes.length + ' pendientes');
+      if(datos.trabajos) lineas.push('• ' + datos.trabajos.length + ' trabajos realizados');
+      if(datos.pruebas) lineas.push('• ' + datos.pruebas.length + ' pruebas BP semanales');
+      if(datos.grabacion) lineas.push('• ' + datos.grabacion.length + ' registros de grabación');
+      lineas.push('');
+      lineas.push('Fecha del respaldo: ' + (datos.fecha ? new Date(datos.fecha).toLocaleString('es-EC') : 'desconocida'));
+      lineas.push('');
+      lineas.push('¿Reemplazar todos los datos actuales con este respaldo?');
+
+      if(!confirm(lineas.join('\\n'))) return;
+
+      // Importar cada colección
+      if(datos.pendientes && Array.isArray(datos.pendientes)){
+        pendientes = datos.pendientes;
+        pendientes.forEach(p => { if(!p.id) p.id = 'p_'+Date.now()+'_'+Math.floor(Math.random()*100000); migrarCamposRegistro(p); });
+        guardarDatos();
+      }
+      if(datos.trabajos && Array.isArray(datos.trabajos)){
+        trabajos = datos.trabajos;
+        localStorage.setItem(CLAVE_TR, JSON.stringify(trabajos));
+        // Subir a Firebase
+        if(window._firebase){
+          const {coleccionTrabajos,doc,setDoc}=window._firebase;
+          trabajos.forEach(t=>{ const {foto,...sf}=t; setDoc(doc(coleccionTrabajos,t.id),sf).catch(e=>console.error(e)); });
+        }
+      }
+      if(datos.pruebas && Array.isArray(datos.pruebas)){
+        pruebasSemanales = datos.pruebas;
+        localStorage.setItem(CLAVE_STORAGE_PRUEBAS, JSON.stringify(pruebasSemanales));
+        if(window._firebasePruebas){
+          pruebasSemanales.forEach(p => window._firebasePruebas.setDoc(window._firebasePruebas.doc(window._firebasePruebas.coleccionPruebas, p.id), p).catch(e=>console.error(e)));
+        }
+      }
+      if(datos.grabacion && Array.isArray(datos.grabacion)){
+        registrosGrabacion = datos.grabacion;
+        localStorage.setItem(CLAVE_STORAGE_GRABACION, JSON.stringify(registrosGrabacion));
+      }
+
+      // Refrescar UI
+      renderTabla(); renderEstadistica(); renderConsulta(); trRenderizar();
+      registrarEventoBitacora('sistema','Respaldo importado','','Pendientes:'+pendientes.length+' Trabajos:'+trabajos.length);
+      alert('Respaldo importado correctamente. ' + lineas.slice(0,4).join(', '));
     }catch(err){
-      alert('El archivo no tiene un formato válido.');
+      alert('Error: El archivo no tiene un formato valido. ' + err.message);
     }
   };
   lector.readAsText(archivo);
@@ -4397,7 +4585,9 @@ function exportarPDF(docExterno, opciones){
   const esStandalone = !docExterno;
   const compacto = !!(opciones && opciones.compacto);
   const incluirFotos = !!(opciones && opciones.incluirFotos) || (document.getElementById('exp-check-fotos') && document.getElementById('exp-check-fotos').checked);
-  const lista = obtenerFiltrados();
+  const filtroTipoOpc = opciones && opciones.filtroTipo;
+  let lista = obtenerFiltrados();
+  if(filtroTipoOpc) lista = lista.filter(p => p.tipo === filtroTipoOpc);
 
   // Título dinámico según los tipos de equipo presentes en lo exportado
   const tiposPresentes = ['Camara','Boton','Incendio'].filter(t => lista.some(p => p.tipo === t));
@@ -5383,8 +5573,8 @@ function exportarTrabajosRealizadosPDF(){
   const grupos={};
   lista.forEach(t=>{const pz=t.piazza||'Sin Piazza';if(!grupos[pz])grupos[pz]={};if(!grupos[pz][t.tipo])grupos[pz][t.tipo]=[];grupos[pz][t.tipo].push(t);});
   Object.keys(grupos).sort().forEach(piazza=>{
-    // Título de Piazza
-    if(y>260){doc.addPage();y=15;}
+    // Título de Piazza — saltar si queda poco espacio
+    if(y>230){doc.addPage();y=15;}
     doc.setFillColor(11,35,64); doc.rect(10,y,ap-20,7,'F');
     doc.setTextColor(255,255,255); doc.setFontSize(10); doc.setFont(undefined,'bold');
     doc.text(`Piazza: ${piazza}`,13,y+5); doc.setFont(undefined,'normal'); doc.setTextColor(0,0,0);
@@ -5412,7 +5602,64 @@ function exportarTrabajosRealizadosPDF(){
   doc.save(`Trabajos_Realizados_${hoyISO()}.pdf`);
 }
 
-function exportarTodosTrabajosRealizados(){ exportarTrabajosRealizadosPDF(); }
+function exportarTodosTrabajosRealizados(docExterno, opciones){
+  // Si se llama desde el consolidado, usar el doc existente en modo compacto
+  if(docExterno){
+    const compacto = !!(opciones && opciones.compacto);
+    let y = (opciones && opciones.startY) || 15;
+    const ap = docExterno.internal.pageSize.getWidth();
+    const filtroTipos = opciones && opciones.filtroTipos ? opciones.filtroTipos : ['Camara','Boton','Incendio','Otro'];
+    let lista = [...trabajos].filter(t => filtroTipos.includes(t.tipo||'Otro'));
+    lista.sort((a,b)=>(a.piazza||'').localeCompare(b.piazza||'')||(a.tipo||'').localeCompare(b.tipo||'')||(b.fecha||'').localeCompare(a.fecha||''));
+    if(!lista.length) return y;
+    // Barra de sección
+    if(y > 230){ docExterno.addPage(); y = 15; }
+    docExterno.setFillColor(11,35,64); docExterno.rect(10,y,ap-20,7,'F');
+    docExterno.setTextColor(255,255,255); docExterno.setFontSize(9); docExterno.setFont(undefined,'bold');
+    docExterno.text('TRABAJOS REALIZADOS', 13, y+5);
+    docExterno.setFont(undefined,'normal'); docExterno.setTextColor(0,0,0);
+    y += 10;
+    // Agrupar por piazza
+    const grupos={};
+    lista.forEach(t=>{const pz=t.piazza||'Sin Piazza';if(!grupos[pz])grupos[pz]={};if(!grupos[pz][t.tipo])grupos[pz][t.tipo]=[];grupos[pz][t.tipo].push(t);});
+    Object.keys(grupos).sort().forEach(piazza=>{
+      if(y>230){docExterno.addPage();y=15;} // saltar si queda poco espacio para encabezado+datos
+      docExterno.setFillColor(242,145,28); docExterno.rect(10,y,ap-20,6,'F');
+      docExterno.setTextColor(255,255,255); docExterno.setFontSize(8); docExterno.setFont(undefined,'bold');
+      docExterno.text('Piazza: '+piazza, 13, y+4.5); docExterno.setFont(undefined,'normal'); docExterno.setTextColor(0,0,0);
+      y+=8;
+      Object.keys(grupos[piazza]).sort().forEach(tipo=>{
+        if(y>245){docExterno.addPage();y=15;}
+        const items=grupos[piazza][tipo];
+        const rows=[];
+        rows.push([{content:NOMBRES_TIPO[tipo]||tipo,colSpan:5,styles:{fontStyle:'bold',fillColor:[238,241,245],fontSize:8}}]);
+        rows.push([
+          {content:'Fecha',styles:{fontStyle:'bold',fillColor:[248,250,252]}},
+          {content:'Detalle',styles:{fontStyle:'bold',fillColor:[248,250,252]}},
+          {content:'Estado',styles:{fontStyle:'bold',fillColor:[248,250,252]}},
+          {content:'Situacion',styles:{fontStyle:'bold',fillColor:[248,250,252]}},
+          {content:'Tecnico',styles:{fontStyle:'bold',fillColor:[248,250,252]}}
+        ]);
+        items.forEach(t=>{
+          const det=t.tipo==='Camara'?(t.dvr+' Cam '+t.camara):t.tipo==='Boton'?(t.nombreLocal+' ('+t.numeroLocal+')'):t.tipo==='Incendio'?(t.identificador||''):t.novedad||'';
+          rows.push([t.fecha||'',det,t.estado||'',t.pendienteEstado||'Pendiente',t.tecnico||'']);
+        });
+        docExterno.autoTable({
+          startY:y, margin:{left:10,right:10},
+          body:rows,
+          styles:{fontSize:7,cellPadding:2.5,valign:'middle',lineColor:[215,222,230],lineWidth:0.3},
+          theme:'grid',
+          didDrawPage:()=>{y=15;}
+        });
+        y=docExterno.lastAutoTable.finalY+3;
+      });
+      y+=3;
+    });
+    return y;
+  }
+  // Llamada standalone — generar PDF propio
+  exportarTrabajosRealizadosPDF();
+}
 
 
 cargarCatalogoOverrides();
