@@ -1052,7 +1052,7 @@
 
       </div>
       <div style="margin-top:24px; display:flex; flex-wrap:wrap; gap:12px; align-items:center;">
-        <button class="btn btn-primario" onclick="pedirDatosReporte(() => exportarConsolidadoPDF())">📄 Generar PDF con lo seleccionado</button>
+        <button class="btn btn-primario" onclick="pedirDatosReporte(() => exportarConsolidadoPDFSafe())">📄 Generar PDF con lo seleccionado</button>
         <div style="border-left:2px solid #d7dee6; height:36px; margin:0 4px;"></div>
         <button class="btn btn-secundario" onclick="exportarJSON()" title="Descarga un archivo JSON con todos los datos del sistema">💾 Exportar Respaldo JSON</button>
         <label class="btn btn-secundario" style="cursor:pointer;" title="Importa un archivo de respaldo JSON">
@@ -2821,7 +2821,7 @@ function eliminarLocalDesdeGrilla(idxLoc){
   }
 }
 
-function exportarPruebasPDF(docExterno, piazzaExterna, anioExterno){
+function exportarPruebasPDF(docExterno, piazzaExterna, anioExterno, opciones){
   const piazza = piazzaExterna || document.getElementById('pruebas-piazza').value;
   const anio = anioExterno || (parseInt(document.getElementById('pruebas-anio').value, 10) || new Date().getFullYear());
   const esStandalone = !docExterno;
@@ -2853,16 +2853,29 @@ function exportarPruebasPDF(docExterno, piazzaExterna, anioExterno){
 
   const { jsPDF } = window.jspdf;
   const doc = docExterno || new jsPDF({orientation:'landscape'});
-  // Nota: si viene del consolidado (docExterno), la página horizontal ya fue agregada
-  // por quien llama, así que aquí NO se debe agregar otra página.
-  doc.setFillColor(11,35,64);
-  doc.rect(0,0,297,18,'F');
-  doc.setTextColor(255,255,255);
-  doc.setFontSize(14);
-  doc.text('Pruebas Semanales de Botones de Pánico - ' + piazza + ' (' + anio + ')', 14, 12);
-  doc.setTextColor(0,0,0);
+  const anchoPaginaPruebas = doc.internal.pageSize.getWidth();
+  let yTrasEncabezado;
 
-  const yTrasEncabezado = dibujarEncabezadoReporte(doc, 'BP Pruebas Semanales', 22);
+  const sinEncabezado = !!(opciones && opciones.sinEncabezado);
+  if(sinEncabezado){
+    // Solo barra de piazza, sin encabezado global
+    doc.setFillColor(242,145,28);
+    doc.rect(0,0,anchoPaginaPruebas,10,'F');
+    doc.setTextColor(255,255,255);
+    doc.setFontSize(11);
+    doc.text('Piazza: ' + piazza + ' (' + anio + ')', 10, 7);
+    doc.setTextColor(0,0,0);
+    yTrasEncabezado = 14;
+  } else {
+    // Encabezado completo
+    doc.setFillColor(11,35,64);
+    doc.rect(0,0,anchoPaginaPruebas,18,'F');
+    doc.setTextColor(255,255,255);
+    doc.setFontSize(14);
+    doc.text('Pruebas Semanales de Botones de Panico - ' + piazza + ' (' + anio + ')', 14, 12);
+    doc.setTextColor(0,0,0);
+    yTrasEncabezado = dibujarEncabezadoReporte(doc, 'BP Pruebas Semanales', 22);
+  }
 
   // Leyenda de colores centrada
   doc.setFontSize(7.5);
@@ -2876,7 +2889,7 @@ function exportarPruebasPDF(docExterno, piazzaExterna, anioExterno){
     { color:[244,246,249], texto:'— Sin prueba' }
   ];
   const yLeyenda = yTrasEncabezado;
-  const anchoPagina = doc.internal.pageSize.getWidth(); // 297mm landscape
+  const anchoPagina = anchoPaginaPruebas; // ya definida arriba
   const GAP = 8; // espacio entre items
   const CUADRO = 3.5;
   // Calcular ancho total de la leyenda
@@ -2894,8 +2907,8 @@ function exportarPruebasPDF(docExterno, piazzaExterna, anioExterno){
     xLeyenda += CUADRO + 2.5 + doc.getTextWidth(item.texto) + GAP;
   });
 
-  // Una sola tabla con las 52 semanas en landscape (297mm de ancho disponible)
-  let y = yTrasEncabezado + 8;
+  // Tabla inmediatamente después de la leyenda sin espacio extra
+  let y = yTrasEncabezado + 6;
   // Márgenes: left=8, right=8 → 281mm útiles
   const encabezado52 = ['N°','Local','Zona', ...Array.from({length:52}, (_,i) => String(i+1))];
   const filas52 = locales.map((loc, rIdx) => [
@@ -4180,7 +4193,7 @@ function dibujarSeccionEstadisticaPDF(doc, opciones){
     doc.rect(10, y, anchoPagina - 20, 8, 'F');
     doc.setTextColor(255,255,255);
     doc.setFontSize(11);
-    doc.text('ESTADÍSTICA POR PIAZZA Y TIPO DE EQUIPO', 13, y + 5.5);
+    doc.text('ESTADISTICA' + (opciones && opciones.filtroPiazza ? ' - ' + opciones.filtroPiazza.toUpperCase() : ' POR PIAZZA Y TIPO DE EQUIPO'), 13, y + 5.5);
     doc.setTextColor(0,0,0);
     y += 12;
   } else {
@@ -4202,9 +4215,12 @@ function dibujarSeccionEstadisticaPDF(doc, opciones){
   const filtroTipos = opciones && opciones.filtroTipos ? opciones.filtroTipos : ['Camara','Boton','Incendio'];
   const tipos = todosTipos.filter(t => filtroTipos.includes(t.clave));
 
-  // Resumen global por tipo (igual que las tarjetas de donas en pantalla)
+  const filtroPiazzaEst = opciones && opciones.filtroPiazza ? opciones.filtroPiazza : '';
+
+  // Resumen por tipo (filtrado por piazza si se especifica)
   const resumen = tipos.map(t => {
-    const items = pendientes.filter(p => p.tipo === t.clave);
+    let items = pendientes.filter(p => p.tipo === t.clave);
+    if(filtroPiazzaEst) items = items.filter(p => p.piazza === filtroPiazzaEst);
     const mapaEq = {};
     items.forEach(p => {
       const k = claveDe(p);
@@ -4305,16 +4321,15 @@ function exportarConsolidadoPDF(){
   }
 
   const { jsPDF } = window.jspdf;
-  const doc = new jsPDF({orientation:'portrait'});
   const hoy = hoyISO();
 
-  // ---------- Un solo encabezado, al inicio de todo el documento (el título grande va en la misma barra) ----------
-  let y = dibujarEncabezadoReporte(doc, 'Reporte de Cámaras, Botones de Pánico y Sistema Contra Incendio', 14);
+  // Si hay pruebas, todo el doc es landscape para poder mezclar en un solo PDF
+  const orientacion = incluirPruebas ? 'landscape' : 'portrait';
+  const doc = new jsPDF({orientation: orientacion});
+  let y = dibujarEncabezadoReporte(doc, 'Reporte de Camaras, Botones de Panico y Sistema Contra Incendio', 14);
 
-  // ---------- Secciones, una tras otra, SIN repetir el encabezado, con espacios mínimos entre bloques ----------
   if(incluirLista){
     const tiposSel = expGetTiposSeleccionados();
-    // Generar una sección por cada tipo seleccionado — igual formato que Consultas
     tiposSel.forEach(tipo => {
       y = exportarPDF(doc, {compacto:true, startY:y, filtroTipo:tipo});
       y += 4;
@@ -4330,22 +4345,32 @@ function exportarConsolidadoPDF(){
     y = exportarTodosTrabajosRealizados(doc, {compacto:true, startY:y, filtroTipos:tiposTR});
     y += 2;
   }
+  if(incluirEstadistica){
+    if(y > 180){ doc.addPage(); y = 15; }
+    const piazzaEst = incluirPruebas && piazzaPruebas && piazzaPruebas !== '__todas__' ? piazzaPruebas : '';
+    dibujarSeccionEstadisticaPDF(doc, {compacto:true, startY:y, filtroTipos:expGetTiposEstadistica(), filtroPiazza:piazzaEst});
+    y = doc.lastAutoTable ? doc.lastAutoTable.finalY + 4 : y + 4;
+  }
   if(incluirPruebas){
     const piazzasAExportar = piazzaPruebas === '__todas__'
       ? PIAZZAS.filter(pz => pruebasSemanales.some(p => p.piazza === pz && p.anio === anioPruebas))
       : [piazzaPruebas];
-    piazzasAExportar.forEach(pz => {
-      doc.addPage('a4','landscape'); // la cuadrícula de 52 semanas necesita ancho horizontal
-      exportarPruebasPDF(doc, pz, anioPruebas);
+    piazzasAExportar.forEach((pz, idx) => {
+      doc.addPage();
+      exportarPruebasPDF(doc, pz, anioPruebas, {sinEncabezado: idx > 0});
     });
-  }
-  if(incluirEstadistica){
-    // Solo saltar página si no hay suficiente espacio (mínimo 80mm para estadística)
-    if(y > 180){ doc.addPage('a4','portrait'); y = 15; }
-    dibujarSeccionEstadisticaPDF(doc, {compacto:true, startY:y, filtroTipos:expGetTiposEstadistica()});
   }
 
   doc.save('Reporte_Consolidado_' + hoy + '.pdf');
+}
+
+function exportarConsolidadoPDFSafe(){
+  try {
+    exportarConsolidadoPDF();
+  } catch(e) {
+    console.error('Error exportando PDF:', e);
+    alert('Error al generar el PDF: ' + e.message + '\n\nRevisa la consola del navegador para más detalles.');
+  }
 }
 
 function poblarDVREstadistica(){
