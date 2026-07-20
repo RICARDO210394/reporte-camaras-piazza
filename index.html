@@ -1423,16 +1423,19 @@ function claveActualDelFormulario(){
 }
 
 function ultimaPruebaRealDeLocal(piazza, numeroLocal, nombreLocal){
-  // Ordenadas ascendente por año/semana; se ignoran temporalmente las que dicen "Cerrado"
-  // para encontrar la última prueba REAL (Si/No/Vacio/Otro/SinSistema).
+  // Ordenadas ascendente por año/semana; se ignoran temporalmente las que dicen "Cerrado",
+  // "Local vacío" o "— (esta semana no le tocó prueba)" para encontrar la última prueba
+  // REAL (Si/No/Otro/SinSistema), que son los únicos resultados que cuentan como pendiente
+  // o funcionando.
   const historialPruebas = pruebasSemanales
     .filter(p => p.piazza === piazza && p.numeroLocal === numeroLocal && p.nombreLocal === nombreLocal)
     .sort((a,b) => (a.anio - b.anio) || (a.semana - b.semana));
   if(!historialPruebas.length) return null;
   for(let i = historialPruebas.length - 1; i >= 0; i--){
-    if(historialPruebas[i].estado !== 'Cerrado') return historialPruebas[i];
+    const est = historialPruebas[i].estado;
+    if(est !== 'Cerrado' && est !== '-' && est !== 'Vacio') return historialPruebas[i];
   }
-  return null; // todas fueron "Cerrado"
+  return null; // todas fueron "Cerrado", "Vacío" o "— (no le tocó prueba)"
 }
 
 function autorrellenarDesdeUltimaPruebaBoton(){
@@ -1559,6 +1562,41 @@ const COLOR_FONDO_ESTADO_PRUEBA = {
 const COLOR_TEXTO_ESTADO_PRUEBA = {
   '-': '#8c96a0', 'Vacio': '#0b2340', 'SinSistema': '#3a2e00'
 };
+// Estadística de Botón de Pánico: el universo de locales a evaluar es el CATÁLOGO
+// completo de la Piazza (los mismos que aparecen en la grilla de "Pruebas Semanales"),
+// más los que se hayan agregado manualmente vía "Registrar" aunque no estén en catálogo.
+// Antes solo se contaban los locales con un registro manual en "Lista de Pendientes",
+// dejando afuera locales con prueba semanal pero sin registro manual.
+// Para cada local: manda el resultado de su ÚLTIMA prueba semanal REAL (ignora "Cerrado",
+// "Local vacío" y "— no le tocó prueba"). "Si" = funcionando; "No llegó", "Otro" y
+// "Sin sistema de BP" = pendiente. Si el local nunca tuvo una prueba real, se usa como
+// respaldo su último registro manual. Si no tiene ni prueba ni registro, se excluye del total.
+function calcularEstadisticaBoton(filtroPiazza){
+  const piazzasAConsiderar = filtroPiazza ? [filtroPiazza] : PIAZZAS;
+  const locales = piazzasAConsiderar.flatMap(pz =>
+    obtenerLocalesCombinadosPiazza(pz).map(l => ({ ...l, piazza: pz }))
+  );
+
+  const evaluados = locales.map(loc => {
+    const ultima = ultimaPruebaRealDeLocal(loc.piazza, loc.numeroLocal, loc.nombreLocal);
+    if(ultima) return { tieneDatos: true, funciona: ultima.estado === 'Si' };
+
+    const registrosLocal = pendientes.filter(p =>
+      p.tipo === 'Boton' && p.piazza === loc.piazza && p.numeroLocal === loc.numeroLocal && p.nombreLocal === loc.nombreLocal
+    );
+    if(registrosLocal.length){
+      const ultimoReg = registrosLocal.sort((a,b) => (a.fecha || '').localeCompare(b.fecha || ''))[registrosLocal.length - 1];
+      return { tieneDatos: true, funciona: !!(ultimoReg.pendienteEstado && ultimoReg.pendienteEstado !== 'Pendiente') };
+    }
+    return { tieneDatos: false }; // sin prueba ni registro: no hay forma de evaluarlo
+  }).filter(e => e.tieneDatos);
+
+  return {
+    total: evaluados.length,
+    funcionando: evaluados.filter(e => e.funciona).length
+  };
+}
+
 function celdaPruebaSemanal(p){
   if(p.tipo !== 'Boton' || !p.numeroLocal || !p.nombreLocal) return '<span style="color:#adb5bd;">—</span>';
   const historialPruebas = pruebasSemanales
@@ -4217,16 +4255,23 @@ function dibujarSeccionEstadisticaPDF(doc, opciones){
 
   // Resumen por tipo (filtrado por piazza si se especifica)
   const resumen = tipos.map(t => {
-    let items = pendientes.filter(p => p.tipo === t.clave);
-    if(filtroPiazzaEst) items = items.filter(p => p.piazza === filtroPiazzaEst);
-    const mapaEq = {};
-    items.forEach(p => {
-      const k = claveDe(p);
-      if(!mapaEq[k] || (p.fecha || '') > (mapaEq[k].fecha || '')) mapaEq[k] = p;
-    });
-    const equipos = Object.values(mapaEq);
-    const total = equipos.length;
-    const funcionando = equipos.filter(p => p.pendienteEstado && p.pendienteEstado !== 'Pendiente' && p.estado !== 'Puerto libre').length;
+    let total, funcionando;
+    if(t.clave === 'Boton'){
+      const r = calcularEstadisticaBoton(filtroPiazzaEst);
+      total = r.total;
+      funcionando = r.funcionando;
+    } else {
+      let items = pendientes.filter(p => p.tipo === t.clave);
+      if(filtroPiazzaEst) items = items.filter(p => p.piazza === filtroPiazzaEst);
+      const mapaEq = {};
+      items.forEach(p => {
+        const k = claveDe(p);
+        if(!mapaEq[k] || (p.fecha || '') > (mapaEq[k].fecha || '')) mapaEq[k] = p;
+      });
+      const equipos = Object.values(mapaEq).filter(p => p.estado !== 'Puerto libre');
+      total = equipos.length;
+      funcionando = equipos.filter(p => p.pendienteEstado && p.pendienteEstado !== 'Pendiente').length;
+    }
     const pendientesCount = total - funcionando;
     const pct = total ? Math.round((funcionando / total) * 100) : 0;
     return { ...t, total, funcionando, pendientes: pendientesCount, pct };
@@ -4391,19 +4436,27 @@ function renderEstadistica(){
   ];
 
   const secciones = tipos.map(t => {
-    let items = pendientes.filter(p => p.tipo === t.clave);
-    if(filtroPiazza) items = items.filter(p => p.piazza === filtroPiazza);
-    if(filtroDvr && t.clave === 'Camara') items = items.filter(p => p.dvr === filtroDvr);
+    let totalEquipos, funcionando;
 
-    // Agrupar por equipo único y tomar su registro más reciente (estado actual real)
-    const mapaEq = {};
-    items.forEach(p => {
-      const k = claveDe(p);
-      if(!mapaEq[k] || (p.fecha || '') > (mapaEq[k].fecha || '')) mapaEq[k] = p;
-    });
-    const equipos = Object.values(mapaEq);
-    const totalEquipos = equipos.length;
-    const funcionando = equipos.filter(p => p.pendienteEstado && p.pendienteEstado !== 'Pendiente' && p.estado !== 'Puerto libre').length;
+    if(t.clave === 'Boton'){
+      const r = calcularEstadisticaBoton(filtroPiazza);
+      totalEquipos = r.total;
+      funcionando = r.funcionando;
+    } else {
+      let items = pendientes.filter(p => p.tipo === t.clave);
+      if(filtroPiazza) items = items.filter(p => p.piazza === filtroPiazza);
+      if(filtroDvr && t.clave === 'Camara') items = items.filter(p => p.dvr === filtroDvr);
+
+      // Agrupar por equipo único y tomar su registro más reciente (estado actual real)
+      const mapaEq = {};
+      items.forEach(p => {
+        const k = claveDe(p);
+        if(!mapaEq[k] || (p.fecha || '') > (mapaEq[k].fecha || '')) mapaEq[k] = p;
+      });
+      const equipos = Object.values(mapaEq).filter(p => p.estado !== 'Puerto libre');
+      totalEquipos = equipos.length;
+      funcionando = equipos.filter(p => p.pendienteEstado && p.pendienteEstado !== 'Pendiente').length;
+    }
     const pct = totalEquipos ? Math.round((funcionando / totalEquipos) * 100) : 0;
     const colorOk = 'var(--verde)';
     const colorMal = 'var(--rojo)';
