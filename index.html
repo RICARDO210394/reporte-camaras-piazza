@@ -3874,9 +3874,7 @@ function obtenerFiltrados(){
 }
 
 function renderTabla(){
-  const filtroTipoOpc = opciones && opciones.filtroTipo;
   let lista = obtenerFiltrados();
-  if(filtroTipoOpc) lista = lista.filter(p => p.tipo === filtroTipoOpc);
   const cont = document.getElementById('arbol-pendientes');
   cont.innerHTML = '';
 
