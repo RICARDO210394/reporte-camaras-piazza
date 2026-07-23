@@ -2587,6 +2587,24 @@ function sincronizarPendienteDesdePrueba(piazza, numeroLocal, nombreLocal, estad
   // Si el último registro ya refleja exactamente este mismo estado, no se crea uno nuevo (evita duplicados)
   if(ultimoPendiente && ultimoPendiente.estado === estadoFinal && ultimoPendiente.pendienteEstado === situacionFinal) return;
 
+  // Si la prueba confirma que YA llegó la señal (todo bien), resolver automáticamente cualquier
+  // pendiente de este mismo local que haya quedado activo, en vez de dejarlo colgado para siempre
+  // y crear un registro aparte.
+  if(estadoPrueba === 'Si'){
+    const activos = historialLocal.filter(p => p.pendienteEstado === 'Pendiente');
+    if(activos.length){
+      const resumen = 'RESUELTO automáticamente (' + fecha + '): la prueba semanal confirmó que sí llegó la señal del botón de pánico' + (quien ? ', probado por ' + quien : '') + '.';
+      activos.forEach(p => {
+        p.estado = 'Operativo';
+        p.pendienteEstado = 'Resuelto';
+        p.reporte = (p.reporte ? p.reporte + '\n\n' : '') + resumen;
+        p.modificado = new Date().toISOString();
+      });
+      guardarDatos(activos.map(p => p.id));
+      return;
+    }
+  }
+
   // Buscar zona conocida del local (catálogo o algún pendiente anterior)
   let zona = '';
   const catalogo = obtenerLocalesCombinadosPiazza(piazza);
