@@ -1994,11 +1994,11 @@ function cargarDatosGrabacion(){
   intentarConectar();
 }
 
-function guardarDatosGrabacion(){
+function guardarDatosGrabacion(registrosAGuardar){
   localStorage.setItem(CLAVE_STORAGE_GRABACION, JSON.stringify(registrosGrabacion));
   if(_sincronizandoGrabacionDesdeFirestore || !window._firebaseGrabacion) return;
   const { coleccionGrabacion, doc, setDoc } = window._firebaseGrabacion;
-  registrosGrabacion.forEach(r => setDoc(doc(coleccionGrabacion, r.id), r).catch(err => console.error('Error guardando grabación:', err)));
+  (registrosAGuardar || registrosGrabacion).forEach(r => setDoc(doc(coleccionGrabacion, r.id), r).catch(err => console.error('Error guardando grabación:', err)));
 }
 
 function diasEntre(desde, hasta){
@@ -2117,7 +2117,7 @@ function guardarGrabacion(){
   if(idx !== -1) registrosGrabacion[idx] = registro;
   else registrosGrabacion.push(registro);
 
-  guardarDatosGrabacion();
+  guardarDatosGrabacion([registro]);
   cerrarModalGrabacion();
   renderGrabacion();
 }
@@ -2606,7 +2606,7 @@ function sincronizarPendienteDesdePrueba(piazza, numeroLocal, nombreLocal, estad
     modificado: new Date().toISOString()
   };
   pendientes.push(nuevoPendiente);
-  guardarDatos();
+  guardarDatos([nuevoPendiente.id]);
 }
 
 function eliminarPruebaActual(){
@@ -2641,7 +2641,7 @@ function eliminarPruebaActual(){
   pendientesAEliminar.forEach(p => eliminarDeFirestore(p.id));
   if(pendientesAEliminar.length){
     pendientes = pendientes.filter(p => !pendientesAEliminar.includes(p));
-    guardarDatos();
+    guardarDatos([]); // ya se borraron individualmente arriba; solo actualiza el localStorage
   }
 
   cerrarModalPrueba();
@@ -2774,15 +2774,17 @@ function editarLocalSeleccionado(){
 
     // También actualizar los pendientes de tipo Botón que usan este local, para que "Registrar"/"Lista" queden coherentes
     let pendientesActualizados = 0;
+    const idsPendientesMigrados = [];
     pendientes.forEach(p => {
       if(p.tipo === 'Boton' && p.piazza === piazza && p.numeroLocal === numeroViejo && p.nombreLocal === nombreViejo){
         p.numeroLocal = numeroNuevo;
         p.nombreLocal = nombreNuevo;
         p.zona = zonaNueva;
+        idsPendientesMigrados.push(p.id);
         pendientesActualizados++;
       }
     });
-    if(pendientesActualizados > 0) guardarDatos();
+    if(pendientesActualizados > 0) guardarDatos(idsPendientesMigrados);
 
     alert('Local actualizado y guardado de forma PERMANENTE. Se migraron ' + migradas + ' prueba(s) semanal(es) y ' + pendientesActualizados + ' registro(s) de "Registrar" al nuevo número/nombre.');
   }
@@ -2826,7 +2828,7 @@ function eliminarLocalObjeto(piazza, loc){
   const pendientesAEliminar = pendientes.filter(p => p.tipo === 'Boton' && p.piazza === piazza && p.numeroLocal === loc.numeroLocal && p.nombreLocal === loc.nombreLocal);
   pendientesAEliminar.forEach(p => eliminarDeFirestore(p.id));
   pendientes = pendientes.filter(p => !(p.tipo === 'Boton' && p.piazza === piazza && p.numeroLocal === loc.numeroLocal && p.nombreLocal === loc.nombreLocal));
-  guardarDatos();
+  guardarDatos([]); // ya se borraron individualmente arriba; solo actualiza el localStorage
 
   registrarEventoBitacora('catalogo', 'Local eliminado del catálogo', piazza, `${loc.numeroLocal} - ${loc.nombreLocal} (${cuentaPruebas} prueba(s), ${cuentaPendientes} registro(s) eliminado(s))`);
 
@@ -2888,12 +2890,14 @@ function editarLocalDesdeGrilla(idxLoc){
   });
   if(migradas > 0) guardarDatosPruebas(registrosMigrados);
   let pAct = 0;
+  const idsPendMigrados = [];
   pendientes.forEach(p => {
     if(p.tipo === 'Boton' && p.piazza === piazza && p.numeroLocal === loc.numeroLocal && p.nombreLocal === loc.nombreLocal){
       p.numeroLocal = numeroNuevo; p.nombreLocal = nombreNuevo; p.zona = zonaNueva; pAct++;
+      idsPendMigrados.push(p.id);
     }
   });
-  if(pAct > 0) guardarDatos();
+  if(pAct > 0) guardarDatos(idsPendMigrados);
   alert('Local actualizado. Se migraron ' + migradas + ' prueba(s) y ' + pAct + ' pendiente(s).');
   poblarLocalPruebas();
   renderPruebas();
@@ -3689,7 +3693,7 @@ function guardarPendiente(){
       if(tecnico) activo.tecnico = tecnico;
       if(operador) activo.operador = operador;
       activo.modificado = new Date().toISOString();
-      guardarDatos();
+      guardarDatos([activo.id]);
       registrarEventoBitacora('pendiente', 'Pendiente resuelto', piazza, `${NOMBRES_TIPO[tipo]||tipo} — ${detalleRegistro(activo)} — Técnico: ${tecnico||'—'}`);
       limpiarForm();
       renderTabla();
@@ -3912,7 +3916,7 @@ function eliminarDesdeDetalle(){
     if(pDel) registrarEventoBitacora('pendiente','Pendiente eliminado',pDel.piazza,(NOMBRES_TIPO[pDel.tipo]||pDel.tipo)+' — '+detalleRegistro(pDel));
     pendientes = pendientes.filter(p => p.id !== id);
     eliminarDeFirestore(id);
-    guardarDatos();
+    guardarDatos([]); // ya se borró individualmente arriba; solo actualiza el localStorage
     cerrarDetalle();
     renderTabla();
     renderEstadistica();
@@ -3926,7 +3930,7 @@ function eliminarPendiente(id){
   if(pDel) registrarEventoBitacora('pendiente','Pendiente eliminado',pDel.piazza,(NOMBRES_TIPO[pDel.tipo]||pDel.tipo)+' — '+detalleRegistro(pDel));
   pendientes = pendientes.filter(p => p.id !== id);
   eliminarDeFirestore(id);
-  guardarDatos();
+  guardarDatos([]); // ya se borró individualmente arriba; solo actualiza el localStorage
   renderTabla();
   renderEstadistica();
   renderConsulta();
@@ -3940,7 +3944,7 @@ function marcarResuelto(id){
   const nuevoEstado = esPendienteActivo(p) ? 'Resuelto' : 'Pendiente';
   p.pendienteEstado = nuevoEstado;
   p.modificado = new Date().toISOString();
-  guardarDatos();
+  guardarDatos([p.id]);
   registrarEventoBitacora('pendiente', `Pendiente marcado como ${nuevoEstado}`, p.piazza, `${NOMBRES_TIPO[p.tipo]||p.tipo} — ${detalleRegistro(p)}`);
   renderTabla();
   renderEstadistica();
@@ -4958,7 +4962,7 @@ function cargarBitacora(){
       mod.onSnapshot(colBitacora, snap => {
         const nueva = [];
         snap.forEach(d => nueva.push({ ...d.data(), _fireId: d.id }));
-        if(primera && nueva.length === 0 && bitacoraEventos.length > 0){
+        if(nueva.length === 0 && bitacoraEventos.length > 0){
           bitacoraEventos.forEach(ev => mod.addDoc(colBitacora, ev).catch(e => console.error(e)));
         } else {
           bitacoraEventos = nueva;
