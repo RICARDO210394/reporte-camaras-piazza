@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<title>Manual de Usuario - Reporte de Cámaras, Botones de Pánico y SCI - Krause Negocios</title>
+<link rel="manifest" href="manual-manifest.json">
+<link rel="icon" href="icon-manual-192.png">
+<link rel="apple-touch-icon" href="icon-manual-192.png">
+<meta name="theme-color" content="#0b2340">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Manual Cámaras">
+<style>
+  :root{
+    --azul-oscuro:#0b2340;
+    --azul-medio:#123a63;
+    --gris-fondo:#f4f6f9;
+    --gris-borde:#dbe2ea;
+    --rojo:#d64545;
+    --verde:#2f9e5c;
+    --amarillo:#ffc107;
+    --morado:#8a5acf;
+    --cian:#0dcaf0;
+    --gris-medio:#5a6b7b;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; font-family:'Segoe UI', Arial, sans-serif;
+    background:var(--gris-fondo); color:#1c2b3a;
+  }
+  header{
+    background:linear-gradient(135deg, var(--azul-oscuro), var(--azul-medio));
+    color:#fff; padding:18px 20px; display:flex; align-items:center; gap:14px;
+    position:sticky; top:0; z-index:50; box-shadow:0 2px 10px rgba(0,0,0,0.15);
+  }
+  header img{width:44px; height:44px; border-radius:10px; flex-shrink:0;}
+  header h1{font-size:1.15rem; margin:0; line-height:1.3;}
+  header .sub{font-size:0.8rem; opacity:0.85; margin-top:2px;}
+  header .acciones-header{margin-left:auto; display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end;}
+  header .btn-instalar{
+    background:var(--rojo); color:#fff; border:none;
+    padding:9px 14px; border-radius:8px; font-weight:700; font-size:0.85rem;
+    cursor:pointer; white-space:nowrap; display:none;
+  }
+  .layout{display:flex; max-width:1200px; margin:0 auto;}
+  nav.indice{
+    width:260px; flex-shrink:0; padding:20px 12px; position:sticky; top:82px;
+    height:calc(100vh - 82px); overflow-y:auto;
+  }
+  nav.indice a{
+    display:block; padding:9px 12px; margin-bottom:2px; border-radius:8px;
+    color:var(--azul-oscuro); text-decoration:none; font-size:0.92rem; font-weight:600;
+  }
+  nav.indice a:hover{background:#e8edf3;}
+  nav.indice a.activo{background:var(--azul-oscuro); color:#fff;}
+  nav.indice .grupo-titulo{
+    font-size:0.72rem; text-transform:uppercase; letter-spacing:0.05em;
+    color:var(--gris-medio); margin:16px 12px 6px; font-weight:700;
+  }
+  main{flex:1; padding:24px 24px 80px; min-width:0;}
+  .card{
+    background:#fff; border-radius:12px; padding:22px 24px; margin-bottom:18px;
+    box-shadow:0 1px 4px rgba(11,35,64,0.08); border:1px solid var(--gris-borde);
+  }
+  .card h2{margin-top:0; color:var(--azul-oscuro); display:flex; align-items:center; gap:10px; font-size:1.25rem;}
+  .card h3{color:var(--azul-medio); font-size:1.02rem; margin:18px 0 8px;}
+  .card p{line-height:1.55; color:#2a3a4a;}
+  .card ul, .card ol{line-height:1.6; color:#2a3a4a; padding-left:22px;}
+  .card li{margin-bottom:6px;}
+  .intro-hero{
+    background:linear-gradient(135deg, var(--azul-oscuro), var(--azul-medio));
+    color:#fff; border-radius:14px; padding:28px 26px; margin-bottom:20px;
+  }
+  .intro-hero h2{color:#fff; margin-top:0;}
+  .intro-hero p{color:#dbe6f2;}
+  .chip{
+    display:inline-flex; align-items:center; gap:6px; padding:4px 11px; border-radius:20px;
+    font-size:0.82rem; font-weight:700; color:#fff; margin:2px 4px 2px 0;
+  }
+  .chip-verde{background:var(--verde);}
+  .chip-rojo{background:var(--rojo);}
+  .chip-amarillo{background:var(--amarillo); color:#3a2e00;}
+  .chip-morado{background:var(--morado);}
+  .chip-cian{background:var(--cian); color:#0b2340;}
+  .chip-gris{background:#8a97a5;}
+  .caja-paso{
+    background:#f4f7fa; border:1px solid var(--gris-borde); border-radius:10px;
+    padding:14px 16px; margin:10px 0;
+  }
+  .caja-paso strong{color:var(--azul-oscuro);}
+  .caja-tip{
+    background:#eaf6ee; border-left:4px solid var(--verde); border-radius:6px;
+    padding:12px 14px; margin:12px 0; font-size:0.92rem;
+  }
+  .caja-alerta{
+    background:#fdeceb; border-left:4px solid var(--rojo); border-radius:6px;
+    padding:12px 14px; margin:12px 0; font-size:0.92rem;
+  }
+  table.tabla-manual{width:100%; border-collapse:collapse; margin:12px 0; font-size:0.9rem;}
+  table.tabla-manual th{background:var(--azul-oscuro); color:#fff; padding:8px 10px; text-align:left;}
+  table.tabla-manual td{padding:8px 10px; border-bottom:1px solid var(--gris-borde);}
+  table.tabla-manual tr:nth-child(even){background:#f8fafc;}
+  .tabs-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:10px; margin:14px 0;}
+  .tab-card{
+    border:1px solid var(--gris-borde); border-radius:10px; padding:12px 14px; background:#fbfcfd;
+  }
+  .tab-card b{color:var(--azul-oscuro); display:block; margin-bottom:4px;}
+  .tab-card span{font-size:0.85rem; color:var(--gris-medio);}
+  code{background:#eef1f4; padding:1px 6px; border-radius:4px; font-size:0.88rem;}
+  .btn-menu-movil{
+    display:none; background:#fff; border:1px solid var(--gris-borde); border-radius:8px;
+    padding:8px 12px; margin:12px 16px 0; font-weight:700; color:var(--azul-oscuro); cursor:pointer;
+  }
+  @media (max-width:880px){
+    .layout{flex-direction:column;}
+    nav.indice{
+      width:100%; position:static; height:auto; padding:0; display:none;
+      border-bottom:1px solid var(--gris-borde); background:#fff;
+    }
+    nav.indice.abierto{display:block; padding:10px 12px 16px;}
+    .btn-menu-movil{display:block;}
+    main{padding:16px 14px 60px;}
+    header h1{font-size:1rem;}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <img src="icon-manual-192.png" alt="Icono manual">
+  <div>
+    <h1>📘 Manual de Usuario</h1>
+    <div class="sub">Reporte de Cámaras, Botones de Pánico y Sistema Contra Incendio — Krause Negocios</div>
+  </div>
+  <div class="acciones-header">
+    <a class="btn-instalar" href="https://ricardo210394.github.io/reporte-camaras-piazza" target="_blank" rel="noopener" style="background:var(--azul-medio); text-decoration:none; display:inline-block;">🔗 Abrir la app</a>
+    <button class="btn-instalar" id="btn-instalar">⬇️ Instalar</button>
+  </div>
+</header>
+
+<button class="btn-menu-movil" id="btn-menu-movil">☰ Índice del manual</button>
+
+<div class="layout">
+  <nav class="indice" id="indice">
+    <div class="grupo-titulo">Empezar</div>
+    <a href="#intro">📘 Qué es esta app</a>
+    <a href="#instalar">📲 Cómo instalarla</a>
+    <a href="#encabezado">🟢 Encabezado y sincronización</a>
+
+    <div class="grupo-titulo">Pestañas de la app</div>
+    <a href="#registrar">➕ Registrar</a>
+    <a href="#lista">📋 Lista de Pendientes</a>
+    <a href="#consultar">🔎 Consultar por Piazza</a>
+    <a href="#grabacion">📼 Tiempo de Grabación DVR/NVR</a>
+    <a href="#pruebas">📅 BP Pruebas Semanales</a>
+    <a href="#estadistica">📊 Estadística</a>
+    <a href="#trabajo">🛠️ Registrar Trabajo</a>
+    <a href="#realizados">✅ Trabajos Realizados</a>
+    <a href="#exportar">📤 Exportar</a>
+    <a href="#bitacora">📒 Bitácora de Cambios</a>
+
+    <div class="grupo-titulo">Referencia</div>
+    <a href="#piazzas">🏢 Piazzas y equipos</a>
+    <a href="#estados">🎨 Estados y colores</a>
+    <a href="#faq">❓ Preguntas frecuentes</a>
+  </nav>
+
+  <main>
+
+    <div class="intro-hero" id="intro">
+      <h2>📘 Qué es esta aplicación</h2>
+      <p>
+        Es la app del cuarto de monitoreo de Krause Negocios para llevar el control de <b>cámaras de seguridad</b>,
+        <b>botones de pánico</b> y <b>sistema contra incendio (SCI)</b> en las 11 Piazzas administradas. Desde acá
+        se registran pendientes, se hace seguimiento a los técnicos, se prueban semanalmente los botones de pánico,
+        se controla el tiempo de grabación de los DVR/NVR y se generan reportes en PDF para los supervisores.
+      </p>
+      <p style="margin-bottom:0;">
+        Los datos se guardan automáticamente en la nube (Firebase) y se sincronizan en tiempo real entre todos los
+        operadores que tengan la app abierta — lo que registra un operador lo ve el resto al instante.
+      </p>
+      <a href="https://ricardo210394.github.io/reporte-camaras-piazza" target="_blank" rel="noopener"
+         style="display:inline-flex; align-items:center; gap:8px; margin-top:16px; background:var(--rojo); color:#fff; text-decoration:none; font-weight:700; padding:11px 18px; border-radius:8px; font-size:0.95rem;">
+        🔗 Abrir la app: reporte-camaras-piazza
+      </a>
+    </div>
+
+    <div class="card" id="instalar">
+      <h2>📲 Cómo instalar esta app en el celular o tablet</h2>
+      <p>Se instala como un ícono más, sin necesidad de Play Store ni App Store. Una vez instalada, abre en pantalla completa, sin la barra del navegador.</p>
+
+      <h3>En Android (Chrome)</h3>
+      <ol>
+        <li>Abre el enlace de la app en Chrome.</li>
+        <li>Toca el menú <b>⋮</b> (arriba a la derecha).</li>
+        <li>Elige <b>"Instalar aplicación"</b> o <b>"Agregar a pantalla de inicio"</b>.</li>
+        <li>Confirma. Va a aparecer un ícono como cualquier otra app.</li>
+      </ol>
+
+      <h3>En iPhone / iPad (Safari)</h3>
+      <ol>
+        <li>Abre el enlace de la app en Safari (tiene que ser Safari, no Chrome).</li>
+        <li>Toca el botón de <b>Compartir</b> (el cuadrado con la flecha hacia arriba).</li>
+        <li>Elige <b>"Agregar a pantalla de inicio"</b>.</li>
+        <li>Confirma el nombre y toca <b>"Agregar"</b>.</li>
+      </ol>
+
+      <div class="caja-tip">
+        💡 <b>Tip:</b> este mismo procedimiento aplica para instalar el manual como su propio ícono, separado del
+        ícono de la app de reportes — así los podés tener a los dos en la pantalla de inicio.
+      </div>
+
+      <div class="caja-alerta">
+        ⚠️ Si actualizás la app (subiendo un nuevo <code>index.html</code>) y la versión instalada no cambia,
+        cerrá la app por completo y volvela a abrir — el service worker la actualiza solo en segundo plano.
+      </div>
+    </div>
+
+    <div class="card" id="encabezado">
+      <h2>🟢 Encabezado y sincronización con Firebase</h2>
+      <p>
+        Arriba de la app vas a ver un indicador que dice algo como <b>"🟢 Firebase: 480 registros sincronizados"</b>.
+        Esto confirma que la app está conectada a la base de datos en la nube y que los cambios se están guardando.
+      </p>
+      <table class="tabla-manual">
+        <tr><th>Color</th><th>Qué significa</th></tr>
+        <tr><td>🟢 Verde</td><td>Conectado y sincronizado correctamente.</td></tr>
+        <tr><td>🔴 Rojo / no aparece</td><td>Sin conexión a internet o problema de sincronización. Los datos que cargues localmente se van a subir apenas vuelva la conexión.</td></tr>
+      </table>
+    </div>
+
+    <div class="card" id="registrar">
+      <h2>➕ Registrar</h2>
+      <p>Es la pantalla principal para cargar un pendiente nuevo (o un trabajo/novedad). Los campos cambian según el <b>Tipo de equipo</b> que elijas:</p>
+
+      <div class="tabs-grid">
+        <div class="tab-card"><b>📹 Cámara</b><span>DVR (DVR1 a DVR4) + número(s) de cámara. Podés seleccionar varias cámaras a la vez si tienen la misma novedad.</span></div>
+        <div class="tab-card"><b>🔴 Botón de Pánico</b><span>Nombre y número del local (se autocompleta con la Piazza) y zona.</span></div>
+        <div class="tab-card"><b>🔥 Sistema Contra Incendio</b><span>Componente (ej: panel central, sensor de humo) y zona.</span></div>
+        <div class="tab-card"><b>🛠️ Otros Trabajos</b><span>Campo libre de "Novedad" para cualquier otro trabajo que no encaje en las categorías anteriores.</span></div>
+      </div>
+
+      <h3>Campos comunes a todos los tipos</h3>
+      <ul>
+        <li><b>Fecha de reporte</b> y <b>Piazza</b>.</li>
+        <li><b>Estado</b>: la situación técnica del equipo (ej. "Operativo", "Sin imagen", "Falla de sensor"). Las opciones cambian según el tipo — ver la sección <a href="#estados">Estados y colores</a>.</li>
+        <li><b>Estado del pendiente</b>: Pendiente / Resuelto / Sin Novedad / Sin Información — esta es la que decide si el equipo cuenta como "funcionando" o "pendiente" en la <a href="#estadistica">Estadística</a>.</li>
+        <li><b>Técnico</b> que hizo el trabajo y <b>Operador</b> que reporta (vos).</li>
+        <li><b>Ubicación</b>, <b>foto</b> (opcional) y <b>reporte</b> con el detalle del diagnóstico.</li>
+      </ul>
+
+      <div class="caja-paso">
+        <strong>Historial del equipo:</strong> al elegir un equipo que ya tiene pendientes anteriores, aparece un
+        panel con todo su historial de trabajos — para saber qué se hizo antes sin tener que ir a buscarlo en otra
+        pestaña. Desde ahí también podés exportar todo ese historial a PDF.
+      </div>
+
+      <p>Al terminar, tocá <b>💾 Guardar Pendiente</b>.</p>
+    </div>
+
+    <div class="card" id="lista">
+      <h2>📋 Lista de Pendientes</h2>
+      <p>
+        Muestra los pendientes agrupados por <b>Piazza → Tipo de equipo → DVR (en cámaras)</b>, en carpetas
+        desplegables. Tiene filtros por tipo, Piazza, DVR, estado y situación (por defecto muestra
+        <b>"Solo Pendientes"</b>).
+      </p>
+      <ul>
+        <li>Cada fila tiene botones para <b>editar</b>, <b>marcar como resuelto</b> y <b>eliminar</b>.</li>
+        <li>Arriba se ven contadores de días acumulados pendientes por tipo de equipo.</li>
+        <li>Si cambiás el filtro de situación a <b>"Pendientes y Resueltos"</b> vas a ver también los que ya se solucionaron.</li>
+      </ul>
+      <div class="caja-tip">💡 Si esta pantalla aparece vacía pero sabés que hay pendientes cargados, revisá que el filtro de situación no esté limitando el resultado a un estado que no tiene coincidencias.</div>
+    </div>
+
+    <div class="card" id="consultar">
+      <h2>🔎 Consultar por Piazza</h2>
+      <p>
+        Vista de consulta rápida: elegís una Piazza y podés filtrar por tipo de equipo y por situación
+        (pendiente/resuelto/sin novedad/sin información). También tiene un selector de <b>equipo específico</b>
+        para ver el historial completo de un solo equipo, sin mezclarlo con los demás.
+      </p>
+    </div>
+
+    <div class="card" id="grabacion">
+      <h2>📼 Tiempo de Grabación de DVR/NVR</h2>
+      <p>
+        Controla cuántos días de grabación tiene disponibles cada DVR/NVR de cada Piazza. Los días se calculan
+        automáticamente a partir de las fechas que cargues (fecha de inicio y fecha hasta donde llega la
+        grabación). Se puede exportar a PDF.
+      </p>
+    </div>
+
+    <div class="card" id="pruebas">
+      <h2>📅 BP Pruebas Semanales</h2>
+      <p>
+        Es la cuadrícula donde se registra, semana por semana (52 semanas del año), si llegó o no la señal de
+        prueba de cada botón de pánico de la Piazza. Cada celda representa una semana; hacé clic en una celda
+        para cargar el resultado de esa semana para ese local.
+      </p>
+
+      <h3>Estados posibles de cada prueba</h3>
+      <p>
+        <span class="chip chip-verde">Sí llegó</span>
+        <span class="chip chip-rojo">No llegó</span>
+        <span class="chip chip-gris">Local cerrado</span>
+        <span class="chip chip-cian">Local vacío</span>
+        <span class="chip chip-morado">Otro</span>
+        <span class="chip chip-amarillo">Sin sistema de BP</span>
+      </p>
+      <p>
+        Las celdas grises con un guion (<code>-</code>) significan que esa semana todavía no se le hizo la
+        prueba a ese local.
+      </p>
+      <div class="caja-alerta">
+        ⚠️ Si elegís <b>"No llegó"</b> u <b>"Otro"</b>, el sistema te va a pedir un <b>comentario obligatorio</b>
+        explicando qué pasó — ese comentario queda anotado como nota numerada al pie de la cuadrícula.
+      </div>
+      <p>
+        Desde acá también podés <b>➕ Añadir local</b> (si se abre un local nuevo que todavía no está en el
+        catálogo) y <b>📄 Exportar PDF</b> de la cuadrícula completa de una Piazza y año.
+      </p>
+    </div>
+
+    <div class="card" id="estadistica">
+      <h2>📊 Estadística</h2>
+      <p>
+        Muestra, por tipo de equipo (Cámara, Botón de Pánico, Sistema Contra Incendio), el porcentaje de equipos
+        <b>funcionando correctamente</b> sobre el total. Se puede filtrar por Piazza y por DVR/NVR (para cámaras).
+      </p>
+
+      <h3>Cámaras y Sistema Contra Incendio</h3>
+      <p>
+        Se calculan sobre los equipos que tienen al menos un registro en <b>Lista de Pendientes</b>, usando el
+        estado más reciente de cada uno. <b>"Puerto libre"</b> (cámaras) se excluye por completo del cálculo —
+        no cuenta ni como funcionando ni como pendiente, porque no es una cámara real instalada.
+      </p>
+
+      <h3>Botón de Pánico</h3>
+      <p>
+        Acá el cálculo es distinto y se basa en la <b>última prueba semanal real</b> de cada local (pestaña
+        <a href="#pruebas">BP Pruebas Semanales</a>), no en el registro manual de "Registrar":
+      </p>
+      <table class="tabla-manual">
+        <tr><th>Resultado de la última prueba real</th><th>Cuenta como</th></tr>
+        <tr><td><span class="chip chip-verde">Sí llegó</span></td><td>✅ Funcionando</td></tr>
+        <tr><td><span class="chip chip-rojo">No llegó</span></td><td>🔴 Pendiente</td></tr>
+        <tr><td><span class="chip chip-morado">Otro</span></td><td>🔴 Pendiente</td></tr>
+        <tr><td><span class="chip chip-amarillo">Sin sistema de BP</span></td><td>🔴 Pendiente</td></tr>
+        <tr><td><span class="chip chip-gris">Local cerrado</span></td><td>Se ignora esa semana — se usa la prueba real anterior</td></tr>
+        <tr><td><span class="chip chip-cian">Local vacío</span></td><td>Se ignora esa semana — se usa la prueba real anterior</td></tr>
+        <tr><td>— (no le tocó prueba)</td><td>Se ignora esa semana — se usa la prueba real anterior</td></tr>
+      </table>
+      <p>
+        El universo de locales evaluados es <b>todo el catálogo de la Piazza</b> (los mismos locales de la
+        cuadrícula de pruebas), no solo los que alguna vez se registraron a mano. Si un local nunca tuvo ninguna
+        prueba semanal, se usa como respaldo su último registro de "Registrar"; si no tiene ni prueba ni
+        registro, queda afuera del total porque no hay forma de evaluarlo.
+      </p>
+    </div>
+
+    <div class="card" id="trabajo">
+      <h2>🛠️ Registrar Trabajo</h2>
+      <p>
+        Para anotar trabajos realizados por técnicos o proveedores (mantenimientos, cambios de equipo, revisiones,
+        etc.), separado de los pendientes del cuarto de monitoreo. Los campos se adaptan igual que en
+        <a href="#registrar">Registrar</a> según el tipo de equipo.
+      </p>
+    </div>
+
+    <div class="card" id="realizados">
+      <h2>✅ Trabajos Realizados</h2>
+      <p>
+        Historial completo de todo lo cargado desde "Registrar Trabajo", con filtros por tipo, Piazza, situación y
+        un buscador de texto libre (técnico, equipo, reporte). Se puede exportar a PDF.
+      </p>
+    </div>
+
+    <div class="card" id="exportar">
+      <h2>📤 Exportar</h2>
+      <p>
+        Arma un solo PDF combinado con las secciones que marques: Lista de Pendientes, Estadística, Trabajos
+        Realizados, BP Pruebas Semanales y/o Tiempo de Grabación de DVR/NVR. Podés elegir incluir o no las fotos
+        (sin fotos el PDF pesa mucho menos).
+      </p>
+      <p>
+        Antes de generar el PDF te va a pedir <b>Fecha, Turno, Supervisor y Operador</b> — esos datos van en el
+        encabezado del reporte.
+      </p>
+      <div class="caja-tip">
+        💾 También desde acá se puede <b>Exportar Respaldo JSON</b> (una copia completa de todos los datos) e
+        <b>Importar Respaldo JSON</b> para restaurarla. Es útil como respaldo manual adicional al de Firebase.
+      </div>
+    </div>
+
+    <div class="card" id="bitacora">
+      <h2>📒 Bitácora de Cambios</h2>
+      <p>
+        Registro automático de solo lectura de todo lo que se modifica en la app: pendientes, trabajos, pruebas
+        semanales y cambios en el catálogo de locales. Sirve para auditar quién cambió qué y cuándo. Tiene filtros
+        por Piazza, tipo de evento y un buscador de texto.
+      </p>
+    </div>
+
+    <div class="card" id="piazzas">
+      <h2>🏢 Piazzas cubiertas</h2>
+      <p>La app cubre las 11 Piazzas administradas por Krause Negocios:</p>
+      <p>
+        <span class="chip chip-gris">Bosques</span>
+        <span class="chip chip-gris">Ceibos</span>
+        <span class="chip chip-gris">Ciudad Celeste</span>
+        <span class="chip chip-gris">Curía</span>
+        <span class="chip chip-gris">FCG</span>
+        <span class="chip chip-gris">La Joya</span>
+        <span class="chip chip-gris">Murano</span>
+        <span class="chip chip-gris">Palmar</span>
+        <span class="chip chip-gris">Samborondón</span>
+        <span class="chip chip-gris">Villa Club</span>
+        <span class="chip chip-gris">Villas del Rey</span>
+      </p>
+      <p>Cada Piazza tiene su propio catálogo de DVR/NVR (DVR1 a DVR4) y de locales con botón de pánico.</p>
+    </div>
+
+    <div class="card" id="estados">
+      <h2>🎨 Estados por tipo de equipo</h2>
+      <table class="tabla-manual">
+        <tr><th>Tipo</th><th>Opciones de "Estado"</th></tr>
+        <tr><td>📹 Cámara</td><td>Operativo, Sin imagen, Blanco y negro, Intermitencia, Interferencia, Puerto libre, Otro</td></tr>
+        <tr><td>🔴 Botón de Pánico</td><td>Operativo, No Operativo, Sin Información</td></tr>
+        <tr><td>🔥 Sistema Contra Incendio</td><td>Operativo, Falla de sensor, Sin señal, Batería baja, Requiere mantenimiento, Desconectado, Otro</td></tr>
+        <tr><td>🛠️ Otros Trabajos</td><td>Completado, En proceso, Sin novedad, Requiere seguimiento</td></tr>
+      </table>
+      <p style="margin-top:14px;">Y el <b>"Estado del pendiente"</b>, que aplica a todos los tipos:</p>
+      <p>
+        <span class="chip chip-rojo">Pendiente</span>
+        <span class="chip chip-verde">Resuelto</span>
+        <span class="chip chip-cian">Sin Novedad</span>
+        <span class="chip chip-gris">Sin Información</span>
+      </p>
+    </div>
+
+    <div class="card" id="faq">
+      <h2>❓ Preguntas frecuentes</h2>
+
+      <h3>La Lista de Pendientes no muestra nada</h3>
+      <p>Revisá el filtro <b>"Pendiente Estado"</b>: por defecto está en "Pendiente", así que si ya resolviste
+      todo lo de esa Piazza/tipo no va a mostrar nada ahí. Cambialo a "Pendientes y Resueltos" para ver todo.</p>
+
+      <h3>El porcentaje de Estadística me parece raro</h3>
+      <p>Para Botón de Pánico, el % se basa en la última prueba semanal real de cada local, no en el último
+      registro manual — revisá la pestaña <a href="#pruebas">BP Pruebas Semanales</a> de esa Piazza para ver
+      qué fue lo último que se probó en cada local.</p>
+
+      <h3>No me deja instalar la app</h3>
+      <p>Asegurate de estar usando <b>Chrome</b> en Android o <b>Safari</b> en iPhone/iPad (en otros navegadores
+      la opción de instalar puede no aparecer o llamarse distinto).</p>
+
+      <h3>Cargué un cambio y no se ve en otro celular</h3>
+      <p>Revisá el indicador de Firebase arriba: si está en rojo o no aparece, no hay conexión a internet en ese
+      momento. Apenas vuelva la conexión, se sincroniza solo.</p>
+
+      <h3>¿Dónde reporto un error de la app?</h3>
+      <p>Contactá directamente a quien administra el desarrollo de la app (Ricardo) con una descripción de qué
+      pasó y, si podés, una captura de pantalla.</p>
+    </div>
+
+  </main>
+</div>
+
+<script>
+  // Resaltar en el índice la sección visible mientras se hace scroll
+  const enlaces = Array.from(document.querySelectorAll('nav.indice a'));
+  const secciones = enlaces.map(a => document.getElementById(a.getAttribute('href').slice(1))).filter(Boolean);
+
+  function actualizarActivo(){
+    let actual = secciones[0];
+    const y = window.scrollY + 110;
+    secciones.forEach(s => { if(s.offsetTop <= y) actual = s; });
+    enlaces.forEach(a => a.classList.toggle('activo', a.getAttribute('href') === '#' + actual.id));
+  }
+  window.addEventListener('scroll', actualizarActivo);
+  actualizarActivo();
+
+  // Índice colapsable en móvil
+  const btnMenu = document.getElementById('btn-menu-movil');
+  const indice = document.getElementById('indice');
+  btnMenu.addEventListener('click', () => indice.classList.toggle('abierto'));
+  enlaces.forEach(a => a.addEventListener('click', () => indice.classList.remove('abierto')));
+
+  // Botón de instalación (Android/Chrome). En iOS no existe este evento; ahí se sigue el paso a paso manual.
+  let promptDiferido = null;
+  const btnInstalar = document.getElementById('btn-instalar');
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    promptDiferido = e;
+    btnInstalar.style.display = 'inline-block';
+  });
+  btnInstalar.addEventListener('click', async () => {
+    if(!promptDiferido) return;
+    promptDiferido.prompt();
+    await promptDiferido.userChoice;
+    promptDiferido = null;
+    btnInstalar.style.display = 'none';
+  });
+
+  // Registrar Service Worker solo en producción (Netlify), igual que la app principal
+  if('serviceWorker' in navigator && (location.hostname.includes('netlify.app') || location.hostname.includes('krause'))){
+    navigator.serviceWorker.register('manual-sw.js');
+  }
+</script>
+</body>
+</html>
