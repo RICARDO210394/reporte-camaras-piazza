@@ -1707,7 +1707,7 @@ function cargarDatos(){
         if(teniaSinOrigen) sinOrigenEnFirebase.push(p);
       });
 
-      if(primeraCarga && nuevaLista.length === 0 && pendientes.length > 0){
+      if(nuevaLista.length === 0 && pendientes.length > 0){
         // SEGURIDAD: la nube llegó vacía pero había datos guardados en este navegador.
         console.warn('Firestore estaba vacío; subiendo ' + pendientes.length + ' registro(s) local(es) a la nube en vez de borrarlos.');
         pendientes.forEach(p => {
@@ -1796,6 +1796,22 @@ function claveCeldaPrueba(piazza, numeroLocal, nombreLocal, anio, semana){
   return `${piazza}|${numeroLocal}|${nombreLocal}|${anio}|${semana}`;
 }
 
+// ID único y ESTABLE para una prueba semanal en Firestore. Incluye piazza + número +
+// NOMBRE del local (no solo el número): si dos locales de la misma Piazza llegaran a
+// compartir el mismo "Número" (por ejemplo tras una edición con error de tipeo), sus
+// pruebas de una misma semana NO se pisan entre sí en la nube.
+function idPruebaSemana(piazza, numeroLocal, nombreLocal, anio, semana){
+  const limpiar = s => String(s == null ? '' : s).trim().replace(/[^a-zA-Z0-9]+/g, '_');
+  return 'ps_' + limpiar(piazza) + '_' + limpiar(numeroLocal) + '_' + limpiar(nombreLocal) + '_' + anio + '_' + semana;
+}
+
+// ¿Ya existe OTRO local (distinto al que se está editando) con ese mismo número en la Piazza?
+// Se usa antes de guardar una edición de local para no crear colisiones de "Número".
+function existeOtroLocalConEseNumero(piazza, numeroNuevo, numeroViejo, nombreViejo){
+  if(numeroNuevo === numeroViejo) return false; // no cambió el número: no hay riesgo de colisión nueva
+  return obtenerLocalesCombinadosPiazza(piazza).some(l => l.numeroLocal === numeroNuevo && !(l.numeroLocal === numeroViejo && l.nombreLocal === nombreViejo));
+}
+
 const CLAVE_STORAGE_CATALOGO_OVERRIDES = 'krause_catalogo_overrides_v1';
 let catalogoOverrides = []; // { piazza, numeroViejo, nombreViejo, numeroNuevo, nombreNuevo, zonaNueva }
 
@@ -1840,7 +1856,7 @@ function cargarCatalogoOverrides(){
       mod.onSnapshot(coleccionOverrides, (snapshot) => {
         const nueva = [];
         snapshot.forEach(d => nueva.push({ ...d.data(), id: d.id }));
-        if(primeraCarga && nueva.length === 0 && catalogoOverrides.length > 0){
+        if(nueva.length === 0 && catalogoOverrides.length > 0){
           catalogoOverrides.forEach(ov => {
             mod.setDoc(mod.doc(coleccionOverrides, ov.id || (ov.piazza + '_' + ov.numeroViejo)), ov).catch(err => console.error('Error subiendo override:', err));
           });
@@ -1895,7 +1911,7 @@ function cargarDatosPruebas(){
         const nueva = [];
         snapshot.forEach(d => nueva.push({ ...d.data(), id: d.id }));
 
-        if(primeraCarga && nueva.length === 0 && pruebasSemanales.length > 0){
+        if(nueva.length === 0 && pruebasSemanales.length > 0){
           pruebasSemanales.forEach(p => {
             mod.setDoc(mod.doc(coleccionPruebas, p.id), p).catch(err => console.error('Error subiendo prueba a Firebase:', err));
           });
@@ -1912,11 +1928,13 @@ function cargarDatosPruebas(){
   intentarConectar();
 }
 
-function guardarDatosPruebas(){
+function guardarDatosPruebas(registrosAGuardar){
   localStorage.setItem(CLAVE_STORAGE_PRUEBAS, JSON.stringify(pruebasSemanales));
   if(_sincronizandoPruebasDesdeFirestore || !window._firebasePruebas) return;
   const { coleccionPruebas, doc, setDoc } = window._firebasePruebas;
-  pruebasSemanales.forEach(p => setDoc(doc(coleccionPruebas, p.id), p).catch(err => console.error('Error guardando prueba:', err)));
+  // Si se especifican registros puntuales (lo normal: solo el que cambió), se sube
+  // solo eso — reescribir TODA la colección en cada guardado es lento e innecesario.
+  (registrosAGuardar || pruebasSemanales).forEach(p => setDoc(doc(coleccionPruebas, p.id), p).catch(err => console.error('Error guardando prueba:', err)));
 }
 
 function poblarSelectorAnioPruebas(){
@@ -1959,7 +1977,7 @@ function cargarDatosGrabacion(){
         const nueva = [];
         snapshot.forEach(d => nueva.push({ ...d.data(), id: d.id }));
 
-        if(primeraCarga && nueva.length === 0 && registrosGrabacion.length > 0){
+        if(nueva.length === 0 && registrosGrabacion.length > 0){
           registrosGrabacion.forEach(r => {
             mod.setDoc(mod.doc(coleccionGrabacion, r.id), r).catch(err => console.error('Error subiendo grabación a Firebase:', err));
           });
@@ -2648,12 +2666,21 @@ function guardarPrueba(){
   }
 
   const idx = pruebasSemanales.findIndex(p => claveCeldaPrueba(p.piazza, p.numeroLocal, p.nombreLocal, p.anio, p.semana) === clave);
-  const registro = { id: 'ps_' + piazza.replace(/\s+/g,'_') + '_' + numeroLocal + '_' + anio + '_' + semana, piazza, numeroLocal, nombreLocal, anio, semana, estado, comentario, quien, fecha };
+  const idViejo = idx !== -1 ? pruebasSemanales[idx].id : null;
+  const registro = { id: idPruebaSemana(piazza, numeroLocal, nombreLocal, anio, semana), piazza, numeroLocal, nombreLocal, anio, semana, estado, comentario, quien, fecha };
 
   if(idx !== -1) pruebasSemanales[idx] = registro;
   else pruebasSemanales.push(registro);
 
-  guardarDatosPruebas();
+  // Si el id cambió (por ejemplo, un registro guardado antes con el formato viejo de id,
+  // que no incluía el nombre del local), hay que borrar el documento anterior en Firestore
+  // para no dejar un duplicado huérfano dando vueltas.
+  if(idViejo && idViejo !== registro.id && window._firebasePruebas){
+    const { coleccionPruebas, doc, deleteDoc } = window._firebasePruebas;
+    deleteDoc(doc(coleccionPruebas, idViejo)).catch(err => console.error('Error borrando id anterior de prueba:', err));
+  }
+
+  guardarDatosPruebas([registro]);
   registrarEventoBitacora('prueba', `Prueba semanal: ${NOMBRES_ESTADO_PRUEBA[estado]||estado}`, piazza, `${nombreLocal} (Local ${numeroLocal}) — Sem ${semana}/${anio} — ${quien||'—'}`);
   sincronizarPendienteDesdePrueba(piazza, numeroLocal, nombreLocal, estado, quien, fecha, comentario);
   cerrarModalPrueba();
@@ -2710,6 +2737,11 @@ function editarLocalSeleccionado(){
     return;
   }
 
+  if(existeOtroLocalConEseNumero(piazza, numeroNuevo, numeroViejo, nombreViejo)){
+    alert('Ya existe otro local con ese número en esta Piazza. Elegí un número distinto para no mezclar sus pruebas y pendientes.');
+    return;
+  }
+
   // 1) Guardar el cambio de forma PERMANENTE por posición (idxOriginal): esto reconstruye
   //    todo el catálogo de la Piazza desde el original + todos los overrides guardados,
   //    así que editar el mismo local varias veces NUNCA se desincroniza.
@@ -2721,16 +2753,23 @@ function editarLocalSeleccionado(){
   } else {
     // Migrar TODAS las pruebas guardadas del local viejo al nuevo número/nombre
     let migradas = 0;
+    const registrosMigrados = [];
     pruebasSemanales.forEach(p => {
       if(p.piazza === piazza && p.numeroLocal === numeroViejo && p.nombreLocal === nombreViejo){
+        const idViejo = p.id;
         p.numeroLocal = numeroNuevo;
         p.nombreLocal = nombreNuevo;
-        p.id = 'ps_' + piazza.replace(/\s+/g,'_') + '_' + numeroNuevo + '_' + p.anio + '_' + p.semana;
+        p.id = idPruebaSemana(piazza, numeroNuevo, nombreNuevo, p.anio, p.semana);
+        if(idViejo !== p.id && window._firebasePruebas){
+          const { coleccionPruebas, doc, deleteDoc } = window._firebasePruebas;
+          deleteDoc(doc(coleccionPruebas, idViejo)).catch(err => console.error('Error borrando id anterior de prueba:', err));
+        }
+        registrosMigrados.push(p);
         migradas++;
       }
     });
     if(migradas > 0){
-      guardarDatosPruebas();
+      guardarDatosPruebas(registrosMigrados);
     }
 
     // También actualizar los pendientes de tipo Botón que usan este local, para que "Registrar"/"Lista" queden coherentes
@@ -2826,17 +2865,28 @@ function editarLocalDesdeGrilla(idxLoc){
   const numeroNuevo = nuevoNumero.trim(), nombreNuevo = nuevoNombre.trim(), zonaNueva = nuevaZona.trim();
   if(loc.numeroLocal === numeroNuevo && loc.nombreLocal === nombreNuevo && (loc.zona||'') === zonaNueva){ alert('No hubo cambios.'); return; }
   if(loc._idxOriginal === undefined){ alert('Este local no pertenece al catálogo base. Editalo desde "✎ Editar local" arriba.'); return; }
+  if(existeOtroLocalConEseNumero(piazza, numeroNuevo, loc.numeroLocal, loc.nombreLocal)){
+    alert('Ya existe otro local con ese número en esta Piazza. Elegí un número distinto para no mezclar sus pruebas y pendientes.');
+    return;
+  }
   guardarCatalogoOverride({ piazza, idxOriginal: loc._idxOriginal, numeroNuevo, nombreNuevo, zonaNueva });
   // Migrar pruebas y pendientes que referencien el nombre viejo
   let migradas = 0;
+  const registrosMigrados = [];
   pruebasSemanales.forEach(p => {
     if(p.piazza === piazza && p.numeroLocal === loc.numeroLocal && p.nombreLocal === loc.nombreLocal){
+      const idViejo = p.id;
       p.numeroLocal = numeroNuevo; p.nombreLocal = nombreNuevo;
-      p.id = 'ps_' + piazza.replace(/\s+/g,'_') + '_' + numeroNuevo + '_' + p.anio + '_' + p.semana;
+      p.id = idPruebaSemana(piazza, numeroNuevo, nombreNuevo, p.anio, p.semana);
+      if(idViejo !== p.id && window._firebasePruebas){
+        const { coleccionPruebas, doc, deleteDoc } = window._firebasePruebas;
+        deleteDoc(doc(coleccionPruebas, idViejo)).catch(err => console.error('Error borrando id anterior de prueba:', err));
+      }
+      registrosMigrados.push(p);
       migradas++;
     }
   });
-  if(migradas > 0) guardarDatosPruebas();
+  if(migradas > 0) guardarDatosPruebas(registrosMigrados);
   let pAct = 0;
   pendientes.forEach(p => {
     if(p.tipo === 'Boton' && p.piazza === piazza && p.numeroLocal === loc.numeroLocal && p.nombreLocal === loc.nombreLocal){
@@ -5020,8 +5070,19 @@ function trCargar(){
       const nueva = [];
       snapshot.forEach(d => nueva.push({ ...d.data(), id: d.id }));
       nueva.sort((a,b)=>(b.fecha||'').localeCompare(a.fecha||'')||(b.creado||'').localeCompare(a.creado||''));
-      trabajos = nueva;
-      localStorage.setItem(CLAVE_TR, JSON.stringify(trabajos));
+
+      if(nueva.length === 0 && trabajos.length > 0){
+        // SEGURIDAD: la nube llegó vacía (blip de red, listener reconectando, etc.) pero
+        // este navegador ya tenía trabajos guardados. Los subimos de nuevo en vez de borrarlos.
+        console.warn('Firestore (trabajos) llegó vacío; subiendo ' + trabajos.length + ' registro(s) local(es) en vez de borrarlos.');
+        trabajos.forEach(t => {
+          const { foto, ...sinFoto } = t;
+          setDoc(doc(coleccionTrabajos, t.id), sinFoto).catch(err => console.error('Error subiendo trabajo a Firebase:', err));
+        });
+      } else {
+        trabajos = nueva;
+        localStorage.setItem(CLAVE_TR, JSON.stringify(trabajos));
+      }
       trRenderizar();
       const ind = document.getElementById('firebase-status');
       if(ind){ ind.style.background='#198754'; ind.textContent='🟢 Firebase: ' + trabajos.length + ' registros sincronizados'; }
