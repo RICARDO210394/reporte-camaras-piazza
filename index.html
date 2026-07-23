@@ -1735,11 +1735,43 @@ function cargarDatos(){
       poblarDVREstadistica();
       refrescarTodasLasVistas();
       _sincronizandoDesdeFirestore = false;
+      reconciliarPendientesBotonSegunPruebas();
     }, (error) => {
       console.error('Error de sincronización con Firebase:', error);
     });
   };
   intentarConectarFirestore();
+}
+
+// Revisa TODOS los pendientes de Botón de Pánico que estén activos ("Pendiente") y, si la ÚLTIMA
+// prueba semanal REAL de ese local ya dice "Sí llegó", los resuelve automáticamente. Esto limpia
+// tanto los pendientes que se generan a futuro como los que ya habían quedado colgados de antes
+// (por ejemplo, si esta corrección se instala cuando ya existían pendientes viejos sin resolver).
+// Se llama cada vez que termina de sincronizar Pendientes o Pruebas Semanales; es económica y no
+// hace nada si no hay nada para corregir, así que es segura de llamar repetidamente.
+function reconciliarPendientesBotonSegunPruebas(){
+  if(_sincronizandoDesdeFirestore || _sincronizandoPruebasDesdeFirestore) return;
+  if(typeof pruebasSemanales === 'undefined' || !pruebasSemanales.length) return;
+  const activos = pendientes.filter(p => p.tipo === 'Boton' && p.pendienteEstado === 'Pendiente');
+  if(!activos.length) return;
+
+  const idsResueltos = [];
+  activos.forEach(p => {
+    const ultima = ultimaPruebaRealDeLocal(p.piazza, p.numeroLocal, p.nombreLocal);
+    if(ultima && ultima.estado === 'Si'){
+      p.estado = 'Operativo';
+      p.pendienteEstado = 'Resuelto';
+      p.reporte = (p.reporte ? p.reporte + '\n\n' : '') + 'RESUELTO automáticamente: la prueba semanal más reciente confirmó que sí llegó la señal del botón de pánico.';
+      p.modificado = new Date().toISOString();
+      idsResueltos.push(p.id);
+    }
+  });
+
+  if(idsResueltos.length){
+    console.log('Reconciliación automática: ' + idsResueltos.length + ' pendiente(s) de Botón resuelto(s) porque la última prueba real ya decía "Sí llegó".');
+    guardarDatos(idsResueltos);
+    refrescarTodasLasVistas();
+  }
 }
 
 // guardarDatos(idsModificados) — si se pasan IDs, solo guarda esos en Firebase
@@ -1922,6 +1954,7 @@ function cargarDatosPruebas(){
         primeraCarga = false;
         if(document.getElementById('tab-pruebas') && document.getElementById('tab-pruebas').classList.contains('activo')) renderPruebas();
         _sincronizandoPruebasDesdeFirestore = false;
+        reconciliarPendientesBotonSegunPruebas();
       }, (error) => console.error('Error de sincronización de pruebas:', error));
     });
   };
