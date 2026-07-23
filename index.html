@@ -717,6 +717,7 @@
           <option value="Sin Novedad">Sin Novedad</option>
           <option value="Sin Información">Sin Información</option>
         </select>
+        <button class="btn btn-secundario btn-chico" onclick="reconciliarPendientesBotonManual()" title="Revisa todos los pendientes de Botón de Pánico y resuelve los que ya tengan &quot;Sí llegó&quot; en su última prueba semanal">🔄 Resolver Botones ya OK</button>
       </div>
     </div>
 
@@ -1429,9 +1430,11 @@ function ultimaPruebaRealDeLocal(piazza, numeroLocal, nombreLocal){
   // Ordenadas ascendente por año/semana; se ignoran temporalmente las que dicen "Cerrado",
   // "Local vacío" o "— (esta semana no le tocó prueba)" para encontrar la última prueba
   // REAL (Si/No/Otro/SinSistema), que son los únicos resultados que cuentan como pendiente
-  // o funcionando.
+  // o funcionando. La comparación ignora mayúsculas/minúsculas y espacios extra al inicio/final,
+  // para que pequeñas diferencias de tipeo no impidan encontrar la prueba correcta.
+  const norm = s => String(s == null ? '' : s).trim().toLowerCase();
   const historialPruebas = pruebasSemanales
-    .filter(p => p.piazza === piazza && p.numeroLocal === numeroLocal && p.nombreLocal === nombreLocal)
+    .filter(p => norm(p.piazza) === norm(piazza) && norm(p.numeroLocal) === norm(numeroLocal) && norm(p.nombreLocal) === norm(nombreLocal))
     .sort((a,b) => (a.anio - b.anio) || (a.semana - b.semana));
   if(!historialPruebas.length) return null;
   for(let i = historialPruebas.length - 1; i >= 0; i--){
@@ -1750,10 +1753,10 @@ function cargarDatos(){
 // Se llama cada vez que termina de sincronizar Pendientes o Pruebas Semanales; es económica y no
 // hace nada si no hay nada para corregir, así que es segura de llamar repetidamente.
 function reconciliarPendientesBotonSegunPruebas(){
-  if(_sincronizandoDesdeFirestore || _sincronizandoPruebasDesdeFirestore) return;
-  if(typeof pruebasSemanales === 'undefined' || !pruebasSemanales.length) return;
+  if(_sincronizandoDesdeFirestore || _sincronizandoPruebasDesdeFirestore) return 0;
+  if(typeof pruebasSemanales === 'undefined' || !pruebasSemanales.length) return 0;
   const activos = pendientes.filter(p => p.tipo === 'Boton' && p.pendienteEstado === 'Pendiente');
-  if(!activos.length) return;
+  if(!activos.length) return 0;
 
   const idsResueltos = [];
   activos.forEach(p => {
@@ -1771,6 +1774,23 @@ function reconciliarPendientesBotonSegunPruebas(){
     console.log('Reconciliación automática: ' + idsResueltos.length + ' pendiente(s) de Botón resuelto(s) porque la última prueba real ya decía "Sí llegó".');
     guardarDatos(idsResueltos);
     refrescarTodasLasVistas();
+  }
+  return idsResueltos.length;
+}
+
+// Versión con aviso en pantalla, para disparar la reconciliación a mano desde el botón
+// "🔄 Resolver Botones ya OK" y ver el resultado al toque (en vez de esperar a que sincronice sola).
+function reconciliarPendientesBotonManual(){
+  const activosAntes = pendientes.filter(p => p.tipo === 'Boton' && p.pendienteEstado === 'Pendiente');
+  if(!activosAntes.length){
+    alert('No hay ningún pendiente de Botón de Pánico activo en este momento. No hay nada que revisar.');
+    return;
+  }
+  const resueltos = reconciliarPendientesBotonSegunPruebas();
+  if(resueltos > 0){
+    alert('✅ Se resolvieron ' + resueltos + ' pendiente(s) de Botón de Pánico cuya última prueba semanal ya decía "Sí llegó".');
+  } else {
+    alert('Revisé los ' + activosAntes.length + ' pendiente(s) de Botón de Pánico activos, pero ninguno tiene "Sí llegó" como resultado de su última prueba semanal real todavía. Si esperabas que alguno se resolviera, revisá en "BP Pruebas Semanales" que la piazza, el número y el nombre del local coincidan exactamente con los del pendiente.');
   }
 }
 
