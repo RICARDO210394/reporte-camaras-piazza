@@ -4886,13 +4886,6 @@ function exportarPDF(docExterno, opciones){
     }]);
     filaAPendiente.push(null);
 
-    // Fila de encabezado de columnas repetida, debajo de cada Piazza
-    body.push(encabezadoTabla.map(titulo => ({
-      content: titulo,
-      styles:{fillColor:[11,35,64], textColor:[255,255,255], fontStyle:'bold', fontSize:7, valign:'middle'}
-    })));
-    filaAPendiente.push(null);
-
     itemsPz.forEach(p => {
       const fila = [
         p.fecha || '',
@@ -4926,6 +4919,18 @@ function exportarPDF(docExterno, opciones){
     headStyles:{fillColor:[11,35,64], textColor:255, fontSize:7, valign:'middle'},
     alternateRowStyles:{fillColor:[244,246,249]},
     columnStyles: anchoColumnas,
+    willDrawCell: function(data){
+      // Evitar que la barra naranja de una Piazza quede "huérfana" al final de una página
+      // (con muy poco espacio debajo). Si al llegar a esa fila queda menos de 40mm libres,
+      // se salta directo a la siguiente página antes de dibujarla.
+      if(data.section === 'body' && data.column.index === 0 && filaAPendiente[data.row.index] === null){
+        const restante = data.doc.internal.pageSize.getHeight() - data.cursor.y;
+        if(restante < 40){
+          data.doc.addPage();
+          data.cursor.y = data.settings.margin.top;
+        }
+      }
+    },
     didParseCell: function(data){
       const fila = filaAPendiente[data.row.index];
       if(!fila) return; // fila de barra-Piazza: ya trae su propio estilo inline
