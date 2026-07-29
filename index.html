@@ -4875,9 +4875,11 @@ function exportarPDF(docExterno, opciones){
   // filaAPendiente mapea cada índice de fila del body al pendiente real (o null si es barra de Piazza).
   const body = [];
   const filaAPendiente = [];
+  const ORDEN_TIPOS = ['Camara','Boton','Incendio','Otro'];
+  const ICONO_TIPO = {'Camara':'📹','Boton':'🔴','Incendio':'🔥','Otro':'🛠️'};
+
   piazzasConDatos.forEach(pz => {
-    const itemsPz = lista.filter(p => p.piazza === pz)
-      .sort((a,b) => (b.fecha || '').localeCompare(a.fecha || ''));
+    const itemsPzTodos = lista.filter(p => p.piazza === pz);
 
     body.push([{
       content: pz,
@@ -4886,19 +4888,33 @@ function exportarPDF(docExterno, opciones){
     }]);
     filaAPendiente.push(null);
 
-    itemsPz.forEach(p => {
-      const fila = [
-        p.fecha || '',
-        String(calcularDias(p)),
-        NOMBRES_TIPO[p.tipo] || p.tipo,
-        detalleRegistro(p),
-        p.estado || ''
-      ];
-      if(mostrarPSem) fila.push(p.tipo === 'Boton' ? (p.pruebaSemanal || '-') : '-');
-      fila.push(p.pendienteEstado || 'Pendiente', p.reporte || '');
-      if(incluirFotos) fila.push('');
-      body.push(fila);
-      filaAPendiente.push(p);
+    const tiposEnEstaPiazza = ORDEN_TIPOS.filter(t => itemsPzTodos.some(p => p.tipo === t));
+
+    tiposEnEstaPiazza.forEach(tipo => {
+      const itemsTipo = itemsPzTodos.filter(p => p.tipo === tipo)
+        .sort((a,b) => (b.fecha || '').localeCompare(a.fecha || ''));
+
+      body.push([{
+        content: (ICONO_TIPO[tipo] || '') + ' ' + (NOMBRES_TIPO[tipo] || tipo),
+        colSpan: encabezadoTabla.length,
+        styles:{fillColor:[18,58,99], textColor:[255,255,255], fontStyle:'bold', fontSize:8.5, cellPadding:{top:2, right:3, bottom:2, left:3}}
+      }]);
+      filaAPendiente.push(null);
+
+      itemsTipo.forEach(p => {
+        const fila = [
+          p.fecha || '',
+          String(calcularDias(p)),
+          NOMBRES_TIPO[p.tipo] || p.tipo,
+          detalleRegistro(p),
+          p.estado || ''
+        ];
+        if(mostrarPSem) fila.push(p.tipo === 'Boton' ? (p.pruebaSemanal || '-') : '-');
+        fila.push(p.pendienteEstado || 'Pendiente', p.reporte || '');
+        if(incluirFotos) fila.push('');
+        body.push(fila);
+        filaAPendiente.push(p);
+      });
     });
   });
 
