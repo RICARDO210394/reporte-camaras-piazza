@@ -4521,6 +4521,8 @@ function exportarConsolidadoPDF(){
   if(incluirLista){
     const tiposSel = expGetTiposSeleccionados();
     tiposSel.forEach(tipo => {
+      const hayDatosParaEsteTipo = obtenerFiltrados().some(p => p.tipo === tipo);
+      if(!hayDatosParaEsteTipo) return; // sin pendientes de este tipo: no dibujar una sección vacía
       y = exportarPDF(doc, {compacto:true, startY:y, filtroTipo:tipo});
       y += 4;
     });
