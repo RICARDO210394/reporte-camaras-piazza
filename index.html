@@ -4031,10 +4031,28 @@ function obtenerFiltrados(){
   const fe = document.getElementById('filtro-estado').value;
   const fpe = document.getElementById('filtro-pendiente-estado').value;
 
-  return pendientes
+  // 1) Filtros estructurales: qué equipos considerar, sin importar su historial.
+  const candidatos = pendientes
     .filter(p => !ft || p.tipo === ft)
     .filter(p => !fp || p.piazza === fp)
-    .filter(p => !fd || p.dvr === fd)
+    .filter(p => !fd || p.dvr === fd);
+
+  // 2) Colapsar a UN SOLO registro por equipo (Cámara/Botón/Incendio/Otro): el más reciente
+  // por fecha (y de empate, por fecha de modificación/creación). Antes se mostraba todo el
+  // historial de reportes de un mismo equipo como filas separadas; ahora solo se ve su
+  // situación actual, tanto en Lista de Pendientes como en el PDF exportado.
+  const masRecientePorEquipo = {};
+  candidatos.forEach(p => {
+    const k = claveDe(p);
+    const actual = masRecientePorEquipo[k];
+    const esMasNuevo = !actual
+      || (p.fecha || '') > (actual.fecha || '')
+      || ((p.fecha || '') === (actual.fecha || '') && (p.modificado || p.creado || '') > (actual.modificado || actual.creado || ''));
+    if(esMasNuevo) masRecientePorEquipo[k] = p;
+  });
+
+  // 3) Filtros de situación actual: aplican sobre el estado más reciente de cada equipo.
+  return Object.values(masRecientePorEquipo)
     .filter(p => !fe || p.estado === fe)
     .filter(p => !fpe || p.pendienteEstado === fpe)
     .sort((a,b) => (b.fecha || '').localeCompare(a.fecha || ''));
