@@ -4854,11 +4854,11 @@ function exportarPDF(docExterno, opciones){
   const idxFoto = idxReporte + 1;
 
   const anchoDisponible = anchoPagina - 20; // margen 10mm a cada lado
-  const anchoFijoResto = 20+9+15+26+17+15; // suma de las columnas de ancho fijo
+  const anchoFijoResto = 20+9+15+45+17+15; // suma de las columnas de ancho fijo
   const anchoFoto = incluirFotos ? 34 : 0;
   const anchoReporte = Math.max(50, anchoDisponible - anchoFijoResto - anchoFoto);
   const anchoColumnas = {
-    0:{cellWidth:20}, 1:{cellWidth:9}, 2:{cellWidth:15}, 3:{cellWidth:26}, 4:{cellWidth:17}
+    0:{cellWidth:20}, 1:{cellWidth:9}, 2:{cellWidth:15}, 3:{cellWidth:45}, 4:{cellWidth:17}
   };
   anchoColumnas[idxSituacion] = {cellWidth:15};
   anchoColumnas[idxReporte] = {cellWidth:anchoReporte};
