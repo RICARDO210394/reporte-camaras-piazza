@@ -4772,7 +4772,7 @@ function exportarHistorialCompletoEquipo(){
 
   doc.autoTable({
     startY: yTrasEncabezadoHist,
-    margin:{top:66, left:10, right:10},
+    margin:{top:15, left:10, right:10},
     head: [['Fecha','Técnico','Estado','Situación','Reporte','Días sol.']],
     body: filas,
     styles:{fontSize:7.5, cellPadding:2.5, overflow:'linebreak'},
@@ -4918,7 +4918,7 @@ function exportarPDF(docExterno, opciones){
 
   doc.autoTable({
     startY: y,
-    margin:{top: compacto ? 15 : 66, left:10, right:10},
+    margin:{top: 15, left:10, right:10},
     tableWidth: 'wrap',
     head: [encabezadoTabla],
     body: body,
