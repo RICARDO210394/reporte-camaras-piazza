@@ -4876,7 +4876,6 @@ function exportarPDF(docExterno, opciones){
   const body = [];
   const filaAPendiente = [];
   const ORDEN_TIPOS = ['Camara','Boton','Incendio','Otro'];
-  const ICONO_TIPO = {'Camara':'📹','Boton':'🔴','Incendio':'🔥','Otro':'🛠️'};
 
   piazzasConDatos.forEach(pz => {
     const itemsPzTodos = lista.filter(p => p.piazza === pz);
@@ -4895,7 +4894,7 @@ function exportarPDF(docExterno, opciones){
         .sort((a,b) => (b.fecha || '').localeCompare(a.fecha || ''));
 
       body.push([{
-        content: (ICONO_TIPO[tipo] || '') + ' ' + (NOMBRES_TIPO[tipo] || tipo),
+        content: NOMBRES_TIPO[tipo] || tipo,
         colSpan: encabezadoTabla.length,
         styles:{fillColor:[18,58,99], textColor:[255,255,255], fontStyle:'bold', fontSize:8.5, cellPadding:{top:2, right:3, bottom:2, left:3}}
       }]);
