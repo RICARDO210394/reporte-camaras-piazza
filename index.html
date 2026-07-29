@@ -4847,23 +4847,19 @@ function exportarPDF(docExterno, opciones){
   // "arañado" entre sí) — esa era la causa real del texto encimado en la exportación.
   const piazzasConDatos = PIAZZAS.filter(pz => lista.some(p => p.piazza === pz));
 
-  const mostrarPSem = tiposPresentes.includes('Boton'); // la columna P.Sem. solo aplica a Botones de Pánico
-  const encabezadoTabla = ['Fecha','Días','Tipo','Detalle','Estado'];
-  if(mostrarPSem) encabezadoTabla.push('P.Sem.');
-  encabezadoTabla.push('Situación','Reporte del Técnico');
+  const encabezadoTabla = ['Fecha','Días','Tipo','Detalle','Estado','Situación','Reporte del Técnico'];
 
-  const idxSituacion = mostrarPSem ? 6 : 5;
+  const idxSituacion = 5;
   const idxReporte = idxSituacion + 1;
   const idxFoto = idxReporte + 1;
 
   const anchoDisponible = anchoPagina - 20; // margen 10mm a cada lado
-  const anchoFijoResto = 20+9+15+26+17+(mostrarPSem ? 11 : 0)+15; // suma de las columnas de ancho fijo
+  const anchoFijoResto = 20+9+15+26+17+15; // suma de las columnas de ancho fijo
   const anchoFoto = incluirFotos ? 34 : 0;
   const anchoReporte = Math.max(50, anchoDisponible - anchoFijoResto - anchoFoto);
   const anchoColumnas = {
     0:{cellWidth:20}, 1:{cellWidth:9}, 2:{cellWidth:15}, 3:{cellWidth:26}, 4:{cellWidth:17}
   };
-  if(mostrarPSem) anchoColumnas[5] = {cellWidth:11};
   anchoColumnas[idxSituacion] = {cellWidth:15};
   anchoColumnas[idxReporte] = {cellWidth:anchoReporte};
   if(incluirFotos){
@@ -4908,7 +4904,6 @@ function exportarPDF(docExterno, opciones){
           detalleRegistro(p),
           p.estado || ''
         ];
-        if(mostrarPSem) fila.push(p.tipo === 'Boton' ? (p.pruebaSemanal || '-') : '-');
         fila.push(p.pendienteEstado || 'Pendiente', p.reporte || '');
         if(incluirFotos) fila.push('');
         body.push(fila);
