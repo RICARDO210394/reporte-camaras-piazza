@@ -20,12 +20,12 @@
   import { getFirestore, collection, doc, setDoc, deleteDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
 
   const firebaseConfig = {
-    apiKey: "AIzaSyAcvBD70Zhuv9jqu2ul4CObS-2svGInO2U",
-    authDomain: "krause-reportes2026.firebaseapp.com",
-    projectId: "krause-reportes2026",
-    storageBucket: "krause-reportes2026.firebasestorage.app",
-    messagingSenderId: "274788386890",
-    appId: "1:274788386890:web:d2a3dbc3f6f46815127eb3"
+    apiKey: "AIzaSyB2KX6PwLoHwJ2QR4uNlxzd885iVZ-NP9s",
+    authDomain: "reporte-de-c.firebaseapp.com",
+    projectId: "reporte-de-c",
+    storageBucket: "reporte-de-c.firebasestorage.app",
+    messagingSenderId: "671233826528",
+    appId: "1:671233826528:web:86f427e1ab0c9c082e7a85"
   };
 
   const fbApp = initializeApp(firebaseConfig);
@@ -33,8 +33,7 @@
   const coleccion = collection(db, "pendientes_camaras");
   const coleccionTrabajos = collection(db, "trabajos_realizados");
 
-  window._coleccionTrabajos = coleccionTrabajos;
-  window._firebase = { db, coleccion, coleccionTrabajos, doc, setDoc, deleteDoc, onSnapshot, collection };
+  window._firebase = { db, coleccion, coleccionTrabajos, doc, setDoc, deleteDoc, onSnapshot };
   window._firebaseListo = true;
   // Indicador visual de conexión Firebase
   document.addEventListener('DOMContentLoaded', () => {
@@ -717,7 +716,6 @@
           <option value="Sin Novedad">Sin Novedad</option>
           <option value="Sin Información">Sin Información</option>
         </select>
-        <button class="btn btn-secundario btn-chico" onclick="reconciliarPendientesBotonManual()" title="Revisa todos los pendientes de Botón de Pánico y resuelve los que ya tengan &quot;Sí llegó&quot; en su última prueba semanal">🔄 Resolver Botones ya OK</button>
       </div>
     </div>
 
@@ -746,7 +744,7 @@
         <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
           <span class="contador-resultados" id="contador-resultados"></span>
           <button class="btn btn-secundario btn-chico" onclick="pedirDatosReporte(() => exportarPDF())">📄 Exportar PDF</button>
-          <button class="btn btn-secundario btn-chico" onclick="exportarJSON()" title="Exportar respaldo completo (pendientes, trabajos, pruebas, grabación)">💾 Exportar Respaldo</button>
+          <button class="btn btn-secundario btn-chico" onclick="exportarJSON()">💾 Respaldo JSON</button>
           <label class="btn btn-secundario btn-chico" style="margin:0; cursor:pointer;">
             📂 Importar JSON
             <input type="file" id="input-json" accept=".json" style="display:none" onchange="importarJSON(event)">
@@ -820,87 +818,26 @@
     <div id="estadistica-graficos"></div>
   </div>
 
-  <!-- TAB REGISTRAR TRABAJO -->
-  <div class="tab" id="tab-items">
-    <div class="card">
-      <h2>🛠️ Registrar Trabajo Realizado</h2>
-      <p style="color:#5a6b7b;margin-top:-8px;">Registra trabajos de técnicos/proveedores.</p>
-      <div class="grid-form">
-        <div class="campo"><label>Fecha *</label><input type="date" id="rt-fecha"></div>
-        <div class="campo"><label>Piazza *</label><select id="rt-piazza" onchange="rtCambiarPiazza()"><option value="">Seleccionar...</option></select></div>
-        <div class="campo"><label>Tipo *</label><select id="rt-tipo" onchange="rtCambiarTipo()"><option value="Camara">📹 Cámara</option><option value="Boton">🔴 Botón de Pánico</option><option value="Incendio">🔥 SCI</option><option value="Otro">🛠️ Otros</option></select></div>
-        <div class="campo" id="rt-wrap-dvr"><label>DVR/NVR *</label><select id="rt-dvr" onchange="rtPoblarCamaras()"><option value="">Seleccionar...</option></select></div>
-        <div class="campo" id="rt-wrap-camara" style="position:relative;">
-          <label>Número de cámara *</label>
-          <div id="rt-camara-display" onclick="rtToggleCamaraPanel()" tabindex="0"
-               style="border:1px solid #ced7e0; border-radius:8px; padding:9px 12px; cursor:pointer; background:#eef1f4; color:#9aa5b1; user-select:none; display:flex; justify-content:space-between; align-items:center;">
-            <span id="rt-camara-texto">Selecciona primero el DVR/NVR</span>
-            <span>▾</span>
-          </div>
-          <div id="rt-camara-panel" style="display:none; position:absolute; z-index:50; top:100%; left:0; right:0; background:#fff; border:1px solid #ced7e0; border-radius:8px; max-height:260px; overflow-y:auto; box-shadow:0 8px 20px rgba(0,0,0,0.12); margin-top:4px;">
-          </div>
-          <input type="hidden" id="rt-camara">
-        </div>
-        <div class="campo" id="rt-wrap-local" style="display:none;"><label>Local *</label><select id="rt-local" onchange="rtCambiarLocal()"><option value="">Seleccionar...</option></select></div>
-        <div class="campo" id="rt-wrap-local-manual" style="display:none;"><label>Nombre del local (manual)</label><input type="text" id="rt-local-manual"></div>
-        <div class="campo" id="rt-wrap-numero-local" style="display:none;"><label>Número del local</label><input type="text" id="rt-numero-local" readonly style="background:#f0f4f8;cursor:not-allowed;color:#5a6b7b;"></div>
-        <div class="campo" id="rt-wrap-zona" style="display:none;"><label>Zona</label><input type="text" id="rt-zona" readonly style="background:#f0f4f8;cursor:not-allowed;color:#5a6b7b;"></div>
-        <div class="campo" id="rt-wrap-componente" style="display:none;"><label>Componente / Zona SCI *</label><input type="text" id="rt-componente" placeholder="Ej: Panel central, Sensor zona 2"></div>
-        <div class="campo full" id="rt-wrap-novedad" style="display:none;"><label>Descripción *</label><input type="text" id="rt-novedad" placeholder="Descripción del trabajo..."></div>
-        <div class="campo" id="rt-wrap-estado"><label>Estado del equipo *</label><select id="rt-estado"><option value="">Seleccionar...</option></select></div>
-        <div class="campo"><label>Situación *</label><select id="rt-situacion"><option value="">Seleccionar...</option><option value="Pendiente">🔴 Pendiente</option><option value="Resuelto">✅ Solucionado</option><option value="Sin Novedad">✔️ Sin Novedad</option></select></div>
-        <div class="campo"><label>Técnico / Proveedor *</label><input type="text" id="rt-tecnico" placeholder="Nombre del técnico o empresa"></div>
-        <div class="campo"><label>Operador que registra *</label><input type="text" id="rt-operador" placeholder="Tu nombre"></div>
-        <div class="campo full"><label>Reporte del trabajo</label><textarea id="rt-reporte" rows="3" placeholder="Detalle del trabajo realizado..."></textarea></div>
-        <div class="campo"><label>Foto (opcional)</label>
-          <input type="file" id="rt-foto" accept="image/*" onchange="rtSeleccionarFoto(event)">
-          <div id="rt-foto-wrap" style="display:none;margin-top:8px;">
-            <img id="rt-foto-img" style="max-width:140px;max-height:110px;border-radius:6px;border:1px solid #d7dee6;">
-            <button type="button" class="btn btn-peligro btn-chico" onclick="rtQuitarFoto()" style="margin-left:8px;">🗑 Quitar</button>
-          </div>
-        </div>
-      </div>
-      <div class="acciones-form" style="margin-top:16px;">
-        <button class="btn btn-primario" onclick="rtGuardar()">💾 Guardar Trabajo</button>
-        <button class="btn btn-secundario" onclick="rtLimpiar()">🗑 Limpiar</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- TAB TRABAJOS REALIZADOS -->
+  <!-- TAB TRABAJOS REALIZADOS (solo entradas ya resueltas / cerradas) -->
   <div class="tab" id="tab-realizados">
     <div class="card">
-      <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:8px;margin-bottom:4px;">
-        <div>
-          <h2 style="margin:0;">✅ Trabajos Realizados</h2>
-          <p style="color:#5a6b7b;margin:4px 0 0;">Historial de todos los trabajos registrados por técnicos y proveedores.</p>
-        </div>
-        <button class="btn btn-primario" onclick="pedirDatosReporte(()=>exportarTrabajosRealizadosPDF())" style="white-space:nowrap;">📄 Exportar PDF</button>
-        <button class="btn btn-secundario" onclick="trDiagnostico()" style="white-space:nowrap;font-size:.8rem;">🔍 Diagnóstico</button>
-      </div>
+      <h2>✅ Trabajos Realizados</h2>
+      <p style="color:#5a6b7b; margin-top:-8px;">Muestra únicamente lo ingresado desde "🛠️ Registrar Trabajo". No incluye lo ingresado desde "➕ Registrar".</p>
       <div class="filtros">
-        <select id="tr-filtro-tipo" onchange="trRenderizar()">
+        <select id="realizados-filtro-tipo" onchange="renderRealizados()">
           <option value="">Todos los tipos</option>
           <option value="Camara">📹 Cámara</option>
           <option value="Boton">🔴 Botón de Pánico</option>
-          <option value="Incendio">🔥 SCI</option>
-          <option value="Otro">🛠️ Otros</option>
+          <option value="Incendio">🔥 Sistema Contra Incendio</option>
+          <option value="Otro">🛠️ Otros Trabajos</option>
         </select>
-        <select id="tr-filtro-piazza" onchange="trRenderizar()">
+        <select id="realizados-filtro-piazza" onchange="renderRealizados()">
           <option value="">Todas las Piazzas</option>
         </select>
-        <select id="tr-filtro-sit" onchange="trRenderizar()">
-          <option value="">Todas las situaciones</option>
-          <option value="Pendiente">🔴 Pendiente</option>
-          <option value="Resuelto">✅ Solucionado</option>
-          <option value="Sin Novedad">✔️ Sin Novedad</option>
-        </select>
-        <input type="text" id="tr-buscar" placeholder="Buscar técnico, equipo, reporte..." oninput="trRenderizar()" style="min-width:200px;">
+        <input type="text" id="realizados-buscar" placeholder="Buscar (técnico, detalle, reporte)..." oninput="renderRealizados()" style="min-width:220px;">
+        <button class="btn btn-primario" onclick="pedirDatosReporte(() => exportarTodosTrabajosRealizados())">📄 Exportar todo (PDF)</button>
+        <button class="btn btn-secundario" onclick="exportarJSON()">💾 Respaldo JSON</button>
       </div>
-    </div>
-    <div id="tr-contenido"></div>
-    <div class="vacio" id="tr-vacio" style="display:none;">No hay trabajos registrados aún.</div>
-  </div>
     </div>
     <div id="arbol-realizados"></div>
     <div class="vacio" id="realizados-mensaje-vacio" style="display:none;">Aún no hay trabajos ingresados desde "🛠️ Registrar Trabajo" que coincidan con estos filtros.</div>
@@ -952,29 +889,9 @@
       <div style="display:flex; flex-direction:column; gap:16px; margin-top:10px;">
 
         <label style="display:flex; align-items:center; gap:10px; cursor:pointer;">
-          <input type="checkbox" id="exp-check-lista" onchange="expToggleTipos()" style="width:18px; height:18px;">
-          <span>📋 <strong>Lista de Pendientes</strong> — pendientes activos agrupados por Piazza y sección.</span>
+          <input type="checkbox" id="exp-check-lista" style="width:18px; height:18px;">
+          <span>📋 <strong>Lista de Pendientes</strong> — todos los pendientes activos, agrupados por Piazza.</span>
         </label>
-
-        <!-- Filtros de tipo para Lista de Pendientes -->
-        <div id="exp-tipos-wrap" style="display:none; margin-left:28px; background:#f4f7fa; border-radius:8px; padding:12px 16px; border:1px solid #d7dee6;">
-          <p style="margin:0 0 10px;font-size:.88rem;color:#4a5a6b;font-weight:600;">¿Qué secciones incluir en el reporte?</p>
-          <div style="display:flex;flex-wrap:wrap;gap:12px;">
-            <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
-              <input type="checkbox" id="exp-tipo-camara" checked style="width:16px;height:16px;">
-              <span>📹 Cámaras</span>
-            </label>
-            <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
-              <input type="checkbox" id="exp-tipo-boton" checked style="width:16px;height:16px;">
-              <span>🔔 Botones de Pánico</span>
-            </label>
-            <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
-              <input type="checkbox" id="exp-tipo-incendio" checked style="width:16px;height:16px;">
-              <span>🔥 Sistema Contra Incendio</span>
-            </label>
-          </div>
-          <p style="margin:10px 0 0;font-size:.8rem;color:#7a8a9b;">Si seleccionas más de uno, el PDF se divide por secciones.</p>
-        </div>
 
         <label style="display:flex; align-items:center; gap:10px; cursor:pointer; margin-left:28px;">
           <input type="checkbox" id="exp-check-fotos" style="width:18px; height:18px;">
@@ -982,56 +899,14 @@
         </label>
 
         <label style="display:flex; align-items:center; gap:10px; cursor:pointer;">
-          <input type="checkbox" id="exp-check-estadistica" onchange="expToggleTiposEstadistica()" style="width:18px; height:18px;">
+          <input type="checkbox" id="exp-check-estadistica" style="width:18px; height:18px;">
           <span>📊 <strong>Estadística</strong> — % operativo por Piazza y tipo de equipo.</span>
         </label>
 
-        <div id="exp-tipos-estadistica-wrap" style="display:none; margin-left:28px; background:#f4f7fa; border-radius:8px; padding:12px 16px; border:1px solid #d7dee6;">
-          <p style="margin:0 0 10px;font-size:.88rem;color:#4a5a6b;font-weight:600;">¿Qué tipos incluir en la estadística?</p>
-          <div style="display:flex;flex-wrap:wrap;gap:12px;">
-            <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
-              <input type="checkbox" id="exp-est-camara" checked style="width:16px;height:16px;">
-              <span>📹 Cámaras</span>
-            </label>
-            <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
-              <input type="checkbox" id="exp-est-boton" checked style="width:16px;height:16px;">
-              <span>🔔 Botones de Pánico</span>
-            </label>
-            <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
-              <input type="checkbox" id="exp-est-incendio" checked style="width:16px;height:16px;">
-              <span>🔥 Sistema Contra Incendio</span>
-            </label>
-          </div>
-        </div>
-
         <label style="display:flex; align-items:center; gap:10px; cursor:pointer;">
-          <input type="checkbox" id="exp-check-realizados" onchange="expToggleTiposRealizados()" style="width:18px; height:18px;">
-          <span>✅ <strong>Trabajos Realizados</strong> — historial de trabajos agrupados por Piazza y tipo.</span>
+          <input type="checkbox" id="exp-check-realizados" style="width:18px; height:18px;">
+          <span>✅ <strong>Trabajos Realizados</strong> — historial completo de trabajos y resoluciones.</span>
         </label>
-
-        <!-- Filtros de tipo para Trabajos Realizados -->
-        <div id="exp-tipos-realizados-wrap" style="display:none; margin-left:28px; background:#f4f7fa; border-radius:8px; padding:12px 16px; border:1px solid #d7dee6;">
-          <p style="margin:0 0 10px;font-size:.88rem;color:#4a5a6b;font-weight:600;">¿Qué tipos de trabajo incluir?</p>
-          <div style="display:flex;flex-wrap:wrap;gap:12px;">
-            <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
-              <input type="checkbox" id="exp-tr-camara" checked style="width:16px;height:16px;">
-              <span>📹 Cámaras</span>
-            </label>
-            <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
-              <input type="checkbox" id="exp-tr-boton" checked style="width:16px;height:16px;">
-              <span>🔔 Botones de Pánico</span>
-            </label>
-            <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
-              <input type="checkbox" id="exp-tr-incendio" checked style="width:16px;height:16px;">
-              <span>🔥 Sistema Contra Incendio</span>
-            </label>
-            <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
-              <input type="checkbox" id="exp-tr-otro" checked style="width:16px;height:16px;">
-              <span>🔧 Otros</span>
-            </label>
-          </div>
-          <p style="margin:10px 0 0;font-size:.8rem;color:#7a8a9b;">Si seleccionas más de uno, el reporte se divide en secciones por tipo.</p>
-        </div>
 
         <div>
           <label style="display:flex; align-items:center; gap:10px; cursor:pointer;">
@@ -1052,14 +927,8 @@
         </label>
 
       </div>
-      <div style="margin-top:24px; display:flex; flex-wrap:wrap; gap:12px; align-items:center;">
-        <button class="btn btn-primario" onclick="pedirDatosReporte(() => exportarConsolidadoPDFSafe())">📄 Generar PDF con lo seleccionado</button>
-        <div style="border-left:2px solid #d7dee6; height:36px; margin:0 4px;"></div>
-        <button class="btn btn-secundario" onclick="exportarJSON()" title="Descarga un archivo JSON con todos los datos del sistema">💾 Exportar Respaldo JSON</button>
-        <label class="btn btn-secundario" style="cursor:pointer;" title="Importa un archivo de respaldo JSON">
-          📂 Importar Respaldo JSON
-          <input type="file" accept=".json" style="display:none" onchange="importarJSON(event)">
-        </label>
+      <div style="margin-top:24px;">
+        <button class="btn btn-primario" onclick="pedirDatosReporte(() => exportarConsolidadoPDF())">📄 Generar PDF con lo seleccionado</button>
       </div>
     </div>
   </div>
@@ -1295,18 +1164,19 @@ const CLAVE_STORAGE = 'krause_pendientes_camaras_v1';
 let pendientes = [];
 
 // ===== TRABAJOS REALIZADOS — array separado, colección Firebase propia =====
+const CLAVE_STORAGE_TRABAJOS = 'krause_trabajos_realizados_v1';
+let trabajosRealizados = []; // solo registros de "Registrar Trabajo"
+let _sincronizandoTrabajosDesdeFirestore = false;
 
-const PIAZZAS = ["Belén del Norte","Bosques","Ceibos","Ciudad Celeste","Curía","FCG","La Joya","Murano","Palmar","Samborondón","Villa Club","Villas del Rey"];
-// "Belén del Norte" NO tiene Tiempo de Grabación de DVR/NVR ni BP Pruebas Semanales
-// (solo se usa para Registrar pendientes y Registrar Trabajo / Trabajos Realizados).
-const PIAZZAS_CON_DVR_Y_PRUEBAS = PIAZZAS.filter(pz => pz !== "Belén del Norte");
+const PIAZZAS = ["Bosques","Ceibos","Ciudad Celeste","Curía","FCG","Isora","La Joya","Murano","Palmar","Samborondón","Villa Club","Villas del Rey"];
 const DVRS = ["DVR1","DVR2","DVR3","DVR4"];
 
 // Configuración de grabadores (DVR/NVR) por Piazza
 const DVRS_POR_PIAZZA = {
   "Ceibos": ["DVR1","DVR2","DVR3"],
   "Bosques": ["NVR1","NVR2"],
-  "Samborondón": ["NVR1","NVR2"],
+  "Isora": ["NVR1"],
+  "Samborondón": ["NVR1","NVR2","DVR3"],
   "Ciudad Celeste": ["DVR1","DVR2","NVR3"],
   "Villa Club": ["NVR1","DVR2","NVR3"],
   "FCG": ["NVR1","NVR2"],
@@ -1321,7 +1191,7 @@ const PUERTOS_POR_PIAZZA = { "Murano": "64" };
 
 // Cantidad de puertos/canales por grabador según la Piazza (para Número de cámara)
 // Por defecto 16; Samborondón 32; Murano 64
-const PUERTOS_CAMARA_POR_PIAZZA = { "Samborondón": 32, "Murano": 64 };
+const PUERTOS_CAMARA_POR_PIAZZA = { "Samborondón": 32, "Murano": 64, "Isora": 32 };
 function puertosCamaraDePiazza(piazza){ return PUERTOS_CAMARA_POR_PIAZZA[piazza] || 16; }
 
 // Lista única de etiquetas DVR/NVR (para el Resumen)
@@ -1340,8 +1210,7 @@ Object.keys(CATALOGO_LOCALES).forEach(pz => {
 const ESTADOS_POR_TIPO = {
   'Camara': ["Operativo","Sin imagen","Blanco y negro","Intermitencia","Interferencia","Puerto libre","Otro"],
   'Boton': ["Operativo","No Operativo","Sin Información"],
-  'Incendio': ["Operativo","Falla de sensor","Sin señal","Batería baja","Requiere mantenimiento","Desconectado","Otro"],
-  'Otro': ["Completado","En proceso","Sin novedad","Requiere seguimiento"]
+  'Incendio': ["Operativo","Falla de sensor","Sin señal","Batería baja","Requiere mantenimiento","Desconectado","Otro"]
 };
 
 function esPendienteActivo(p){
@@ -1427,21 +1296,16 @@ function claveActualDelFormulario(){
 }
 
 function ultimaPruebaRealDeLocal(piazza, numeroLocal, nombreLocal){
-  // Ordenadas ascendente por año/semana; se ignoran temporalmente las que dicen "Cerrado",
-  // "Local vacío" o "— (esta semana no le tocó prueba)" para encontrar la última prueba
-  // REAL (Si/No/Otro/SinSistema), que son los únicos resultados que cuentan como pendiente
-  // o funcionando. La comparación ignora mayúsculas/minúsculas y espacios extra al inicio/final,
-  // para que pequeñas diferencias de tipeo no impidan encontrar la prueba correcta.
-  const norm = s => String(s == null ? '' : s).trim().toLowerCase();
+  // Ordenadas ascendente por año/semana; se ignoran temporalmente las que dicen "Cerrado"
+  // para encontrar la última prueba REAL (Si/No/Vacio/Otro/SinSistema).
   const historialPruebas = pruebasSemanales
-    .filter(p => norm(p.piazza) === norm(piazza) && norm(p.numeroLocal) === norm(numeroLocal) && norm(p.nombreLocal) === norm(nombreLocal))
+    .filter(p => p.piazza === piazza && p.numeroLocal === numeroLocal && p.nombreLocal === nombreLocal)
     .sort((a,b) => (a.anio - b.anio) || (a.semana - b.semana));
   if(!historialPruebas.length) return null;
   for(let i = historialPruebas.length - 1; i >= 0; i--){
-    const est = historialPruebas[i].estado;
-    if(est !== 'Cerrado' && est !== '-' && est !== 'Vacio') return historialPruebas[i];
+    if(historialPruebas[i].estado !== 'Cerrado') return historialPruebas[i];
   }
-  return null; // todas fueron "Cerrado", "Vacío" o "— (no le tocó prueba)"
+  return null; // todas fueron "Cerrado"
 }
 
 function autorrellenarDesdeUltimaPruebaBoton(){
@@ -1568,41 +1432,6 @@ const COLOR_FONDO_ESTADO_PRUEBA = {
 const COLOR_TEXTO_ESTADO_PRUEBA = {
   '-': '#8c96a0', 'Vacio': '#0b2340', 'SinSistema': '#3a2e00'
 };
-// Estadística de Botón de Pánico: el universo de locales a evaluar es el CATÁLOGO
-// completo de la Piazza (los mismos que aparecen en la grilla de "Pruebas Semanales"),
-// más los que se hayan agregado manualmente vía "Registrar" aunque no estén en catálogo.
-// Antes solo se contaban los locales con un registro manual en "Lista de Pendientes",
-// dejando afuera locales con prueba semanal pero sin registro manual.
-// Para cada local: manda el resultado de su ÚLTIMA prueba semanal REAL (ignora "Cerrado",
-// "Local vacío" y "— no le tocó prueba"). "Si" = funcionando; "No llegó", "Otro" y
-// "Sin sistema de BP" = pendiente. Si el local nunca tuvo una prueba real, se usa como
-// respaldo su último registro manual. Si no tiene ni prueba ni registro, se excluye del total.
-function calcularEstadisticaBoton(filtroPiazza){
-  const piazzasAConsiderar = filtroPiazza ? [filtroPiazza] : PIAZZAS;
-  const locales = piazzasAConsiderar.flatMap(pz =>
-    obtenerLocalesCombinadosPiazza(pz).map(l => ({ ...l, piazza: pz }))
-  );
-
-  const evaluados = locales.map(loc => {
-    const ultima = ultimaPruebaRealDeLocal(loc.piazza, loc.numeroLocal, loc.nombreLocal);
-    if(ultima) return { tieneDatos: true, funciona: ultima.estado === 'Si' };
-
-    const registrosLocal = pendientes.filter(p =>
-      p.tipo === 'Boton' && p.piazza === loc.piazza && p.numeroLocal === loc.numeroLocal && p.nombreLocal === loc.nombreLocal
-    );
-    if(registrosLocal.length){
-      const ultimoReg = registrosLocal.sort((a,b) => (a.fecha || '').localeCompare(b.fecha || ''))[registrosLocal.length - 1];
-      return { tieneDatos: true, funciona: !!(ultimoReg.pendienteEstado && ultimoReg.pendienteEstado !== 'Pendiente') };
-    }
-    return { tieneDatos: false }; // sin prueba ni registro: no hay forma de evaluarlo
-  }).filter(e => e.tieneDatos);
-
-  return {
-    total: evaluados.length,
-    funcionando: evaluados.filter(e => e.funciona).length
-  };
-}
-
 function celdaPruebaSemanal(p){
   if(p.tipo !== 'Boton' || !p.numeroLocal || !p.nombreLocal) return '<span style="color:#adb5bd;">—</span>';
   const historialPruebas = pruebasSemanales
@@ -1668,6 +1497,46 @@ function refrescarTodasLasVistas(){
   }
 }
 
+function cargarTrabajos(){
+  try{
+    const guardado = localStorage.getItem(CLAVE_STORAGE_TRABAJOS);
+    trabajosRealizados = guardado ? JSON.parse(guardado) : [];
+  }catch(e){ trabajosRealizados = []; }
+
+  const intentar = () => {
+    if(!window._firebase){ setTimeout(intentar, 300); return; }
+    const { coleccionTrabajos, onSnapshot } = window._firebase;
+    onSnapshot(coleccionTrabajos, (snapshot) => {
+      _sincronizandoTrabajosDesdeFirestore = true;
+      trabajosRealizados = [];
+      snapshot.forEach(docSnap => {
+        trabajosRealizados.push({ ...docSnap.data(), id: docSnap.id });
+      });
+      localStorage.setItem(CLAVE_STORAGE_TRABAJOS, JSON.stringify(trabajosRealizados));
+      _sincronizandoTrabajosDesdeFirestore = false;
+      renderRealizados(); // siempre actualizar, no solo si el tab está activo
+      console.log('✅ Trabajos sincronizados desde Firebase: ' + trabajosRealizados.length);
+    }, err => console.error('Error onSnapshot trabajos:', err));
+  };
+  intentar();
+}
+
+function guardarTrabajo(trabajo){
+  // Guardar en array local y localStorage
+  const idx = trabajosRealizados.findIndex(t => t.id === trabajo.id);
+  if(idx !== -1) trabajosRealizados[idx] = trabajo;
+  else trabajosRealizados.push(trabajo);
+  localStorage.setItem(CLAVE_STORAGE_TRABAJOS, JSON.stringify(trabajosRealizados));
+
+  // Guardar en Firebase colección trabajos_realizados
+  if(_sincronizandoTrabajosDesdeFirestore || !window._firebase) return;
+  const { coleccionTrabajos, doc, setDoc } = window._firebase;
+  const { foto, ...tSinFoto } = trabajo;
+  setDoc(doc(coleccionTrabajos, trabajo.id), tSinFoto)
+    .then(() => console.log('✅ Trabajo guardado en Firebase ID=' + trabajo.id))
+    .catch(err => console.error('❌ Error guardando trabajo en Firebase:', err));
+}
+
 function cargarDatos(){
   // Respaldo local inmediato (por si no hay internet al abrir la app)
   try{
@@ -1710,7 +1579,7 @@ function cargarDatos(){
         if(teniaSinOrigen) sinOrigenEnFirebase.push(p);
       });
 
-      if(nuevaLista.length === 0 && pendientes.length > 0){
+      if(primeraCarga && nuevaLista.length === 0 && pendientes.length > 0){
         // SEGURIDAD: la nube llegó vacía pero había datos guardados en este navegador.
         console.warn('Firestore estaba vacío; subiendo ' + pendientes.length + ' registro(s) local(es) a la nube en vez de borrarlos.');
         pendientes.forEach(p => {
@@ -1738,60 +1607,11 @@ function cargarDatos(){
       poblarDVREstadistica();
       refrescarTodasLasVistas();
       _sincronizandoDesdeFirestore = false;
-      reconciliarPendientesBotonSegunPruebas();
     }, (error) => {
       console.error('Error de sincronización con Firebase:', error);
     });
   };
   intentarConectarFirestore();
-}
-
-// Revisa TODOS los pendientes de Botón de Pánico que estén activos ("Pendiente") y, si la ÚLTIMA
-// prueba semanal REAL de ese local ya dice "Sí llegó", los resuelve automáticamente. Esto limpia
-// tanto los pendientes que se generan a futuro como los que ya habían quedado colgados de antes
-// (por ejemplo, si esta corrección se instala cuando ya existían pendientes viejos sin resolver).
-// Se llama cada vez que termina de sincronizar Pendientes o Pruebas Semanales; es económica y no
-// hace nada si no hay nada para corregir, así que es segura de llamar repetidamente.
-function reconciliarPendientesBotonSegunPruebas(){
-  if(_sincronizandoDesdeFirestore || _sincronizandoPruebasDesdeFirestore) return 0;
-  if(typeof pruebasSemanales === 'undefined' || !pruebasSemanales.length) return 0;
-  const activos = pendientes.filter(p => p.tipo === 'Boton' && p.pendienteEstado === 'Pendiente');
-  if(!activos.length) return 0;
-
-  const idsResueltos = [];
-  activos.forEach(p => {
-    const ultima = ultimaPruebaRealDeLocal(p.piazza, p.numeroLocal, p.nombreLocal);
-    if(ultima && ultima.estado === 'Si'){
-      p.estado = 'Operativo';
-      p.pendienteEstado = 'Resuelto';
-      p.reporte = (p.reporte ? p.reporte + '\n\n' : '') + 'RESUELTO automáticamente: la prueba semanal más reciente confirmó que sí llegó la señal del botón de pánico.';
-      p.modificado = new Date().toISOString();
-      idsResueltos.push(p.id);
-    }
-  });
-
-  if(idsResueltos.length){
-    console.log('Reconciliación automática: ' + idsResueltos.length + ' pendiente(s) de Botón resuelto(s) porque la última prueba real ya decía "Sí llegó".');
-    guardarDatos(idsResueltos);
-    refrescarTodasLasVistas();
-  }
-  return idsResueltos.length;
-}
-
-// Versión con aviso en pantalla, para disparar la reconciliación a mano desde el botón
-// "🔄 Resolver Botones ya OK" y ver el resultado al toque (en vez de esperar a que sincronice sola).
-function reconciliarPendientesBotonManual(){
-  const activosAntes = pendientes.filter(p => p.tipo === 'Boton' && p.pendienteEstado === 'Pendiente');
-  if(!activosAntes.length){
-    alert('No hay ningún pendiente de Botón de Pánico activo en este momento. No hay nada que revisar.');
-    return;
-  }
-  const resueltos = reconciliarPendientesBotonSegunPruebas();
-  if(resueltos > 0){
-    alert('✅ Se resolvieron ' + resueltos + ' pendiente(s) de Botón de Pánico cuya última prueba semanal ya decía "Sí llegó".');
-  } else {
-    alert('Revisé los ' + activosAntes.length + ' pendiente(s) de Botón de Pánico activos, pero ninguno tiene "Sí llegó" como resultado de su última prueba semanal real todavía. Si esperabas que alguno se resolviera, revisá en "BP Pruebas Semanales" que la piazza, el número y el nombre del local coincidan exactamente con los del pendiente.');
-  }
 }
 
 // guardarDatos(idsModificados) — si se pasan IDs, solo guarda esos en Firebase
@@ -1848,22 +1668,6 @@ function claveCeldaPrueba(piazza, numeroLocal, nombreLocal, anio, semana){
   return `${piazza}|${numeroLocal}|${nombreLocal}|${anio}|${semana}`;
 }
 
-// ID único y ESTABLE para una prueba semanal en Firestore. Incluye piazza + número +
-// NOMBRE del local (no solo el número): si dos locales de la misma Piazza llegaran a
-// compartir el mismo "Número" (por ejemplo tras una edición con error de tipeo), sus
-// pruebas de una misma semana NO se pisan entre sí en la nube.
-function idPruebaSemana(piazza, numeroLocal, nombreLocal, anio, semana){
-  const limpiar = s => String(s == null ? '' : s).trim().replace(/[^a-zA-Z0-9]+/g, '_');
-  return 'ps_' + limpiar(piazza) + '_' + limpiar(numeroLocal) + '_' + limpiar(nombreLocal) + '_' + anio + '_' + semana;
-}
-
-// ¿Ya existe OTRO local (distinto al que se está editando) con ese mismo número en la Piazza?
-// Se usa antes de guardar una edición de local para no crear colisiones de "Número".
-function existeOtroLocalConEseNumero(piazza, numeroNuevo, numeroViejo, nombreViejo){
-  if(numeroNuevo === numeroViejo) return false; // no cambió el número: no hay riesgo de colisión nueva
-  return obtenerLocalesCombinadosPiazza(piazza).some(l => l.numeroLocal === numeroNuevo && !(l.numeroLocal === numeroViejo && l.nombreLocal === nombreViejo));
-}
-
 const CLAVE_STORAGE_CATALOGO_OVERRIDES = 'krause_catalogo_overrides_v1';
 let catalogoOverrides = []; // { piazza, numeroViejo, nombreViejo, numeroNuevo, nombreNuevo, zonaNueva }
 
@@ -1908,7 +1712,7 @@ function cargarCatalogoOverrides(){
       mod.onSnapshot(coleccionOverrides, (snapshot) => {
         const nueva = [];
         snapshot.forEach(d => nueva.push({ ...d.data(), id: d.id }));
-        if(nueva.length === 0 && catalogoOverrides.length > 0){
+        if(primeraCarga && nueva.length === 0 && catalogoOverrides.length > 0){
           catalogoOverrides.forEach(ov => {
             mod.setDoc(mod.doc(coleccionOverrides, ov.id || (ov.piazza + '_' + ov.numeroViejo)), ov).catch(err => console.error('Error subiendo override:', err));
           });
@@ -1963,7 +1767,7 @@ function cargarDatosPruebas(){
         const nueva = [];
         snapshot.forEach(d => nueva.push({ ...d.data(), id: d.id }));
 
-        if(nueva.length === 0 && pruebasSemanales.length > 0){
+        if(primeraCarga && nueva.length === 0 && pruebasSemanales.length > 0){
           pruebasSemanales.forEach(p => {
             mod.setDoc(mod.doc(coleccionPruebas, p.id), p).catch(err => console.error('Error subiendo prueba a Firebase:', err));
           });
@@ -1974,20 +1778,17 @@ function cargarDatosPruebas(){
         primeraCarga = false;
         if(document.getElementById('tab-pruebas') && document.getElementById('tab-pruebas').classList.contains('activo')) renderPruebas();
         _sincronizandoPruebasDesdeFirestore = false;
-        reconciliarPendientesBotonSegunPruebas();
       }, (error) => console.error('Error de sincronización de pruebas:', error));
     });
   };
   intentarConectar();
 }
 
-function guardarDatosPruebas(registrosAGuardar){
+function guardarDatosPruebas(){
   localStorage.setItem(CLAVE_STORAGE_PRUEBAS, JSON.stringify(pruebasSemanales));
   if(_sincronizandoPruebasDesdeFirestore || !window._firebasePruebas) return;
   const { coleccionPruebas, doc, setDoc } = window._firebasePruebas;
-  // Si se especifican registros puntuales (lo normal: solo el que cambió), se sube
-  // solo eso — reescribir TODA la colección en cada guardado es lento e innecesario.
-  (registrosAGuardar || pruebasSemanales).forEach(p => setDoc(doc(coleccionPruebas, p.id), p).catch(err => console.error('Error guardando prueba:', err)));
+  pruebasSemanales.forEach(p => setDoc(doc(coleccionPruebas, p.id), p).catch(err => console.error('Error guardando prueba:', err)));
 }
 
 function poblarSelectorAnioPruebas(){
@@ -2030,7 +1831,7 @@ function cargarDatosGrabacion(){
         const nueva = [];
         snapshot.forEach(d => nueva.push({ ...d.data(), id: d.id }));
 
-        if(nueva.length === 0 && registrosGrabacion.length > 0){
+        if(primeraCarga && nueva.length === 0 && registrosGrabacion.length > 0){
           registrosGrabacion.forEach(r => {
             mod.setDoc(mod.doc(coleccionGrabacion, r.id), r).catch(err => console.error('Error subiendo grabación a Firebase:', err));
           });
@@ -2047,11 +1848,11 @@ function cargarDatosGrabacion(){
   intentarConectar();
 }
 
-function guardarDatosGrabacion(registrosAGuardar){
+function guardarDatosGrabacion(){
   localStorage.setItem(CLAVE_STORAGE_GRABACION, JSON.stringify(registrosGrabacion));
   if(_sincronizandoGrabacionDesdeFirestore || !window._firebaseGrabacion) return;
   const { coleccionGrabacion, doc, setDoc } = window._firebaseGrabacion;
-  (registrosAGuardar || registrosGrabacion).forEach(r => setDoc(doc(coleccionGrabacion, r.id), r).catch(err => console.error('Error guardando grabación:', err)));
+  registrosGrabacion.forEach(r => setDoc(doc(coleccionGrabacion, r.id), r).catch(err => console.error('Error guardando grabación:', err)));
 }
 
 function diasEntre(desde, hasta){
@@ -2170,7 +1971,7 @@ function guardarGrabacion(){
   if(idx !== -1) registrosGrabacion[idx] = registro;
   else registrosGrabacion.push(registro);
 
-  guardarDatosGrabacion([registro]);
+  guardarDatosGrabacion();
   cerrarModalGrabacion();
   renderGrabacion();
 }
@@ -2199,7 +2000,7 @@ function renderGrabacion(){
 
   // Máximo de columnas necesarias (según DVRS_POR_PIAZZA de cada Piazza)
   let maxDvrs = 1;
-  PIAZZAS_CON_DVR_Y_PRUEBAS.forEach(pz => {
+  PIAZZAS.forEach(pz => {
     const n = (DVRS_POR_PIAZZA[pz] || DVRS || []).length;
     if(n > maxDvrs) maxDvrs = n;
   });
@@ -2209,7 +2010,7 @@ function renderGrabacion(){
     encabezadoCols.push(`<th class="col-dvr-nombre">Grabador ${i+1}</th><th class="col-dvr-dias">DÍAS</th>`);
   }
 
-  const filas = PIAZZAS_CON_DVR_Y_PRUEBAS.map(pz => {
+  const filas = PIAZZAS.map(pz => {
     const dvrsDeEstaPiazza = DVRS_POR_PIAZZA[pz] || DVRS || [];
     const celdas = [];
     for(let i = 0; i < maxDvrs; i++){
@@ -2296,7 +2097,7 @@ function exportarGrabacionPDF(docExterno, opciones){
   const yTrasEncabezadoGrab = y;
 
   let maxDvrs = 1;
-  PIAZZAS_CON_DVR_Y_PRUEBAS.forEach(pz => {
+  PIAZZAS.forEach(pz => {
     const n = (DVRS_POR_PIAZZA[pz] || DVRS || []).length;
     if(n > maxDvrs) maxDvrs = n;
   });
@@ -2305,7 +2106,7 @@ function exportarGrabacionPDF(docExterno, opciones){
   for(let i = 0; i < maxDvrs; i++){ head[0].push('Grabador ' + (i+1)); head[0].push('DÍAS'); }
 
   // Construir body con didDrawCell para colorear celdas con problema
-  const bodyData = PIAZZAS_CON_DVR_Y_PRUEBAS.map(pz => {
+  const bodyData = PIAZZAS.map(pz => {
     const dvrsDeEstaPiazza = DVRS_POR_PIAZZA[pz] || DVRS || [];
     const fila = [{ content: pz, styles:{fontStyle:'bold', halign:'left', fillColor:[238,241,245]} }];
     for(let i = 0; i < maxDvrs; i++){
@@ -2640,24 +2441,6 @@ function sincronizarPendienteDesdePrueba(piazza, numeroLocal, nombreLocal, estad
   // Si el último registro ya refleja exactamente este mismo estado, no se crea uno nuevo (evita duplicados)
   if(ultimoPendiente && ultimoPendiente.estado === estadoFinal && ultimoPendiente.pendienteEstado === situacionFinal) return;
 
-  // Si la prueba confirma que YA llegó la señal (todo bien), resolver automáticamente cualquier
-  // pendiente de este mismo local que haya quedado activo, en vez de dejarlo colgado para siempre
-  // y crear un registro aparte.
-  if(estadoPrueba === 'Si'){
-    const activos = historialLocal.filter(p => p.pendienteEstado === 'Pendiente');
-    if(activos.length){
-      const resumen = 'RESUELTO automáticamente (' + fecha + '): la prueba semanal confirmó que sí llegó la señal del botón de pánico' + (quien ? ', probado por ' + quien : '') + '.';
-      activos.forEach(p => {
-        p.estado = 'Operativo';
-        p.pendienteEstado = 'Resuelto';
-        p.reporte = (p.reporte ? p.reporte + '\n\n' : '') + resumen;
-        p.modificado = new Date().toISOString();
-      });
-      guardarDatos(activos.map(p => p.id));
-      return;
-    }
-  }
-
   // Buscar zona conocida del local (catálogo o algún pendiente anterior)
   let zona = '';
   const catalogo = obtenerLocalesCombinadosPiazza(piazza);
@@ -2677,7 +2460,7 @@ function sincronizarPendienteDesdePrueba(piazza, numeroLocal, nombreLocal, estad
     modificado: new Date().toISOString()
   };
   pendientes.push(nuevoPendiente);
-  guardarDatos([nuevoPendiente.id]);
+  guardarDatos();
 }
 
 function eliminarPruebaActual(){
@@ -2712,7 +2495,7 @@ function eliminarPruebaActual(){
   pendientesAEliminar.forEach(p => eliminarDeFirestore(p.id));
   if(pendientesAEliminar.length){
     pendientes = pendientes.filter(p => !pendientesAEliminar.includes(p));
-    guardarDatos([]); // ya se borraron individualmente arriba; solo actualiza el localStorage
+    guardarDatos();
   }
 
   cerrarModalPrueba();
@@ -2737,21 +2520,12 @@ function guardarPrueba(){
   }
 
   const idx = pruebasSemanales.findIndex(p => claveCeldaPrueba(p.piazza, p.numeroLocal, p.nombreLocal, p.anio, p.semana) === clave);
-  const idViejo = idx !== -1 ? pruebasSemanales[idx].id : null;
-  const registro = { id: idPruebaSemana(piazza, numeroLocal, nombreLocal, anio, semana), piazza, numeroLocal, nombreLocal, anio, semana, estado, comentario, quien, fecha };
+  const registro = { id: 'ps_' + piazza.replace(/\s+/g,'_') + '_' + numeroLocal + '_' + anio + '_' + semana, piazza, numeroLocal, nombreLocal, anio, semana, estado, comentario, quien, fecha };
 
   if(idx !== -1) pruebasSemanales[idx] = registro;
   else pruebasSemanales.push(registro);
 
-  // Si el id cambió (por ejemplo, un registro guardado antes con el formato viejo de id,
-  // que no incluía el nombre del local), hay que borrar el documento anterior en Firestore
-  // para no dejar un duplicado huérfano dando vueltas.
-  if(idViejo && idViejo !== registro.id && window._firebasePruebas){
-    const { coleccionPruebas, doc, deleteDoc } = window._firebasePruebas;
-    deleteDoc(doc(coleccionPruebas, idViejo)).catch(err => console.error('Error borrando id anterior de prueba:', err));
-  }
-
-  guardarDatosPruebas([registro]);
+  guardarDatosPruebas();
   registrarEventoBitacora('prueba', `Prueba semanal: ${NOMBRES_ESTADO_PRUEBA[estado]||estado}`, piazza, `${nombreLocal} (Local ${numeroLocal}) — Sem ${semana}/${anio} — ${quien||'—'}`);
   sincronizarPendienteDesdePrueba(piazza, numeroLocal, nombreLocal, estado, quien, fecha, comentario);
   cerrarModalPrueba();
@@ -2808,11 +2582,6 @@ function editarLocalSeleccionado(){
     return;
   }
 
-  if(existeOtroLocalConEseNumero(piazza, numeroNuevo, numeroViejo, nombreViejo)){
-    alert('Ya existe otro local con ese número en esta Piazza. Elegí un número distinto para no mezclar sus pruebas y pendientes.');
-    return;
-  }
-
   // 1) Guardar el cambio de forma PERMANENTE por posición (idxOriginal): esto reconstruye
   //    todo el catálogo de la Piazza desde el original + todos los overrides guardados,
   //    así que editar el mismo local varias veces NUNCA se desincroniza.
@@ -2824,38 +2593,29 @@ function editarLocalSeleccionado(){
   } else {
     // Migrar TODAS las pruebas guardadas del local viejo al nuevo número/nombre
     let migradas = 0;
-    const registrosMigrados = [];
     pruebasSemanales.forEach(p => {
       if(p.piazza === piazza && p.numeroLocal === numeroViejo && p.nombreLocal === nombreViejo){
-        const idViejo = p.id;
         p.numeroLocal = numeroNuevo;
         p.nombreLocal = nombreNuevo;
-        p.id = idPruebaSemana(piazza, numeroNuevo, nombreNuevo, p.anio, p.semana);
-        if(idViejo !== p.id && window._firebasePruebas){
-          const { coleccionPruebas, doc, deleteDoc } = window._firebasePruebas;
-          deleteDoc(doc(coleccionPruebas, idViejo)).catch(err => console.error('Error borrando id anterior de prueba:', err));
-        }
-        registrosMigrados.push(p);
+        p.id = 'ps_' + piazza.replace(/\s+/g,'_') + '_' + numeroNuevo + '_' + p.anio + '_' + p.semana;
         migradas++;
       }
     });
     if(migradas > 0){
-      guardarDatosPruebas(registrosMigrados);
+      guardarDatosPruebas();
     }
 
     // También actualizar los pendientes de tipo Botón que usan este local, para que "Registrar"/"Lista" queden coherentes
     let pendientesActualizados = 0;
-    const idsPendientesMigrados = [];
     pendientes.forEach(p => {
       if(p.tipo === 'Boton' && p.piazza === piazza && p.numeroLocal === numeroViejo && p.nombreLocal === nombreViejo){
         p.numeroLocal = numeroNuevo;
         p.nombreLocal = nombreNuevo;
         p.zona = zonaNueva;
-        idsPendientesMigrados.push(p.id);
         pendientesActualizados++;
       }
     });
-    if(pendientesActualizados > 0) guardarDatos(idsPendientesMigrados);
+    if(pendientesActualizados > 0) guardarDatos();
 
     alert('Local actualizado y guardado de forma PERMANENTE. Se migraron ' + migradas + ' prueba(s) semanal(es) y ' + pendientesActualizados + ' registro(s) de "Registrar" al nuevo número/nombre.');
   }
@@ -2899,7 +2659,7 @@ function eliminarLocalObjeto(piazza, loc){
   const pendientesAEliminar = pendientes.filter(p => p.tipo === 'Boton' && p.piazza === piazza && p.numeroLocal === loc.numeroLocal && p.nombreLocal === loc.nombreLocal);
   pendientesAEliminar.forEach(p => eliminarDeFirestore(p.id));
   pendientes = pendientes.filter(p => !(p.tipo === 'Boton' && p.piazza === piazza && p.numeroLocal === loc.numeroLocal && p.nombreLocal === loc.nombreLocal));
-  guardarDatos([]); // ya se borraron individualmente arriba; solo actualiza el localStorage
+  guardarDatos();
 
   registrarEventoBitacora('catalogo', 'Local eliminado del catálogo', piazza, `${loc.numeroLocal} - ${loc.nombreLocal} (${cuentaPruebas} prueba(s), ${cuentaPendientes} registro(s) eliminado(s))`);
 
@@ -2938,37 +2698,24 @@ function editarLocalDesdeGrilla(idxLoc){
   const numeroNuevo = nuevoNumero.trim(), nombreNuevo = nuevoNombre.trim(), zonaNueva = nuevaZona.trim();
   if(loc.numeroLocal === numeroNuevo && loc.nombreLocal === nombreNuevo && (loc.zona||'') === zonaNueva){ alert('No hubo cambios.'); return; }
   if(loc._idxOriginal === undefined){ alert('Este local no pertenece al catálogo base. Editalo desde "✎ Editar local" arriba.'); return; }
-  if(existeOtroLocalConEseNumero(piazza, numeroNuevo, loc.numeroLocal, loc.nombreLocal)){
-    alert('Ya existe otro local con ese número en esta Piazza. Elegí un número distinto para no mezclar sus pruebas y pendientes.');
-    return;
-  }
   guardarCatalogoOverride({ piazza, idxOriginal: loc._idxOriginal, numeroNuevo, nombreNuevo, zonaNueva });
   // Migrar pruebas y pendientes que referencien el nombre viejo
   let migradas = 0;
-  const registrosMigrados = [];
   pruebasSemanales.forEach(p => {
     if(p.piazza === piazza && p.numeroLocal === loc.numeroLocal && p.nombreLocal === loc.nombreLocal){
-      const idViejo = p.id;
       p.numeroLocal = numeroNuevo; p.nombreLocal = nombreNuevo;
-      p.id = idPruebaSemana(piazza, numeroNuevo, nombreNuevo, p.anio, p.semana);
-      if(idViejo !== p.id && window._firebasePruebas){
-        const { coleccionPruebas, doc, deleteDoc } = window._firebasePruebas;
-        deleteDoc(doc(coleccionPruebas, idViejo)).catch(err => console.error('Error borrando id anterior de prueba:', err));
-      }
-      registrosMigrados.push(p);
+      p.id = 'ps_' + piazza.replace(/\s+/g,'_') + '_' + numeroNuevo + '_' + p.anio + '_' + p.semana;
       migradas++;
     }
   });
-  if(migradas > 0) guardarDatosPruebas(registrosMigrados);
+  if(migradas > 0) guardarDatosPruebas();
   let pAct = 0;
-  const idsPendMigrados = [];
   pendientes.forEach(p => {
     if(p.tipo === 'Boton' && p.piazza === piazza && p.numeroLocal === loc.numeroLocal && p.nombreLocal === loc.nombreLocal){
       p.numeroLocal = numeroNuevo; p.nombreLocal = nombreNuevo; p.zona = zonaNueva; pAct++;
-      idsPendMigrados.push(p.id);
     }
   });
-  if(pAct > 0) guardarDatos(idsPendMigrados);
+  if(pAct > 0) guardarDatos();
   alert('Local actualizado. Se migraron ' + migradas + ' prueba(s) y ' + pAct + ' pendiente(s).');
   poblarLocalPruebas();
   renderPruebas();
@@ -2987,7 +2734,7 @@ function eliminarLocalDesdeGrilla(idxLoc){
   }
 }
 
-function exportarPruebasPDF(docExterno, piazzaExterna, anioExterno, opciones){
+function exportarPruebasPDF(docExterno, piazzaExterna, anioExterno){
   const piazza = piazzaExterna || document.getElementById('pruebas-piazza').value;
   const anio = anioExterno || (parseInt(document.getElementById('pruebas-anio').value, 10) || new Date().getFullYear());
   const esStandalone = !docExterno;
@@ -3019,29 +2766,16 @@ function exportarPruebasPDF(docExterno, piazzaExterna, anioExterno, opciones){
 
   const { jsPDF } = window.jspdf;
   const doc = docExterno || new jsPDF({orientation:'landscape'});
-  const anchoPaginaPruebas = doc.internal.pageSize.getWidth();
-  let yTrasEncabezado;
+  // Nota: si viene del consolidado (docExterno), la página horizontal ya fue agregada
+  // por quien llama, así que aquí NO se debe agregar otra página.
+  doc.setFillColor(11,35,64);
+  doc.rect(0,0,297,18,'F');
+  doc.setTextColor(255,255,255);
+  doc.setFontSize(14);
+  doc.text('Pruebas Semanales de Botones de Pánico - ' + piazza + ' (' + anio + ')', 14, 12);
+  doc.setTextColor(0,0,0);
 
-  const sinEncabezado = !!(opciones && opciones.sinEncabezado);
-  if(sinEncabezado){
-    // Solo barra de piazza, sin encabezado global
-    doc.setFillColor(242,145,28);
-    doc.rect(0,0,anchoPaginaPruebas,10,'F');
-    doc.setTextColor(255,255,255);
-    doc.setFontSize(11);
-    doc.text('Piazza: ' + piazza + ' (' + anio + ')', 10, 7);
-    doc.setTextColor(0,0,0);
-    yTrasEncabezado = 14;
-  } else {
-    // Encabezado completo
-    doc.setFillColor(11,35,64);
-    doc.rect(0,0,anchoPaginaPruebas,18,'F');
-    doc.setTextColor(255,255,255);
-    doc.setFontSize(14);
-    doc.text('Pruebas Semanales de Botones de Panico - ' + piazza + ' (' + anio + ')', 14, 12);
-    doc.setTextColor(0,0,0);
-    yTrasEncabezado = dibujarEncabezadoReporte(doc, 'BP Pruebas Semanales', 22);
-  }
+  const yTrasEncabezado = dibujarEncabezadoReporte(doc, 'BP Pruebas Semanales', 22);
 
   // Leyenda de colores centrada
   doc.setFontSize(7.5);
@@ -3055,7 +2789,7 @@ function exportarPruebasPDF(docExterno, piazzaExterna, anioExterno, opciones){
     { color:[244,246,249], texto:'— Sin prueba' }
   ];
   const yLeyenda = yTrasEncabezado;
-  const anchoPagina = anchoPaginaPruebas; // ya definida arriba
+  const anchoPagina = doc.internal.pageSize.getWidth(); // 297mm landscape
   const GAP = 8; // espacio entre items
   const CUADRO = 3.5;
   // Calcular ancho total de la leyenda
@@ -3073,8 +2807,8 @@ function exportarPruebasPDF(docExterno, piazzaExterna, anioExterno, opciones){
     xLeyenda += CUADRO + 2.5 + doc.getTextWidth(item.texto) + GAP;
   });
 
-  // Tabla inmediatamente después de la leyenda sin espacio extra
-  let y = yTrasEncabezado + 6;
+  // Una sola tabla con las 52 semanas en landscape (297mm de ancho disponible)
+  let y = yTrasEncabezado + 8;
   // Márgenes: left=8, right=8 → 281mm útiles
   const encabezado52 = ['N°','Local','Zona', ...Array.from({length:52}, (_,i) => String(i+1))];
   const filas52 = locales.map((loc, rIdx) => [
@@ -3152,12 +2886,11 @@ function poblarSelectsPiazza(){
     document.getElementById('estadistica-filtro-piazza'),
     document.getElementById('pruebas-piazza')
   ];
-  selects.filter(Boolean).forEach(sel => {
+  selects.forEach(sel => {
     const placeholder = sel.id === 'filtro-piazza' || sel.id === 'realizados-filtro-piazza' || sel.id === 'estadistica-filtro-piazza' ? 'Todas las Piazzas' :
                          sel.id === 'consulta-piazza' || sel.id === 'pruebas-piazza' ? 'Seleccionar Piazza...' : 'Seleccionar...';
-    const listaPiazzas = sel.id === 'pruebas-piazza' ? PIAZZAS_CON_DVR_Y_PRUEBAS : PIAZZAS;
     const valorActual = sel.value;
-    sel.innerHTML = `<option value="">${placeholder}</option>` + listaPiazzas.map(p => `<option value="${p}">${p}</option>`).join('');
+    sel.innerHTML = `<option value="">${placeholder}</option>` + PIAZZAS.map(p => `<option value="${p}">${p}</option>`).join('');
     if(valorActual) sel.value = valorActual;
   });
 }
@@ -3431,59 +3164,6 @@ function actualizarCamposPorTipo(){
 // =================== DATOS DEL REPORTE (encabezado obligatorio antes de exportar) ===================
 const CLAVE_STORAGE_DATOS_REPORTE = 'krause_datos_reporte_v1';
 let _accionExportarPendiente = null;
-
-function expToggleTipos(){
-  const wrap = document.getElementById('exp-tipos-wrap');
-  const chk = document.getElementById('exp-check-lista');
-  if(wrap) wrap.style.display = chk && chk.checked ? 'block' : 'none';
-}
-
-function expToggleTiposEstadistica(){
-  const wrap = document.getElementById('exp-tipos-estadistica-wrap');
-  const chk = document.getElementById('exp-check-estadistica');
-  if(wrap) wrap.style.display = chk && chk.checked ? 'block' : 'none';
-}
-
-function expGetTiposEstadistica(){
-  const camara = document.getElementById('exp-est-camara');
-  const boton = document.getElementById('exp-est-boton');
-  const incendio = document.getElementById('exp-est-incendio');
-  const tipos = [];
-  if(camara && camara.checked) tipos.push('Camara');
-  if(boton && boton.checked) tipos.push('Boton');
-  if(incendio && incendio.checked) tipos.push('Incendio');
-  return tipos.length > 0 ? tipos : ['Camara','Boton','Incendio'];
-}
-
-function expToggleTiposRealizados(){
-  const wrap = document.getElementById('exp-tipos-realizados-wrap');
-  const chk = document.getElementById('exp-check-realizados');
-  if(wrap) wrap.style.display = chk && chk.checked ? 'block' : 'none';
-}
-
-function expGetTiposRealizados(){
-  const camara = document.getElementById('exp-tr-camara');
-  const boton = document.getElementById('exp-tr-boton');
-  const incendio = document.getElementById('exp-tr-incendio');
-  const otro = document.getElementById('exp-tr-otro');
-  const tipos = [];
-  if(camara && camara.checked) tipos.push('Camara');
-  if(boton && boton.checked) tipos.push('Boton');
-  if(incendio && incendio.checked) tipos.push('Incendio');
-  if(otro && otro.checked) tipos.push('Otro');
-  return tipos.length > 0 ? tipos : ['Camara','Boton','Incendio','Otro'];
-}
-
-function expGetTiposSeleccionados(){
-  const camara = document.getElementById('exp-tipo-camara');
-  const boton = document.getElementById('exp-tipo-boton');
-  const incendio = document.getElementById('exp-tipo-incendio');
-  const tipos = [];
-  if(camara && camara.checked) tipos.push('Camara');
-  if(boton && boton.checked) tipos.push('Boton');
-  if(incendio && incendio.checked) tipos.push('Incendio');
-  return tipos.length > 0 ? tipos : ['Camara','Boton','Incendio']; // si ninguno, todos
-}
 
 function pedirDatosReporte(callback){
   _accionExportarPendiente = callback;
@@ -3764,7 +3444,7 @@ function guardarPendiente(){
       if(tecnico) activo.tecnico = tecnico;
       if(operador) activo.operador = operador;
       activo.modificado = new Date().toISOString();
-      guardarDatos([activo.id]);
+      guardarDatos();
       registrarEventoBitacora('pendiente', 'Pendiente resuelto', piazza, `${NOMBRES_TIPO[tipo]||tipo} — ${detalleRegistro(activo)} — Técnico: ${tecnico||'—'}`);
       limpiarForm();
       renderTabla();
@@ -3983,11 +3663,9 @@ function editarDesdeDetalle(){
 function eliminarDesdeDetalle(){
   const id = _detalleActualId;
   if(id && confirm('¿Eliminar este registro? Esta acción no se puede deshacer.')){
-    const pDel = pendientes.find(p=>p.id===id);
-    if(pDel) registrarEventoBitacora('pendiente','Pendiente eliminado',pDel.piazza,(NOMBRES_TIPO[pDel.tipo]||pDel.tipo)+' — '+detalleRegistro(pDel));
     pendientes = pendientes.filter(p => p.id !== id);
     eliminarDeFirestore(id);
-    guardarDatos([]); // ya se borró individualmente arriba; solo actualiza el localStorage
+    guardarDatos();
     cerrarDetalle();
     renderTabla();
     renderEstadistica();
@@ -3997,11 +3675,9 @@ function eliminarDesdeDetalle(){
 
 function eliminarPendiente(id){
   if(!confirm('¿Eliminar este pendiente? Esta acción no se puede deshacer.')) return;
-  const pDel = pendientes.find(p=>p.id===id);
-  if(pDel) registrarEventoBitacora('pendiente','Pendiente eliminado',pDel.piazza,(NOMBRES_TIPO[pDel.tipo]||pDel.tipo)+' — '+detalleRegistro(pDel));
   pendientes = pendientes.filter(p => p.id !== id);
   eliminarDeFirestore(id);
-  guardarDatos([]); // ya se borró individualmente arriba; solo actualiza el localStorage
+  guardarDatos();
   renderTabla();
   renderEstadistica();
   renderConsulta();
@@ -4015,7 +3691,7 @@ function marcarResuelto(id){
   const nuevoEstado = esPendienteActivo(p) ? 'Resuelto' : 'Pendiente';
   p.pendienteEstado = nuevoEstado;
   p.modificado = new Date().toISOString();
-  guardarDatos([p.id]);
+  guardarDatos();
   registrarEventoBitacora('pendiente', `Pendiente marcado como ${nuevoEstado}`, p.piazza, `${NOMBRES_TIPO[p.tipo]||p.tipo} — ${detalleRegistro(p)}`);
   renderTabla();
   renderEstadistica();
@@ -4031,35 +3707,17 @@ function obtenerFiltrados(){
   const fe = document.getElementById('filtro-estado').value;
   const fpe = document.getElementById('filtro-pendiente-estado').value;
 
-  // 1) Filtros estructurales: qué equipos considerar, sin importar su historial.
-  const candidatos = pendientes
+  return pendientes
     .filter(p => !ft || p.tipo === ft)
     .filter(p => !fp || p.piazza === fp)
-    .filter(p => !fd || p.dvr === fd);
-
-  // 2) Colapsar a UN SOLO registro por equipo (Cámara/Botón/Incendio/Otro): el más reciente
-  // por fecha (y de empate, por fecha de modificación/creación). Antes se mostraba todo el
-  // historial de reportes de un mismo equipo como filas separadas; ahora solo se ve su
-  // situación actual, tanto en Lista de Pendientes como en el PDF exportado.
-  const masRecientePorEquipo = {};
-  candidatos.forEach(p => {
-    const k = claveDe(p);
-    const actual = masRecientePorEquipo[k];
-    const esMasNuevo = !actual
-      || (p.fecha || '') > (actual.fecha || '')
-      || ((p.fecha || '') === (actual.fecha || '') && (p.modificado || p.creado || '') > (actual.modificado || actual.creado || ''));
-    if(esMasNuevo) masRecientePorEquipo[k] = p;
-  });
-
-  // 3) Filtros de situación actual: aplican sobre el estado más reciente de cada equipo.
-  return Object.values(masRecientePorEquipo)
+    .filter(p => !fd || p.dvr === fd)
     .filter(p => !fe || p.estado === fe)
     .filter(p => !fpe || p.pendienteEstado === fpe)
     .sort((a,b) => (b.fecha || '').localeCompare(a.fecha || ''));
 }
 
 function renderTabla(){
-  let lista = obtenerFiltrados();
+  const lista = obtenerFiltrados();
   const cont = document.getElementById('arbol-pendientes');
   cont.innerHTML = '';
 
@@ -4364,6 +4022,25 @@ function renderConsulta(){
   contenedor.innerHTML = cajaContador + secciones;
 }
 
+function obtenerRealizadosFiltrados(){
+  const filtroTipo = document.getElementById('realizados-filtro-tipo').value;
+  const filtroPiazza = document.getElementById('realizados-filtro-piazza').value;
+  const buscar = document.getElementById('realizados-buscar').value.trim().toLowerCase();
+
+  // Fuente única: array trabajosRealizados (colección Firebase propia, no depende del campo origen)
+  let lista = [...trabajosRealizados];
+  if(filtroTipo) lista = lista.filter(p => p.tipo === filtroTipo);
+  if(filtroPiazza) lista = lista.filter(p => p.piazza === filtroPiazza);
+  if(buscar){
+    lista = lista.filter(p =>
+      (p.tecnico || '').toLowerCase().includes(buscar) ||
+      (p.reporte || '').toLowerCase().includes(buscar) ||
+      detalleRegistro(p).toLowerCase().includes(buscar)
+    );
+  }
+  return lista;
+}
+
 function dibujarSeccionEstadisticaPDF(doc, opciones){
   const compacto = !!(opciones && opciones.compacto);
   const anchoPagina = doc.internal.pageSize.getWidth();
@@ -4376,7 +4053,7 @@ function dibujarSeccionEstadisticaPDF(doc, opciones){
     doc.rect(10, y, anchoPagina - 20, 8, 'F');
     doc.setTextColor(255,255,255);
     doc.setFontSize(11);
-    doc.text('ESTADISTICA' + (opciones && opciones.filtroPiazza ? ' - ' + opciones.filtroPiazza.toUpperCase() : ' POR PIAZZA Y TIPO DE EQUIPO'), 13, y + 5.5);
+    doc.text('ESTADÍSTICA POR PIAZZA Y TIPO DE EQUIPO', 13, y + 5.5);
     doc.setTextColor(0,0,0);
     y += 12;
   } else {
@@ -4390,35 +4067,23 @@ function dibujarSeccionEstadisticaPDF(doc, opciones){
     y = dibujarEncabezadoReporte(doc, 'Estadística por Piazza y Tipo de Equipo', 20);
   }
 
-  const todosTipos = [
+  const tipos = [
     {clave:'Camara', nombre:'Cámara'},
     {clave:'Boton', nombre:'Botón de Pánico'},
     {clave:'Incendio', nombre:'Sistema Contra Incendio'}
   ];
-  const filtroTipos = opciones && opciones.filtroTipos ? opciones.filtroTipos : ['Camara','Boton','Incendio'];
-  const tipos = todosTipos.filter(t => filtroTipos.includes(t.clave));
 
-  const filtroPiazzaEst = opciones && opciones.filtroPiazza ? opciones.filtroPiazza : '';
-
-  // Resumen por tipo (filtrado por piazza si se especifica)
+  // Resumen global por tipo (igual que las tarjetas de donas en pantalla)
   const resumen = tipos.map(t => {
-    let total, funcionando;
-    if(t.clave === 'Boton'){
-      const r = calcularEstadisticaBoton(filtroPiazzaEst);
-      total = r.total;
-      funcionando = r.funcionando;
-    } else {
-      let items = pendientes.filter(p => p.tipo === t.clave);
-      if(filtroPiazzaEst) items = items.filter(p => p.piazza === filtroPiazzaEst);
-      const mapaEq = {};
-      items.forEach(p => {
-        const k = claveDe(p);
-        if(!mapaEq[k] || (p.fecha || '') > (mapaEq[k].fecha || '')) mapaEq[k] = p;
-      });
-      const equipos = Object.values(mapaEq).filter(p => p.estado !== 'Puerto libre');
-      total = equipos.length;
-      funcionando = equipos.filter(p => p.pendienteEstado && p.pendienteEstado !== 'Pendiente').length;
-    }
+    const items = pendientes.filter(p => p.tipo === t.clave);
+    const mapaEq = {};
+    items.forEach(p => {
+      const k = claveDe(p);
+      if(!mapaEq[k] || (p.fecha || '') > (mapaEq[k].fecha || '')) mapaEq[k] = p;
+    });
+    const equipos = Object.values(mapaEq);
+    const total = equipos.length;
+    const funcionando = equipos.filter(p => p.pendienteEstado && p.pendienteEstado !== 'Pendiente' && p.estado !== 'Puerto libre').length;
     const pendientesCount = total - funcionando;
     const pct = total ? Math.round((funcionando / total) * 100) : 0;
     return { ...t, total, funcionando, pendientes: pendientesCount, pct };
@@ -4472,7 +4137,7 @@ function dibujarSeccionEstadisticaPDF(doc, opciones){
 function poblarSelectoresExportar(){
   const selPiazza = document.getElementById('exp-piazza-pruebas');
   const valorPiazzaActual = selPiazza.value;
-  selPiazza.innerHTML = '<option value="">Seleccionar Piazza...</option><option value="__todas__">Todas</option>' + PIAZZAS_CON_DVR_Y_PRUEBAS.map(pz => `<option value="${pz}">${pz}</option>`).join('');
+  selPiazza.innerHTML = '<option value="">Seleccionar Piazza...</option><option value="__todas__">Todas</option>' + PIAZZAS.map(pz => `<option value="${pz}">${pz}</option>`).join('');
   if(valorPiazzaActual) selPiazza.value = valorPiazzaActual;
 
   const selAnio = document.getElementById('exp-anio-pruebas');
@@ -4511,21 +4176,15 @@ function exportarConsolidadoPDF(){
   }
 
   const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({orientation:'portrait'});
   const hoy = hoyISO();
 
-  // Si hay pruebas, todo el doc es landscape para poder mezclar en un solo PDF
-  const orientacion = incluirPruebas ? 'landscape' : 'portrait';
-  const doc = new jsPDF({orientation: orientacion});
-  let y = dibujarEncabezadoReporte(doc, 'Reporte de Camaras, Botones de Panico y Sistema Contra Incendio', 14);
+  // ---------- Un solo encabezado, al inicio de todo el documento (el título grande va en la misma barra) ----------
+  let y = dibujarEncabezadoReporte(doc, 'Reporte de Cámaras, Botones de Pánico y Sistema Contra Incendio', 14);
 
+  // ---------- Secciones, una tras otra, SIN repetir el encabezado, con espacios mínimos entre bloques ----------
   if(incluirLista){
-    const tiposSel = expGetTiposSeleccionados();
-    tiposSel.forEach(tipo => {
-      const hayDatosParaEsteTipo = obtenerFiltrados().some(p => p.tipo === tipo);
-      if(!hayDatosParaEsteTipo) return; // sin pendientes de este tipo: no dibujar una sección vacía
-      y = exportarPDF(doc, {compacto:true, startY:y, filtroTipo:tipo});
-      y += 4;
-    });
+    y = exportarPDF(doc, {compacto:true, startY:y});
     y += 2;
   }
   if(incluirGrabacion){
@@ -4533,36 +4192,165 @@ function exportarConsolidadoPDF(){
     y += 2;
   }
   if(incluirRealizados){
-    const tiposTR = expGetTiposRealizados();
-    y = exportarTodosTrabajosRealizados(doc, {compacto:true, startY:y, filtroTipos:tiposTR});
+    y = exportarTodosTrabajosRealizados(doc, {compacto:true, startY:y});
     y += 2;
-  }
-  if(incluirEstadistica){
-    if(y > 180){ doc.addPage(); y = 15; }
-    const piazzaEst = incluirPruebas && piazzaPruebas && piazzaPruebas !== '__todas__' ? piazzaPruebas : '';
-    dibujarSeccionEstadisticaPDF(doc, {compacto:true, startY:y, filtroTipos:expGetTiposEstadistica(), filtroPiazza:piazzaEst});
-    y = doc.lastAutoTable ? doc.lastAutoTable.finalY + 4 : y + 4;
   }
   if(incluirPruebas){
     const piazzasAExportar = piazzaPruebas === '__todas__'
       ? PIAZZAS.filter(pz => pruebasSemanales.some(p => p.piazza === pz && p.anio === anioPruebas))
       : [piazzaPruebas];
-    piazzasAExportar.forEach((pz, idx) => {
-      doc.addPage();
-      exportarPruebasPDF(doc, pz, anioPruebas, {sinEncabezado: idx > 0});
+    piazzasAExportar.forEach(pz => {
+      doc.addPage('a4','landscape'); // la cuadrícula de 52 semanas necesita ancho horizontal
+      exportarPruebasPDF(doc, pz, anioPruebas);
     });
+  }
+  if(incluirEstadistica){
+    doc.addPage('a4','portrait'); // Estadística siempre va al final del reporte
+    dibujarSeccionEstadisticaPDF(doc, {compacto:true, startY:20});
   }
 
   doc.save('Reporte_Consolidado_' + hoy + '.pdf');
 }
 
-function exportarConsolidadoPDFSafe(){
-  try {
-    exportarConsolidadoPDF();
-  } catch(e) {
-    console.error('Error exportando PDF:', e);
-    alert('Error al generar el PDF: ' + e.message + '\n\nRevisa la consola del navegador para más detalles.');
+function exportarTodosTrabajosRealizados(docExterno, opciones){
+  const esStandalone = !docExterno;
+  const compacto = !!(opciones && opciones.compacto);
+  const solopiazza = (opciones && opciones.solopiazza) || null;
+  let lista = esStandalone ? obtenerRealizadosFiltrados() : [...trabajosRealizados];
+  if(solopiazza) lista = lista.filter(p => p.piazza === solopiazza);
+  if(!lista.length){ if(esStandalone) alert('No hay trabajos realizados para exportar con estos filtros.'); return compacto ? opciones.startY : undefined; }
+
+  const { jsPDF } = window.jspdf;
+  const doc = docExterno || new jsPDF({orientation:'portrait'});
+  const anchoPagina = doc.internal.pageSize.getWidth();
+  let y;
+
+  if(compacto){
+    y = opciones.startY;
+    if(y > 250){ doc.addPage('a4','portrait'); y = 20; }
+    doc.setFillColor(11,35,64);
+    doc.rect(10, y, anchoPagina - 20, 8, 'F');
+    doc.setTextColor(255,255,255);
+    doc.setFontSize(11);
+    doc.text('TRABAJOS REALIZADOS', 13, y + 5.5);
+    doc.setTextColor(0,0,0);
+    y += 12;
+  } else {
+    if(!esStandalone) doc.addPage('a4','portrait');
+    doc.setFillColor(11,35,64);
+    doc.rect(0,0,anchoPagina,16,'F');
+    doc.setTextColor(255,255,255);
+    doc.setFontSize(12);
+    doc.text('Trabajos Realizados - Krause Negocios', 10, 11);
+
+    doc.setTextColor(0,0,0);
+    doc.setFontSize(9);
+    doc.text('Generado: ' + new Date().toLocaleString('es-EC') + '   |   Total: ' + lista.length, 10, 20);
+
+    y = dibujarEncabezadoReporte(doc, 'Trabajos Realizados', 24);
   }
+
+  const anchoContenido = anchoPagina - 20;
+  const piazzasConDatos = PIAZZAS.filter(pz => lista.some(p => p.piazza === pz));
+
+  piazzasConDatos.forEach((pz, idxPz) => {
+    const itemsPz = lista.filter(p => p.piazza === pz).sort((a,b) => (b.fecha || '').localeCompare(a.fecha || ''));
+    if(!compacto && idxPz > 0){ doc.addPage('a4','portrait'); y = 60; }
+    else if(y > 250){ doc.addPage('a4','portrait'); y = 20; }
+
+    doc.setFillColor(242,145,28);
+    doc.rect(10, y, anchoContenido, 7, 'F');
+    doc.setTextColor(255,255,255);
+    doc.setFontSize(10);
+    doc.setFont(undefined, 'bold');
+    doc.text(pz, 13, y + 5);
+    doc.setFont(undefined, 'normal');
+    y += 9;
+
+    const filas = itemsPz.map(p => {
+      const hist = historialDeEquipo(claveDe(p));
+      const dias = diasParaSolucion(hist, hist.indexOf(p));
+      return [
+        p.fecha || '',
+        NOMBRES_TIPO[p.tipo] || p.tipo,
+        detalleRegistro(p),
+        p.tecnico || '—',
+        p.estado || '',
+        p.pendienteEstado || '',
+        p.reporte || '',
+        dias !== null ? dias + ' día(s)' : '—'
+      ];
+    });
+
+    doc.autoTable({
+      startY: y,
+      margin:{top:66, left:10, right:10},
+      head: [['Fecha','Tipo','Detalle','Técnico','Estado','Situación','Reporte','Días sol.']],
+      body: filas,
+      styles:{fontSize:6.5, cellPadding:1.8, overflow:'linebreak'},
+      headStyles:{fillColor:[11,35,64], textColor:255},
+      alternateRowStyles:{fillColor:[244,246,249]},
+      columnStyles:{
+        0:{cellWidth:16}, 1:{cellWidth:15}, 2:{cellWidth:26}, 3:{cellWidth:20},
+        4:{cellWidth:16}, 5:{cellWidth:16}, 6:{cellWidth:'auto'}, 7:{cellWidth:16}
+      }
+    });
+    y = doc.lastAutoTable.finalY + 10;
+  });
+
+  if(esStandalone) doc.save('trabajos_realizados_' + hoyISO() + '.pdf');
+  return y;
+}
+
+function renderRealizados(){
+  const lista = obtenerRealizadosFiltrados();
+
+  const cont = document.getElementById('arbol-realizados');
+  document.getElementById('realizados-mensaje-vacio').style.display = lista.length ? 'none' : 'block';
+  if(!lista.length){ cont.innerHTML = ''; return; }
+
+  const piazzasConDatos = PIAZZAS.filter(pz => lista.some(p => p.piazza === pz));
+
+  cont.innerHTML = piazzasConDatos.map(pz => {
+    const itemsPz = lista.filter(p => p.piazza === pz).sort((a,b) => (b.fecha || '').localeCompare(a.fecha || ''));
+
+    const porTipo = TIPOS_ORDEN.map(t => {
+      const itemsTipo = itemsPz.filter(p => p.tipo === t.clave);
+      if(!itemsTipo.length) return '';
+      const filas = itemsTipo.map(p => {
+        const hist = historialDeEquipo(claveDe(p));
+        const idxEnHist = hist.indexOf(p);
+        const dias = diasParaSolucion(hist, idxEnHist);
+        return `
+          <tr>
+            <td>${p.fecha || ''}</td>
+            <td>${detalleRegistro(p)}</td>
+            <td>${p.tecnico || '—'}</td>
+            <td>${t.clave === 'Otro' ? '—' : `<span class="badge ${claseBadgeEstado(p.estado)}">${p.estado || ''}</span>`}</td>
+            <td><span class="badge ${claseBadgePendiente(p.pendienteEstado)}">${p.pendienteEstado}</span></td>
+            <td>${(p.reporte || '').replace(/</g,'&lt;')}</td>
+            <td>${dias !== null ? dias + ' día(s)' : '—'}</td>
+            <td style="white-space:nowrap;"><button class="btn btn-secundario btn-chico" onclick="verDetalle('${p.id}')" title="Ver">👁</button></td>
+          </tr>`;
+      }).join('');
+      return `
+        <details class="dvr-folder">
+          <summary>${ICONOS_TIPO[t.clave]} ${NOMBRES_TIPO[t.clave]} <span class="chip-ter">${itemsTipo.length}</span></summary>
+          <div class="tabla-wrap">
+            <table><thead><tr><th>Fecha</th><th>Detalle</th><th>Técnico</th><th>Estado</th><th>Situación</th><th>Reporte</th><th>Días solución</th><th>Acciones</th></tr></thead><tbody>${filas}</tbody></table>
+          </div>
+        </details>`;
+    }).join('');
+
+    return `
+      <details class="piazza-folder">
+        <summary>📁 ${pz} <span class="conteo-chip">${itemsPz.length} trabajo(s)</span>
+          <button class="btn btn-primario btn-chico" style="margin-left:12px; font-size:0.78rem; padding:3px 10px;"
+            onclick="event.stopPropagation(); event.preventDefault(); pedirDatosReporte(() => exportarTodosTrabajosRealizados(null, {solopiazza:'${pz.replace(/'/g,"\\'")}'}))">📄 Exportar Piazza</button>
+        </summary>
+        ${porTipo}
+      </details>`;
+  }).join('');
 }
 
 function poblarDVREstadistica(){
@@ -4585,27 +4373,19 @@ function renderEstadistica(){
   ];
 
   const secciones = tipos.map(t => {
-    let totalEquipos, funcionando;
+    let items = pendientes.filter(p => p.tipo === t.clave);
+    if(filtroPiazza) items = items.filter(p => p.piazza === filtroPiazza);
+    if(filtroDvr && t.clave === 'Camara') items = items.filter(p => p.dvr === filtroDvr);
 
-    if(t.clave === 'Boton'){
-      const r = calcularEstadisticaBoton(filtroPiazza);
-      totalEquipos = r.total;
-      funcionando = r.funcionando;
-    } else {
-      let items = pendientes.filter(p => p.tipo === t.clave);
-      if(filtroPiazza) items = items.filter(p => p.piazza === filtroPiazza);
-      if(filtroDvr && t.clave === 'Camara') items = items.filter(p => p.dvr === filtroDvr);
-
-      // Agrupar por equipo único y tomar su registro más reciente (estado actual real)
-      const mapaEq = {};
-      items.forEach(p => {
-        const k = claveDe(p);
-        if(!mapaEq[k] || (p.fecha || '') > (mapaEq[k].fecha || '')) mapaEq[k] = p;
-      });
-      const equipos = Object.values(mapaEq).filter(p => p.estado !== 'Puerto libre');
-      totalEquipos = equipos.length;
-      funcionando = equipos.filter(p => p.pendienteEstado && p.pendienteEstado !== 'Pendiente').length;
-    }
+    // Agrupar por equipo único y tomar su registro más reciente (estado actual real)
+    const mapaEq = {};
+    items.forEach(p => {
+      const k = claveDe(p);
+      if(!mapaEq[k] || (p.fecha || '') > (mapaEq[k].fecha || '')) mapaEq[k] = p;
+    });
+    const equipos = Object.values(mapaEq);
+    const totalEquipos = equipos.length;
+    const funcionando = equipos.filter(p => p.pendienteEstado && p.pendienteEstado !== 'Pendiente' && p.estado !== 'Puerto libre').length;
     const pct = totalEquipos ? Math.round((funcionando / totalEquipos) * 100) : 0;
     const colorOk = 'var(--verde)';
     const colorMal = 'var(--rojo)';
@@ -4638,7 +4418,7 @@ function cambiarTab(nombre){
   document.querySelectorAll('nav button').forEach(b => b.classList.remove('activo'));
   document.querySelector(`nav button[data-tab="${nombre}"]`).classList.add('activo');
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('activo'));
-  const tabReal = nombre;
+  const tabReal = (nombre === 'items') ? 'registrar' : nombre;
   document.getElementById('tab-' + tabReal).classList.add('activo');
   if(nombre === 'lista') renderTabla();
   if(nombre === 'consultar') renderConsulta();
@@ -4648,9 +4428,10 @@ function cambiarTab(nombre){
   }
   if(nombre === 'items'){
     _origenFormulario = 'trabajo';
-    rtInicializar();
+    limpiarForm();
+    document.getElementById('titulo-form').textContent = 'Trabajos Realizados';
   }
-  if(nombre === 'realizados'){ const fp=document.getElementById('tr-filtro-piazza'); if(fp&&fp.options.length<=1) fp.innerHTML='<option value="">Todas las Piazzas</option>'+PIAZZAS.map(p=>`<option>${p}</option>`).join(''); trRenderizar(); }
+  if(nombre === 'realizados') renderRealizados();
   if(nombre === 'pruebas'){ poblarLocalPruebas(); renderPruebas(); }
   if(nombre === 'grabacion'){ renderGrabacion(); }
   if(nombre === 'exportar'){ poblarSelectoresExportar(); }
@@ -4662,22 +4443,13 @@ document.querySelectorAll('nav button').forEach(btn => {
 });
 
 function exportarJSON(){
-  const respaldo = {
-    version: '2.0',
-    fecha: new Date().toISOString(),
-    pendientes: pendientes,
-    trabajos: trabajos,
-    pruebas: pruebasSemanales,
-    grabacion: registrosGrabacion
-  };
-  const blob = new Blob([JSON.stringify(respaldo, null, 2)], {type:'application/json'});
+  const blob = new Blob([JSON.stringify(pendientes, null, 2)], {type:'application/json'});
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = 'respaldo_krause_' + hoyISO() + '.json';
+  a.download = 'pendientes_backup_' + hoyISO() + '.json';
   a.click();
   URL.revokeObjectURL(url);
-  registrarEventoBitacora('sistema','Respaldo exportado','','Pendientes:'+pendientes.length+' Trabajos:'+trabajos.length+' Pruebas:'+pruebasSemanales.length);
 }
 
 function importarJSON(event){
@@ -4687,67 +4459,20 @@ function importarJSON(event){
   lector.onload = function(e){
     try{
       const datos = JSON.parse(e.target.result);
-      // Detectar formato nuevo (objeto con version) o viejo (array de pendientes)
-      const esFormatoNuevo = datos && datos.version && typeof datos === 'object' && !Array.isArray(datos);
-      const esFormatoViejo = Array.isArray(datos);
-      if(!esFormatoNuevo && !esFormatoViejo) throw new Error('Formato inválido');
-
-      if(esFormatoViejo){
-        // Formato viejo — solo pendientes
-        if(!confirm('Se encontraron ' + datos.length + ' pendientes. ¿Reemplazar los datos actuales?')) return;
-        pendientes = datos;
-        pendientes.forEach(p => { if(!p.id) p.id = 'p_'+Date.now()+'_'+Math.floor(Math.random()*100000); migrarCamposRegistro(p); });
-        guardarDatos(); renderTabla(); renderEstadistica(); renderConsulta();
-        alert('✅ Importados ' + pendientes.length + ' pendientes.');
-        return;
-      }
-
-      // Formato nuevo completo
-      const lineas = [];
-      if(datos.pendientes) lineas.push('• ' + datos.pendientes.length + ' pendientes');
-      if(datos.trabajos) lineas.push('• ' + datos.trabajos.length + ' trabajos realizados');
-      if(datos.pruebas) lineas.push('• ' + datos.pruebas.length + ' pruebas BP semanales');
-      if(datos.grabacion) lineas.push('• ' + datos.grabacion.length + ' registros de grabación');
-      lineas.push('');
-      lineas.push('Fecha del respaldo: ' + (datos.fecha ? new Date(datos.fecha).toLocaleString('es-EC') : 'desconocida'));
-      lineas.push('');
-      lineas.push('¿Reemplazar todos los datos actuales con este respaldo?');
-
-      if(!confirm(lineas.join('\\n'))) return;
-
-      // Importar cada colección
-      if(datos.pendientes && Array.isArray(datos.pendientes)){
-        pendientes = datos.pendientes;
-        pendientes.forEach(p => { if(!p.id) p.id = 'p_'+Date.now()+'_'+Math.floor(Math.random()*100000); migrarCamposRegistro(p); });
-        guardarDatos();
-      }
-      if(datos.trabajos && Array.isArray(datos.trabajos)){
-        trabajos = datos.trabajos;
-        localStorage.setItem(CLAVE_TR, JSON.stringify(trabajos));
-        // Subir a Firebase
-        if(window._firebase){
-          const {coleccionTrabajos,doc,setDoc}=window._firebase;
-          trabajos.forEach(t=>{ const {foto,...sf}=t; setDoc(doc(coleccionTrabajos,t.id),sf).catch(e=>console.error(e)); });
-        }
-      }
-      if(datos.pruebas && Array.isArray(datos.pruebas)){
-        pruebasSemanales = datos.pruebas;
-        localStorage.setItem(CLAVE_STORAGE_PRUEBAS, JSON.stringify(pruebasSemanales));
-        if(window._firebasePruebas){
-          pruebasSemanales.forEach(p => window._firebasePruebas.setDoc(window._firebasePruebas.doc(window._firebasePruebas.coleccionPruebas, p.id), p).catch(e=>console.error(e)));
-        }
-      }
-      if(datos.grabacion && Array.isArray(datos.grabacion)){
-        registrosGrabacion = datos.grabacion;
-        localStorage.setItem(CLAVE_STORAGE_GRABACION, JSON.stringify(registrosGrabacion));
-      }
-
-      // Refrescar UI
-      renderTabla(); renderEstadistica(); renderConsulta(); trRenderizar();
-      registrarEventoBitacora('sistema','Respaldo importado','','Pendientes:'+pendientes.length+' Trabajos:'+trabajos.length);
-      alert('Respaldo importado correctamente. ' + lineas.slice(0,4).join(', '));
+      if(!Array.isArray(datos)) throw new Error('Formato inválido');
+      if(!confirm(`Se encontraron ${datos.length} registros. ¿Deseas reemplazar los datos actuales?`)) return;
+      pendientes = datos;
+      pendientes.forEach(p => {
+        if(!p.id) p.id = 'p_' + Date.now() + '_' + Math.floor(Math.random()*100000);
+        migrarCamposRegistro(p);
+      });
+      guardarDatos();
+      renderTabla();
+      renderEstadistica();
+      renderConsulta();
+      alert('Datos importados correctamente.');
     }catch(err){
-      alert('Error: El archivo no tiene un formato valido. ' + err.message);
+      alert('El archivo no tiene un formato válido.');
     }
   };
   lector.readAsText(archivo);
@@ -4792,7 +4517,7 @@ function exportarHistorialCompletoEquipo(){
 
   doc.autoTable({
     startY: yTrasEncabezadoHist,
-    margin:{top:15, left:10, right:10},
+    margin:{top:66, left:10, right:10},
     head: [['Fecha','Técnico','Estado','Situación','Reporte','Días sol.']],
     body: filas,
     styles:{fontSize:7.5, cellPadding:2.5, overflow:'linebreak'},
@@ -4804,15 +4529,53 @@ function exportarHistorialCompletoEquipo(){
   doc.save('historial_' + (ref.piazza || '').replace(/\s+/g,'_') + '_' + hoyISO() + '.pdf');
 }
 
+function exportarTrabajoIndividual(id){
+  const p = pendientes.find(x => x.id === id);
+  if(!p) return;
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+
+  doc.setFillColor(11,35,64);
+  doc.rect(0,0,210,20,'F');
+  doc.setTextColor(255,255,255);
+  doc.setFontSize(15);
+  doc.text('Trabajo Realizado - Krause Negocios', 14, 13);
+
+  doc.setTextColor(0,0,0);
+  let y = dibujarEncabezadoReporte(doc, 'Trabajo Realizado', 26);
+  const hist = historialDeEquipo(claveDe(p));
+  const dias = diasParaSolucion(hist, hist.indexOf(p));
+
+  const campos = [
+    ['Tipo', `${NOMBRES_TIPO[p.tipo] || p.tipo}`],
+    ['Piazza', p.piazza || ''],
+    ['Equipo', detalleRegistro(p)],
+    ['Fecha', p.fecha || ''],
+    ['Técnico', p.tecnico || '—'],
+    ['Estado', p.estado || '—'],
+    ['Situación', p.pendienteEstado || 'Pendiente'],
+    ['Días para solución', dias !== null ? dias + ' día(s)' : '—'],
+    ['Reporte', p.reporte || '']
+  ];
+
+  doc.autoTable({
+    startY: y,
+    body: campos,
+    theme: 'plain',
+    styles:{fontSize:11, cellPadding:4},
+    columnStyles:{0:{fontStyle:'bold', cellWidth:45}, 1:{cellWidth:140}}
+  });
+
+  doc.save('trabajo_' + (p.fecha || hoyISO()) + '_' + p.id + '.pdf');
+}
+
 function exportarPDF(docExterno, opciones){
   const { jsPDF } = window.jspdf;
   const doc = docExterno || new jsPDF({orientation:'landscape'});
   const esStandalone = !docExterno;
   const compacto = !!(opciones && opciones.compacto);
   const incluirFotos = !!(opciones && opciones.incluirFotos) || (document.getElementById('exp-check-fotos') && document.getElementById('exp-check-fotos').checked);
-  const filtroTipoOpc = opciones && opciones.filtroTipo;
-  let lista = obtenerFiltrados();
-  if(filtroTipoOpc) lista = lista.filter(p => p.tipo === filtroTipoOpc);
+  const lista = obtenerFiltrados();
 
   // Título dinámico según los tipos de equipo presentes en lo exportado
   const tiposPresentes = ['Camara','Boton','Incendio'].filter(t => lista.some(p => p.tipo === t));
@@ -4867,19 +4630,23 @@ function exportarPDF(docExterno, opciones){
   // "arañado" entre sí) — esa era la causa real del texto encimado en la exportación.
   const piazzasConDatos = PIAZZAS.filter(pz => lista.some(p => p.piazza === pz));
 
-  const encabezadoTabla = ['Fecha','Días','Tipo','Detalle','Estado','Situación','Reporte del Técnico'];
+  const mostrarPSem = tiposPresentes.includes('Boton'); // la columna P.Sem. solo aplica a Botones de Pánico
+  const encabezadoTabla = ['Fecha','Días','Tipo','Detalle','Estado'];
+  if(mostrarPSem) encabezadoTabla.push('P.Sem.');
+  encabezadoTabla.push('Situación','Reporte del Técnico');
 
-  const idxSituacion = 5;
+  const idxSituacion = mostrarPSem ? 6 : 5;
   const idxReporte = idxSituacion + 1;
   const idxFoto = idxReporte + 1;
 
   const anchoDisponible = anchoPagina - 20; // margen 10mm a cada lado
-  const anchoFijoResto = 20+9+15+45+17+15; // suma de las columnas de ancho fijo
+  const anchoFijoResto = 20+9+15+26+17+(mostrarPSem ? 11 : 0)+15; // suma de las columnas de ancho fijo
   const anchoFoto = incluirFotos ? 34 : 0;
   const anchoReporte = Math.max(50, anchoDisponible - anchoFijoResto - anchoFoto);
   const anchoColumnas = {
-    0:{cellWidth:20}, 1:{cellWidth:9}, 2:{cellWidth:15}, 3:{cellWidth:45}, 4:{cellWidth:17}
+    0:{cellWidth:20}, 1:{cellWidth:9}, 2:{cellWidth:15}, 3:{cellWidth:26}, 4:{cellWidth:17}
   };
+  if(mostrarPSem) anchoColumnas[5] = {cellWidth:11};
   anchoColumnas[idxSituacion] = {cellWidth:15};
   anchoColumnas[idxReporte] = {cellWidth:anchoReporte};
   if(incluirFotos){
@@ -4891,10 +4658,9 @@ function exportarPDF(docExterno, opciones){
   // filaAPendiente mapea cada índice de fila del body al pendiente real (o null si es barra de Piazza).
   const body = [];
   const filaAPendiente = [];
-  const ORDEN_TIPOS = ['Camara','Boton','Incendio','Otro'];
-
   piazzasConDatos.forEach(pz => {
-    const itemsPzTodos = lista.filter(p => p.piazza === pz);
+    const itemsPz = lista.filter(p => p.piazza === pz)
+      .sort((a,b) => (b.fecha || '').localeCompare(a.fecha || ''));
 
     body.push([{
       content: pz,
@@ -4903,32 +4669,26 @@ function exportarPDF(docExterno, opciones){
     }]);
     filaAPendiente.push(null);
 
-    const tiposEnEstaPiazza = ORDEN_TIPOS.filter(t => itemsPzTodos.some(p => p.tipo === t));
+    // Fila de encabezado de columnas repetida, debajo de cada Piazza
+    body.push(encabezadoTabla.map(titulo => ({
+      content: titulo,
+      styles:{fillColor:[11,35,64], textColor:[255,255,255], fontStyle:'bold', fontSize:7, valign:'middle'}
+    })));
+    filaAPendiente.push(null);
 
-    tiposEnEstaPiazza.forEach(tipo => {
-      const itemsTipo = itemsPzTodos.filter(p => p.tipo === tipo)
-        .sort((a,b) => (b.fecha || '').localeCompare(a.fecha || ''));
-
-      body.push([{
-        content: NOMBRES_TIPO[tipo] || tipo,
-        colSpan: encabezadoTabla.length,
-        styles:{fillColor:[18,58,99], textColor:[255,255,255], fontStyle:'bold', fontSize:8.5, cellPadding:{top:2, right:3, bottom:2, left:3}}
-      }]);
-      filaAPendiente.push(null);
-
-      itemsTipo.forEach(p => {
-        const fila = [
-          p.fecha || '',
-          String(calcularDias(p)),
-          NOMBRES_TIPO[p.tipo] || p.tipo,
-          detalleRegistro(p),
-          p.estado || ''
-        ];
-        fila.push(p.pendienteEstado || 'Pendiente', p.reporte || '');
-        if(incluirFotos) fila.push('');
-        body.push(fila);
-        filaAPendiente.push(p);
-      });
+    itemsPz.forEach(p => {
+      const fila = [
+        p.fecha || '',
+        String(calcularDias(p)),
+        NOMBRES_TIPO[p.tipo] || p.tipo,
+        detalleRegistro(p),
+        p.estado || ''
+      ];
+      if(mostrarPSem) fila.push(p.tipo === 'Boton' ? (p.pruebaSemanal || '-') : '-');
+      fila.push(p.pendienteEstado || 'Pendiente', p.reporte || '');
+      if(incluirFotos) fila.push('');
+      body.push(fila);
+      filaAPendiente.push(p);
     });
   });
 
@@ -4941,7 +4701,7 @@ function exportarPDF(docExterno, opciones){
 
   doc.autoTable({
     startY: y,
-    margin:{top: 15, left:10, right:10},
+    margin:{top: compacto ? 15 : 66, left:10, right:10},
     tableWidth: 'wrap',
     head: [encabezadoTabla],
     body: body,
@@ -4949,18 +4709,6 @@ function exportarPDF(docExterno, opciones){
     headStyles:{fillColor:[11,35,64], textColor:255, fontSize:7, valign:'middle'},
     alternateRowStyles:{fillColor:[244,246,249]},
     columnStyles: anchoColumnas,
-    willDrawCell: function(data){
-      // Evitar que la barra naranja de una Piazza quede "huérfana" al final de una página
-      // (con muy poco espacio debajo). Si al llegar a esa fila queda menos de 40mm libres,
-      // se salta directo a la siguiente página antes de dibujarla.
-      if(data.section === 'body' && data.column.index === 0 && filaAPendiente[data.row.index] === null){
-        const restante = data.doc.internal.pageSize.getHeight() - data.cursor.y;
-        if(restante < 40){
-          data.doc.addPage();
-          data.cursor.y = data.settings.margin.top;
-        }
-      }
-    },
     didParseCell: function(data){
       const fila = filaAPendiente[data.row.index];
       if(!fila) return; // fila de barra-Piazza: ya trae su propio estilo inline
@@ -5068,7 +4816,7 @@ function cargarBitacora(){
       mod.onSnapshot(colBitacora, snap => {
         const nueva = [];
         snap.forEach(d => nueva.push({ ...d.data(), _fireId: d.id }));
-        if(nueva.length === 0 && bitacoraEventos.length > 0){
+        if(primera && nueva.length === 0 && bitacoraEventos.length > 0){
           bitacoraEventos.forEach(ev => mod.addDoc(colBitacora, ev).catch(e => console.error(e)));
         } else {
           bitacoraEventos = nueva;
@@ -5154,770 +4902,11 @@ function renderBitacora(){
 
 // Inicialización
 document.getElementById('fecha-actual').textContent = new Date().toLocaleDateString('es-EC', {weekday:'long', year:'numeric', month:'long', day:'numeric'});
-// Event listeners navegación
-document.querySelectorAll('nav button[data-tab]').forEach(btn => {
-  btn.addEventListener('click', () => cambiarTab(btn.dataset.tab));
-});
-
-// ============================================================
-// TRABAJOS REALIZADOS — MISMO PATRÓN EXACTO QUE PENDIENTES
-// ============================================================
-const CLAVE_TR = 'krause_trabajos_v2';
-let trabajos = [];
-let _sincronizandoTrabajosDesdeFirestore = false;
-
-function trCargar(){
-  try{
-    const g = localStorage.getItem(CLAVE_TR);
-    trabajos = g ? JSON.parse(g) : [];
-  }catch(e){ trabajos = []; }
-
-  const intentarConectar = () => {
-    if(!window._firebase){ setTimeout(intentarConectar, 300); return; }
-    // IGUAL QUE PENDIENTES: usar coleccionTrabajos y onSnapshot de window._firebase directamente
-    const { coleccionTrabajos, onSnapshot, doc, setDoc } = window._firebase;
-    onSnapshot(coleccionTrabajos, (snapshot) => {
-      const nueva = [];
-      snapshot.forEach(d => nueva.push({ ...d.data(), id: d.id }));
-      nueva.sort((a,b)=>(b.fecha||'').localeCompare(a.fecha||'')||(b.creado||'').localeCompare(a.creado||''));
-
-      if(nueva.length === 0 && trabajos.length > 0){
-        // SEGURIDAD: la nube llegó vacía (blip de red, listener reconectando, etc.) pero
-        // este navegador ya tenía trabajos guardados. Los subimos de nuevo en vez de borrarlos.
-        console.warn('Firestore (trabajos) llegó vacío; subiendo ' + trabajos.length + ' registro(s) local(es) en vez de borrarlos.');
-        trabajos.forEach(t => {
-          const { foto, ...sinFoto } = t;
-          setDoc(doc(coleccionTrabajos, t.id), sinFoto).catch(err => console.error('Error subiendo trabajo a Firebase:', err));
-        });
-      } else {
-        trabajos = nueva;
-        localStorage.setItem(CLAVE_TR, JSON.stringify(trabajos));
-      }
-      trRenderizar();
-      const ind = document.getElementById('firebase-status');
-      if(ind){ ind.style.background='#198754'; ind.textContent='🟢 Firebase: ' + trabajos.length + ' registros sincronizados'; }
-    }, (error) => {
-      console.error('Error sincronización trabajos:', error);
-    });
-  };
-  intentarConectar();
-}
-
-function trGuardarFirebase(t){
-  localStorage.setItem(CLAVE_TR, JSON.stringify(trabajos));
-  if(_sincronizandoTrabajosDesdeFirestore) return;
-  if(!window._firebase){ console.warn('Firebase no disponible'); return; }
-  const { coleccionTrabajos, doc, setDoc } = window._firebase;
-  const { foto, ...sinFoto } = t;
-  setDoc(doc(coleccionTrabajos, t.id), sinFoto)
-    .then(() => console.log('✅ Trabajo guardado Firebase:', t.id))
-    .catch(e => console.error('❌ Error guardando trabajo:', e));
-}
-
-let _rtFoto='';
-
-function rtInicializar(){
-  const sel=document.getElementById('rt-piazza'); if(!sel) return;
-  sel.innerHTML='<option value="">Seleccionar...</option>'+PIAZZAS.map(p=>`<option value="${p}">${p}</option>`).join('');
-  const fd=document.getElementById('rt-fecha'); if(fd) fd.value=hoyISO();
-  rtCambiarTipo();
-  // Poblar cámaras con default (16)
-  rtPoblarCamaras();
-}
-
-function rtCambiarPiazza(){
-  const piazza=(document.getElementById('rt-piazza')||{}).value||'';
-  const tipo=(document.getElementById('rt-tipo')||{}).value||'Camara';
-  if(tipo==='Camara'){
-    const dvrs=piazza?(DVRS_POR_PIAZZA[piazza]||DVRS):DVRS;
-    document.getElementById('rt-dvr').innerHTML='<option value="">Seleccionar...</option>'+dvrs.map(d=>`<option>${d}</option>`).join('');
-    _rtCamarasSeleccionadas=[];
-    rtPoblarCamaras(true);
-  }
-  if(tipo==='Boton'){
-    const locs=piazza&&CATALOGO_LOCALES[piazza]?CATALOGO_LOCALES[piazza]:[];
-    document.getElementById('rt-local').innerHTML='<option value="">Seleccionar local...</option>'+
-      locs.map((l,i)=>`<option value="${i}">${l.numeroLocal} — ${l.nombreLocal}</option>`).join('')+
-      '<option value="__manual__">✏️ Escribir manualmente</option>';
-    document.getElementById('rt-numero-local').value='';
-    document.getElementById('rt-zona').value='';
-  }
-}
-
-function rtCambiarTipo(){
-  const tipo=(document.getElementById('rt-tipo')||{}).value||'Camara';
-  const show=(id,v)=>{const el=document.getElementById(id);if(el)el.style.display=v?'':'none';};
-  show('rt-wrap-dvr',tipo==='Camara'); show('rt-wrap-camara',tipo==='Camara');
-  show('rt-wrap-local',tipo==='Boton'); show('rt-wrap-numero-local',tipo==='Boton');
-  show('rt-wrap-zona',tipo==='Boton'); show('rt-wrap-local-manual',false);
-  show('rt-wrap-componente',tipo==='Incendio'); show('rt-wrap-novedad',tipo==='Otro');
-  const se=document.getElementById('rt-estado');
-  if(se) se.innerHTML='<option value="">Seleccionar...</option>'+(ESTADOS_POR_TIPO[tipo]||[]).map(e=>`<option>${e}</option>`).join('');
-  // Estado Operativo → Situación Solucionado automático (onchange directo)
-  if(se) se.setAttribute('onchange','rtOnEstadoCambio()');
-  rtCambiarPiazza();
-}
-
-function rtCambiarLocal(){
-  const piazza=(document.getElementById('rt-piazza')||{}).value||'';
-  const val=(document.getElementById('rt-local')||{}).value||'';
-  const manual=document.getElementById('rt-wrap-local-manual');
-  if(val==='__manual__'){
-    if(manual)manual.style.display='';
-    document.getElementById('rt-numero-local').value='';
-    document.getElementById('rt-zona').value='';
-  } else if(val!==''&&CATALOGO_LOCALES[piazza]&&CATALOGO_LOCALES[piazza][val]){
-    if(manual)manual.style.display='none';
-    const loc=CATALOGO_LOCALES[piazza][val];
-    document.getElementById('rt-numero-local').value=loc.numeroLocal||'';
-    document.getElementById('rt-zona').value=loc.zona||'';
-  } else { if(manual)manual.style.display='none'; }
-}
-
-
-let _rtCamarasSeleccionadas = [];
-
-function rtPoblarCamaras(resetear){
-  const panel = document.getElementById('rt-camara-panel');
-  if(!panel) return;
-  const piazza = (document.getElementById('rt-piazza')||{}).value||'';
-  const dvr = (document.getElementById('rt-dvr')||{}).value||'';
-  const cantidad = puertosCamaraDePiazza(piazza);
-  if(resetear) _rtCamarasSeleccionadas = [];
-  _rtCamarasSeleccionadas = _rtCamarasSeleccionadas.filter(v => {
-    const n = parseInt(v.replace(/\D/g,''),10);
-    return n >= 1 && n <= cantidad;
-  });
-  panel.innerHTML = '';
-  for(let i=1; i<=cantidad; i++){
-    const valor = 'Cam ' + i;
-    const marcado = _rtCamarasSeleccionadas.includes(valor);
-    // Buscar si existe pendiente activo para mostrar estado
-    const existente = pendientes.find(p => p.tipo==='Camara' && p.piazza===piazza && p.dvr===dvr && p.camara===valor);
-    let chip = '';
-    if(existente){
-      const clase = claseBadgeEstado(existente.estado);
-      chip = `<span class="badge ${clase}" style="font-size:0.72rem;padding:2px 8px;">${existente.estado||''}</span>`;
-    }
-    panel.innerHTML += `<label style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 14px;cursor:pointer;border-bottom:1px solid #f0f2f5;">
-      <span style="display:flex;align-items:center;gap:8px;"><input type="checkbox" value="${valor}" ${marcado?'checked':''} style="width:auto;" onchange="rtToggleCamaraSeleccion('${valor}',this.checked)"> ${valor}</span>
-      ${chip}
-    </label>`;
-  }
-  rtActualizarDisplayCamaras();
-  // Actualizar bloqueo del display según si hay DVR
-  const display = document.getElementById('rt-camara-display');
-  if(display){
-    display.style.background = dvr ? '#fff' : '#eef1f4';
-    display.style.color = dvr ? 'inherit' : '#9aa5b1';
-    display.style.pointerEvents = dvr ? 'auto' : 'none';
-  }
-  if(!dvr){
-    document.getElementById('rt-camara-texto').textContent = 'Selecciona primero el DVR/NVR';
-    if(panel) panel.style.display = 'none';
-  }
-}
-
-function rtActualizarDisplayCamaras(){
-  const txt = document.getElementById('rt-camara-texto');
-  const ordenadas = _rtCamarasSeleccionadas.slice().sort((a,b) => (parseInt(a.replace(/\D/g,''),10)||0)-(parseInt(b.replace(/\D/g,''),10)||0));
-  if(txt) txt.textContent = ordenadas.length ? ordenadas.join(', ') : 'Seleccionar...';
-  const hidden = document.getElementById('rt-camara');
-  if(hidden) hidden.value = ordenadas.join(', ') || '';
-}
-
-function rtToggleCamaraSeleccion(valor, marcado){
-  if(marcado){
-    if(!_rtCamarasSeleccionadas.includes(valor)) _rtCamarasSeleccionadas.push(valor);
-  } else {
-    _rtCamarasSeleccionadas = _rtCamarasSeleccionadas.filter(v => v !== valor);
-  }
-  rtActualizarDisplayCamaras();
-}
-
-function rtToggleCamaraPanel(){
-  const dvr = (document.getElementById('rt-dvr')||{}).value||'';
-  if(!dvr) return;
-  const panel = document.getElementById('rt-camara-panel');
-  if(panel) panel.style.display = panel.style.display === 'block' ? 'none' : 'block';
-}
-
-// Cerrar panel al hacer click fuera
-document.addEventListener('click', function(e){
-  const display = document.getElementById('rt-camara-display');
-  const panel = document.getElementById('rt-camara-panel');
-  if(panel && display && !display.contains(e.target) && !panel.contains(e.target)){
-    panel.style.display = 'none';
-  }
-});
-
-function rtOnEstadoCambio(){
-  const estado=(document.getElementById('rt-estado')||{}).value||'';
-  const sit=document.getElementById('rt-situacion');
-  if(!sit) return;
-  if(!estado){ sit.value=''; return; }
-  if(estado==='Operativo') sit.value='Resuelto';
-  else sit.value='Pendiente';
-}
-function rtSeleccionarFoto(event){
-  const file=event.target.files[0]; if(!file) return;
-  const reader=new FileReader();
-  reader.onload=e=>{
-    const img=new Image();
-    img.onload=()=>{
-      const canvas=document.createElement('canvas');
-      let w=img.width,h=img.height;
-      if(w>800){h=Math.round(h*800/w);w=800;} if(h>600){w=Math.round(w*600/h);h=600;}
-      canvas.width=w;canvas.height=h;canvas.getContext('2d').drawImage(img,0,0,w,h);
-      _rtFoto=canvas.toDataURL('image/jpeg',0.7);
-      document.getElementById('rt-foto-img').src=_rtFoto;
-      document.getElementById('rt-foto-wrap').style.display='block';
-    };
-    img.src=e.target.result;
-  };
-  reader.readAsDataURL(file);
-}
-
-function rtQuitarFoto(){
-  _rtFoto='';
-  const fi=document.getElementById('rt-foto');if(fi)fi.value='';
-  const fw=document.getElementById('rt-foto-wrap');if(fw)fw.style.display='none';
-}
-
-function rtLimpiar(){
-  const val=(id,v='')=>{const el=document.getElementById(id);if(el)el.value=v;};
-  val('rt-fecha',hoyISO()); val('rt-piazza'); val('rt-tipo','Camara');
-  val('rt-dvr'); val('rt-camara');
-  _rtCamarasSeleccionadas=[];
-  rtPoblarCamaras(true);
-  const rtPanel=document.getElementById('rt-camara-panel'); if(rtPanel) rtPanel.style.display='none';
-  val('rt-local'); val('rt-local-manual');
-  val('rt-numero-local'); val('rt-zona'); val('rt-componente'); val('rt-novedad');
-  val('rt-estado'); val('rt-situacion','');
-  val('rt-tecnico'); val('rt-operador'); val('rt-reporte');
-  rtQuitarFoto(); rtCambiarTipo();
-}
-
-function rtGuardar(){
-  const g=id=>((document.getElementById(id)||{}).value||'').trim();
-  const fecha=g('rt-fecha'); const piazza=g('rt-piazza'); const tipo=g('rt-tipo')||'Camara';
-  if(!fecha){alert('⚠️ Por favor ingresa la Fecha.');return;}
-  if(!piazza){alert('⚠️ Por favor selecciona la Piazza.');return;}
-  // Validaciones por tipo
-  if(tipo==='Camara'){
-    if(!g('rt-dvr')){alert('⚠️ Selecciona el DVR/NVR.');return;}
-    if(!g('rt-camara')){alert('⚠️ Selecciona al menos una cámara.');return;}
-  }
-  if(tipo==='Boton'){
-    const loc=g('rt-local');
-    if(!loc){alert('⚠️ Selecciona el Local.');return;}
-    if(loc==='__manual__'&&!g('rt-local-manual')){alert('⚠️ Escribe el nombre del local.');return;}
-    if(!g('rt-numero-local')){alert('⚠️ Ingresa el Número de Local.');return;}
-    if(!g('rt-zona')){alert('⚠️ Ingresa la Zona.');return;}
-  }
-  if(tipo==='Incendio'&&!g('rt-componente')){alert('⚠️ Ingresa el Componente / Zona SCI.');return;}
-  if(tipo==='Otro'&&!g('rt-novedad')){alert('⚠️ Ingresa la Descripción del trabajo.');return;}
-  if(!g('rt-estado')){alert('⚠️ Selecciona el Estado del equipo.');return;}
-  if(!g('rt-tecnico')){alert('⚠️ Ingresa el Técnico / Proveedor.');return;}
-  if(!g('rt-operador')){alert('⚠️ Ingresa el Operador que registra.');return;}
-
-  const dvr=tipo==='Camara'?g('rt-dvr'):'';
-  const camara=tipo==='Camara'?g('rt-camara'):'';
-  const comp=tipo==='Incendio'?g('rt-componente'):'';
-  const novedad=tipo==='Otro'?g('rt-novedad'):'';
-  let nombreLocal='',numeroLocal='',zona='';
-  if(tipo==='Boton'){
-    const sel=g('rt-local');
-    if(sel==='__manual__'){ nombreLocal=g('rt-local-manual'); }
-    else if(sel!==''&&CATALOGO_LOCALES[piazza]&&CATALOGO_LOCALES[piazza][sel]){
-      const loc=CATALOGO_LOCALES[piazza][sel]; nombreLocal=loc.nombreLocal||'';
-    }
-    numeroLocal=g('rt-numero-local'); zona=g('rt-zona');
-  }
-  const estado=g('rt-estado');
-  const situacion=g('rt-situacion')||'Pendiente';
-  const tecnico=g('rt-tecnico'); const operador=g('rt-operador');
-  const reporte=g('rt-reporte'); const foto=_rtFoto||'';
-
-  const trabajo={
-    id:'tr_'+Date.now()+'_'+Math.floor(Math.random()*9999),
-    tipo,fecha,piazza,dvr,camara,nombreLocal,numeroLocal,zona,
-    identificador:comp,novedad,estado,pendienteEstado:situacion,
-    tecnico,operador,reporte,foto,
-    origen:'trabajo',pruebaSemanal:'',dvrPuertos:'',ubicacion:'',
-    creado:new Date().toISOString(),modificado:new Date().toISOString()
-  };
-
-  // Verificar si estamos editando un trabajo existente
-  const btnGuardar=document.querySelector('#tab-items .btn-primario');
-  const editandoId=btnGuardar&&btnGuardar.dataset.editandoId;
-  if(editandoId){
-    // Actualizar existente
-    trabajo.id=editandoId;
-    trabajo.creado=trabajos.find(t=>t.id===editandoId)?.creado||trabajo.creado;
-    trabajos=trabajos.map(t=>t.id===editandoId?trabajo:t);
-    trGuardarFirebase(trabajo);
-    // Limpiar modo edición
-    btnGuardar.textContent='💾 Guardar Trabajo';
-    delete btnGuardar.dataset.editandoId;
-    registrarEventoBitacora('trabajo','Trabajo editado',piazza,NOMBRES_TIPO[tipo]||tipo);
-  } else {
-    trabajos.push(trabajo);
-    trGuardarFirebase(trabajo);
-  }
-
-  if(situacion==='Pendiente'){
-    const pend=Object.assign({},trabajo,{id:'p_'+(Date.now()+1)+'_'+Math.floor(Math.random()*9999),origen:'registrar'});
-    pendientes.push(pend); guardarDatos([pend.id]);
-    registrarEventoBitacora('trabajo','Trabajo registrado — Pendiente',piazza,NOMBRES_TIPO[tipo]||tipo);
-  }
-  if(situacion==='Resuelto'||situacion==='Sin Novedad'){
-    const clave=tipo==='Camara'?`Camara|${piazza}|${dvr}|${camara}`:
-               tipo==='Boton'?`Boton|${piazza}|${numeroLocal}|${nombreLocal}`:
-               tipo==='Incendio'?`Incendio|${piazza}|${comp}`:null;
-    if(clave){
-      const activo=pendientes.find(p=>claveDe(p)===clave&&p.pendienteEstado==='Pendiente');
-      if(activo){
-        activo.estado=estado||activo.estado; activo.pendienteEstado=situacion;
-        activo.tecnico=tecnico||activo.tecnico;
-        activo.reporte=(activo.reporte?activo.reporte+'\n\n':'')+
-          'RESUELTO ('+fecha+')'+(tecnico?' — '+tecnico:'')+(reporte?': '+reporte:'');
-        activo.modificado=new Date().toISOString(); guardarDatos([activo.id]);
-      }
-    }
-    registrarEventoBitacora('trabajo','Trabajo registrado — Solucionado',piazza,NOMBRES_TIPO[tipo]||tipo);
-  }
-
-  rtLimpiar();
-  // Resetear botón si estaba en modo edición
-  const btnG=document.querySelector('#tab-items .btn-primario');
-  if(btnG){btnG.textContent='💾 Guardar Trabajo';delete btnG.dataset.editandoId;}
-  trRenderizar(); renderTabla(); renderEstadistica();
-  cambiarTab('realizados');
-  const notif=document.createElement('div');
-  notif.textContent='✅ Trabajo guardado correctamente';
-  notif.style.cssText='position:fixed;bottom:24px;right:24px;background:#198754;color:#fff;padding:14px 22px;border-radius:8px;font-weight:600;z-index:9999;box-shadow:0 4px 16px rgba(0,0,0,.2);';
-  document.body.appendChild(notif); setTimeout(()=>notif.remove(),3000);
-}
-
-function trDiagnostico(){
-  if(window._firebase){
-    const {db} = window._firebase;
-    import("https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js").then(mod=>{
-      mod.getDocs(mod.collection(db,'trabajos_realizados')).then(snap=>{
-        const enFirebase = snap.size;
-        const enLocal = trabajos.length;
-        const msg = '📊 DIAGNÓSTICO TRABAJOS\n\n'
-          + '• En Firebase: ' + enFirebase + ' trabajos\n'
-          + '• En memoria local: ' + enLocal + ' trabajos\n'
-          + '• _firebaseTrabajos listo: ' + (!!window._firebaseTrabajos) + '\n\n'
-          + (enFirebase === 0 && enLocal > 0
-            ? '⚠️ Firebase está vacío pero hay ' + enLocal + ' trabajos locales.\n¿Subir todos a Firebase ahora?'
-            : '✅ Firebase conectado correctamente.');
-        
-        if(enFirebase === 0 && enLocal > 0){
-          if(confirm(msg)){
-            trForzarSubidaFirebase();
-          }
-        } else {
-          alert(msg);
-        }
-      }).catch(e=>{
-        alert('❌ Firebase NO puede leer trabajos_realizados\nError: ' + e.code + '\n\nRevisa las reglas de Firestore.');
-      });
-    });
-  } else {
-    alert('Firebase no conectado aún. Espera un momento y vuelve a intentar.');
-  }
-}
-
-function trForzarSubidaFirebase(){
-  if(!window._firebaseTrabajos){
-    alert('Firebase Trabajos no listo. Espera y reintenta.');
-    return;
-  }
-  const { colTr, doc, setDoc } = window._firebaseTrabajos;
-  let ok = 0, err = 0;
-  const total = trabajos.length;
-  trabajos.forEach(t => {
-    const { foto, ...sinFoto } = t;
-    setDoc(doc(colTr, t.id), sinFoto)
-      .then(() => {
-        ok++;
-        if(ok + err === total){
-          alert('✅ Subidos ' + ok + ' trabajos a Firebase.\nAhora se verán en todos los dispositivos.');
-        }
-      })
-      .catch(e => {
-        err++;
-        console.error('Error subiendo', t.id, e);
-        if(ok + err === total){
-          alert('⚠️ ' + ok + ' subidos, ' + err + ' con error.');
-        }
-      });
-  });
-}
-
-function trDetalleTexto(t){
-  if(t.tipo==='Camara') return `DVR ${t.dvr||''} — Cámara ${t.camara||''}`;
-  if(t.tipo==='Boton') return `${t.nombreLocal||''} (Local ${t.numeroLocal||''})`;
-  if(t.tipo==='Incendio') return t.identificador||'';
-  return t.novedad||'';
-}
-
-function trRenderizar(){
-  const cont=document.getElementById('tr-contenido');
-  const vacio=document.getElementById('tr-vacio');
-  if(!cont) return;
-  const g=id=>((document.getElementById(id)||{}).value||'');
-  const filtTipo=g('tr-filtro-tipo'); const filtPiaz=g('tr-filtro-piazza');
-  const filtSit=g('tr-filtro-sit'); const buscar=g('tr-buscar').toLowerCase();
-  let lista=[...trabajos];
-  if(filtTipo) lista=lista.filter(t=>t.tipo===filtTipo);
-  if(filtPiaz) lista=lista.filter(t=>t.piazza===filtPiaz);
-  if(filtSit)  lista=lista.filter(t=>t.pendienteEstado===filtSit);
-  if(buscar)   lista=lista.filter(t=>
-    (t.tecnico||'').toLowerCase().includes(buscar)||(t.reporte||'').toLowerCase().includes(buscar)||
-    (t.piazza||'').toLowerCase().includes(buscar)||(t.nombreLocal||'').toLowerCase().includes(buscar)||
-    (t.camara||'').toLowerCase().includes(buscar)||(t.novedad||'').toLowerCase().includes(buscar)||
-    (t.dvr||'').toLowerCase().includes(buscar)||(t.estado||'').toLowerCase().includes(buscar));
-  lista.sort((a,b)=>(a.piazza||'').localeCompare(b.piazza||'')||(a.tipo||'').localeCompare(b.tipo||'')||(b.fecha||'').localeCompare(a.fecha||''));
-
-  if(vacio) vacio.style.display=lista.length?'none':'block';
-  if(!lista.length){cont.innerHTML='';return;}
-
-  const colorSit=s=>s==='Resuelto'||s==='Sin Novedad'?'#2f9e5c':'#d64545';
-  const iconSit=s=>s==='Resuelto'||s==='Sin Novedad'?'✅':'🔴';
-
-  // Agrupar por Piazza → Tipo
-  const grupos={};
-  lista.forEach(t=>{
-    const pz=t.piazza||'Sin Piazza';
-    const tp=t.tipo||'Otro';
-    if(!grupos[pz]) grupos[pz]={};
-    if(!grupos[pz][tp]) grupos[pz][tp]=[];
-    grupos[pz][tp].push(t);
-  });
-
-  let html='';
-  Object.keys(grupos).sort().forEach(piazza=>{
-    html+=`<div class="card" style="margin-bottom:16px;padding:0;overflow:hidden;">
-      <div style="background:var(--azul-oscuro);color:#fff;padding:10px 16px;font-weight:700;font-size:1rem;letter-spacing:.3px;">
-        🏢 ${piazza} <span style="font-weight:400;font-size:.85rem;opacity:.8;">(${Object.values(grupos[piazza]).flat().length} trabajo${Object.values(grupos[piazza]).flat().length!==1?'s':''})</span>
-      </div>`;
-    Object.keys(grupos[piazza]).sort().forEach(tipo=>{
-      const items=grupos[piazza][tipo];
-      html+=`<div style="padding:10px 16px 4px;background:#eef2f8;border-bottom:1px solid #d7dee6;">
-        <span style="font-weight:700;font-size:.92rem;">${ICONOS_TIPO[tipo]||''} ${NOMBRES_TIPO[tipo]||tipo}</span>
-        <span style="font-size:.8rem;color:#5a6b7b;margin-left:8px;">${items.length} registro${items.length!==1?'s':''}</span>
-      </div>`;
-      items.forEach(t=>{
-        const sit=t.pendienteEstado||'Pendiente';
-        const det=trDetalleTexto(t);
-        html+=`<div style="border-bottom:1px solid #f0f2f5;padding:12px 16px;">
-          <div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;align-items:flex-start;">
-            <div style="flex:1;min-width:0;">
-              <div style="display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-bottom:4px;">
-                <strong style="color:#0b2340;">${t.fecha||''}</strong>
-                ${t.estado?`<span class="badge ${claseBadgeEstado(t.estado)}">${t.estado}</span>`:''}
-                <span style="font-weight:700;color:${colorSit(sit)};font-size:.88rem;">${iconSit(sit)} ${sit}</span>
-              </div>
-              ${det?`<div style="font-weight:600;color:#2d3a4a;margin-bottom:4px;">${det}</div>`:''}
-              <div style="display:flex;flex-wrap:wrap;gap:12px;font-size:.84rem;color:#555;">
-                ${t.tecnico?`<span>👷 ${t.tecnico}</span>`:''}
-                ${t.operador?`<span>👤 ${t.operador}</span>`:''}
-              </div>
-              ${t.reporte?`<div style="margin-top:6px;font-size:.83rem;color:#444;background:#f8f9fa;border-radius:5px;padding:6px 10px;">${(t.reporte||'').replace(/</g,'&lt;').replace(/\n/g,'<br>')}</div>`:''}
-              ${t.foto?`<div style="margin-top:6px;"><img src="${t.foto}" style="max-width:90px;max-height:70px;border-radius:5px;cursor:pointer;border:1px solid #d7dee6;" onclick="window.open(this.src)"></div>`:''}
-            </div>
-            <div style="display:flex;flex-direction:column;gap:6px;flex-shrink:0;">
-              <button class="btn btn-secundario btn-chico" onclick="trVerDetalle('${t.id}')">👁 Ver</button>
-              <button class="btn btn-secundario btn-chico" onclick="trEditar('${t.id}')">✎ Editar</button>
-              <button class="btn btn-peligro btn-chico" onclick="trEliminar('${t.id}')">🗑 Eliminar</button>
-              <button class="btn btn-chico" style="background:#198754;color:#fff;" onclick="pedirDatosReporte(()=>exportarUnTrabajoRealizado('${t.id}'))">📄 PDF</button>
-            </div>
-          </div>
-        </div>`;
-      });
-    });
-    html+='</div>';
-  });
-  cont.innerHTML=html;
-}
-
-// ── Modal detalle de TRABAJO REALIZADO ──────────────────────
-let _trDetalleId = null;
-
-function trVerDetalle(id){
-  const t = trabajos.find(x=>x.id===id);
-  if(!t) return;
-  _trDetalleId = id;
-  const filas=[];
-  const fila=(etq,val)=>{if(val!==undefined&&val!==null&&val!=='')filas.push(`<div style="display:flex;gap:10px;padding:7px 0;border-bottom:1px solid #eef2f6;"><div style="min-width:150px;color:#6b7785;font-weight:600;">${etq}</div><div style="flex:1;">${String(val).replace(/</g,'&lt;').replace(/\n/g,'<br>')}</div></div>`);};
-  fila('Tipo',`${ICONOS_TIPO[t.tipo]||''} ${NOMBRES_TIPO[t.tipo]||t.tipo}`);
-  fila('Fecha',t.fecha); fila('Piazza',t.piazza);
-  if(t.tipo==='Camara'){fila('DVR/NVR',t.dvr);fila('Cámara',t.camara);}
-  else if(t.tipo==='Boton'){fila('Local',t.nombreLocal);fila('Número de Local',t.numeroLocal);fila('Zona',t.zona);}
-  else if(t.tipo==='Incendio'){fila('Componente',t.identificador);}
-  else{fila('Descripción',t.novedad);}
-  fila('Estado del equipo',t.estado);
-  fila('Situación',t.pendienteEstado||'Pendiente');
-  fila('Técnico / Proveedor',t.tecnico);
-  fila('Operador',t.operador);
-  fila('Reporte',t.reporte);
-  if(t.foto) filas.push(`<div style="display:flex;gap:10px;padding:7px 0;border-bottom:1px solid #eef2f6;"><div style="min-width:150px;color:#6b7785;font-weight:600;">Foto</div><div style="flex:1;"><img src="${t.foto}" style="max-width:260px;max-height:200px;border-radius:6px;border:1px solid #d7dee6;cursor:pointer;" onclick="window.open('${t.foto}','_blank')"></div></div>`);
-  document.getElementById('modal-detalle-titulo').textContent=`${ICONOS_TIPO[t.tipo]||''} ${NOMBRES_TIPO[t.tipo]||t.tipo} — ${t.piazza||''}`;
-  document.getElementById('modal-detalle-cuerpo').innerHTML=filas.join('')||'<em>Sin datos.</em>';
-  // Reusar el modal existente pero con acciones de trabajo
-  const btns=document.querySelector('#modal-detalle > div > div:last-child');
-  if(btns) btns.innerHTML=`
-    <button class="btn btn-secundario btn-chico" onclick="trEditarDesdeModal()">✎ Editar</button>
-    <button class="btn btn-peligro btn-chico" onclick="trEliminarDesdeModal()">🗑 Eliminar</button>
-    <button class="btn btn-primario btn-chico" onclick="pedirDatosReporte(()=>exportarUnTrabajoRealizado(_trDetalleId))">📄 Exportar</button>
-    <button class="btn btn-secundario btn-chico" onclick="cerrarDetalle()">Cerrar</button>`;
-  document.getElementById('modal-detalle').style.display='flex';
-}
-
-function trEditarDesdeModal(){
-  const id=_trDetalleId; cerrarDetalle(); if(id) trEditar(id);
-}
-function trEliminarDesdeModal(){
-  const id=_trDetalleId;
-  if(id&&confirm('¿Eliminar este trabajo? Esta acción no se puede deshacer.')){
-    cerrarDetalle(); trEliminar(id,true);
-  }
-}
-
-function trEditar(id){
-  const t=trabajos.find(x=>x.id===id);
-  if(!t){alert('No se encontró el trabajo.');return;}
-  // Ir al formulario de Registrar Trabajo y precargar los datos
-  cambiarTab('items');
-  setTimeout(()=>{
-    const v=(elId,val)=>{const el=document.getElementById(elId);if(el)el.value=val||'';};
-    v('rt-fecha',t.fecha); v('rt-piazza',t.piazza); v('rt-tipo',t.tipo||'Camara');
-    rtCambiarTipo();
-    setTimeout(()=>{
-      v('rt-dvr',t.dvr); rtPoblarCamaras();
-      if(t.tipo==='Camara'&&t.camara){
-        // Marcar cámara(s) en el panel
-        const cams=(t.camara||'').split(',').map(s=>s.trim()).filter(Boolean);
-        _rtCamarasSeleccionadas=[...cams];
-        rtActualizarDisplayCamaras();
-        // Marcar checkboxes visualmente
-        const panel=document.getElementById('rt-camara-panel');
-        if(panel){panel.querySelectorAll('input[type=checkbox]').forEach(cb=>{cb.checked=cams.includes(cb.value);});}
-      }
-      if(t.tipo==='Boton'){
-        const locs=CATALOGO_LOCALES[t.piazza]||[];
-        const idx=locs.findIndex(l=>l.nombreLocal===t.nombreLocal||l.numeroLocal===t.numeroLocal);
-        v('rt-local',idx>=0?String(idx):'__manual__');
-        v('rt-numero-local',t.numeroLocal); v('rt-zona',t.zona);
-        if(idx<0){v('rt-local-manual',t.nombreLocal);document.getElementById('rt-wrap-local-manual').style.display='';}
-      }
-      if(t.tipo==='Incendio') v('rt-componente',t.identificador||'');
-      if(t.tipo==='Otro') v('rt-novedad',t.novedad||'');
-      v('rt-estado',t.estado); v('rt-situacion',t.pendienteEstado||'Pendiente');
-      v('rt-tecnico',t.tecnico); v('rt-operador',t.operador); v('rt-reporte',t.reporte);
-      if(t.foto){
-        _rtFoto=t.foto;
-        document.getElementById('rt-foto-img').src=t.foto;
-        document.getElementById('rt-foto-wrap').style.display='block';
-      }
-      // Marcar que estamos editando
-      const btn=document.querySelector('#tab-items .btn-primario');
-      if(btn){btn.textContent='💾 Actualizar Trabajo';btn.dataset.editandoId=id;}
-    },150);
-  },100);
-}
-
-function trEliminar(id, yaConfirmado){
-  if(!yaConfirmado&&!confirm('¿Eliminar este trabajo? Esta acción no se puede deshacer.')) return;
-  // Eliminar de Firebase — el onSnapshot actualizará la lista automáticamente
-  if(window._firebase){
-    const {coleccionTrabajos, doc, deleteDoc} = window._firebase;
-    deleteDoc(doc(coleccionTrabajos, String(id)))
-      .then(()=>{
-        console.log('✅ Trabajo eliminado Firebase:', id);
-        // También limpiar local por si acaso
-        trabajos = trabajos.filter(t=>t.id!==id);
-        localStorage.setItem(CLAVE_TR, JSON.stringify(trabajos));
-      })
-      .catch(e => console.error('❌ Error eliminando trabajo:', e));
-  } else {
-    // Sin Firebase: solo local
-    trabajos = trabajos.filter(t=>t.id!==id);
-    localStorage.setItem(CLAVE_TR, JSON.stringify(trabajos));
-    trRenderizar();
-  }
-  registrarEventoBitacora('trabajo', 'Trabajo eliminado', '', 'ID: ' + id);
-  const notif=document.createElement('div');
-  notif.textContent='Trabajo eliminado';
-  notif.style.cssText='position:fixed;bottom:24px;right:24px;background:#d64545;color:#fff;padding:12px 20px;border-radius:8px;font-weight:600;z-index:9999;';
-  document.body.appendChild(notif); setTimeout(()=>notif.remove(),2500);
-}
-
-// ── Exportar UN trabajo realizado a PDF ──────────────────────
-function exportarUnTrabajoRealizado(id){
-  const t=trabajos.find(x=>x.id===id);
-  if(!t){alert('Trabajo no encontrado.');return;}
-  const {jsPDF}=window.jspdf;
-  const doc=new jsPDF({orientation:'portrait'});
-  const ap=doc.internal.pageSize.getWidth();
-  // Encabezado
-  doc.setFillColor(11,35,64); doc.rect(0,0,ap,16,'F');
-  doc.setTextColor(255,255,255); doc.setFontSize(11);
-  doc.text('Krause Negocios — Trabajo Realizado',10,11);
-  doc.setTextColor(0,0,0);
-  let y=dibujarEncabezadoReporte(doc,'Trabajo: ' + (NOMBRES_TIPO[t.tipo]||t.tipo) + ' - ' + (t.piazza||''),20);
-  const rows=[];
-  const r=(k,v)=>{if(v)rows.push([k,v]);};
-  r('Fecha',t.fecha); r('Piazza',t.piazza);
-  r('Tipo', NOMBRES_TIPO[t.tipo]||t.tipo);
-  if(t.tipo==='Camara'){r('DVR/NVR',t.dvr);r('Cámara',t.camara);}
-  else if(t.tipo==='Boton'){r('Local',t.nombreLocal);r('N° Local',t.numeroLocal);r('Zona',t.zona);}
-  else if(t.tipo==='Incendio'){r('Componente',t.identificador);}
-  else{r('Descripción',t.novedad);}
-  r('Estado del equipo',t.estado);
-  r('Situación',t.pendienteEstado||'Pendiente');
-  r('Técnico / Proveedor',t.tecnico);
-  r('Operador',t.operador);
-  r('Reporte',t.reporte);
-  doc.autoTable({
-    startY:y, margin:{left:10,right:10},
-    body:rows,
-    columnStyles:{0:{cellWidth:55,fontStyle:'bold',fillColor:[238,241,245]},1:{cellWidth:'auto'}},
-    styles:{fontSize:9,cellPadding:4,valign:'middle',lineColor:[215,222,230],lineWidth:0.3},
-    theme:'grid'
-  });
-  if(t.foto){
-    let yf=doc.lastAutoTable.finalY+6;
-    if(yf>240){doc.addPage();yf=15;}
-    try{doc.addImage(t.foto,'JPEG',10,yf,80,60);}catch(e){}
-  }
-  doc.save(`Trabajo_${t.piazza||''}_${t.fecha||''}_${t.tipo||''}.pdf`);
-}
-
-// ── Exportar TODOS los trabajos filtrados a PDF ───────────────
-function exportarTrabajosRealizadosPDF(){
-  const g=id=>((document.getElementById(id)||{}).value||'');
-  const filtTipo=g('tr-filtro-tipo');const filtPiaz=g('tr-filtro-piazza');
-  const filtSit=g('tr-filtro-sit');const buscar=g('tr-buscar').toLowerCase();
-  let lista=[...trabajos];
-  if(filtTipo) lista=lista.filter(t=>t.tipo===filtTipo);
-  if(filtPiaz) lista=lista.filter(t=>t.piazza===filtPiaz);
-  if(filtSit)  lista=lista.filter(t=>t.pendienteEstado===filtSit);
-  if(buscar)   lista=lista.filter(t=>
-    (t.tecnico||'').toLowerCase().includes(buscar)||(t.reporte||'').toLowerCase().includes(buscar)||
-    (t.piazza||'').toLowerCase().includes(buscar)||(t.camara||'').toLowerCase().includes(buscar));
-  lista.sort((a,b)=>(a.piazza||'').localeCompare(b.piazza||'')||(a.tipo||'').localeCompare(b.tipo||'')||(b.fecha||'').localeCompare(a.fecha||''));
-  if(!lista.length){alert('No hay trabajos para exportar con los filtros actuales.');return;}
-  const {jsPDF}=window.jspdf;
-  const doc=new jsPDF({orientation:'portrait'});
-  const ap=doc.internal.pageSize.getWidth();
-  doc.setFillColor(11,35,64); doc.rect(0,0,ap,16,'F');
-  doc.setTextColor(255,255,255); doc.setFontSize(11);
-  doc.text('Krause Negocios — Trabajos Realizados',10,11);
-  doc.setTextColor(0,0,0);
-  let y=dibujarEncabezadoReporte(doc,'Reporte de Trabajos Realizados',20);
-  // Agrupar por piazza
-  const grupos={};
-  lista.forEach(t=>{const pz=t.piazza||'Sin Piazza';if(!grupos[pz])grupos[pz]={};if(!grupos[pz][t.tipo])grupos[pz][t.tipo]=[];grupos[pz][t.tipo].push(t);});
-  Object.keys(grupos).sort().forEach(piazza=>{
-    // Título de Piazza — saltar si queda poco espacio
-    if(y>230){doc.addPage();y=15;}
-    doc.setFillColor(11,35,64); doc.rect(10,y,ap-20,7,'F');
-    doc.setTextColor(255,255,255); doc.setFontSize(10); doc.setFont(undefined,'bold');
-    doc.text(`Piazza: ${piazza}`,13,y+5); doc.setFont(undefined,'normal'); doc.setTextColor(0,0,0);
-    y+=10;
-    Object.keys(grupos[piazza]).sort().forEach(tipo=>{
-      const items=grupos[piazza][tipo];
-      const rows=[];
-      rows.push([{content:`${ICONOS_TIPO[tipo]||''} ${NOMBRES_TIPO[tipo]||tipo}`,colSpan:5,styles:{fontStyle:'bold',fillColor:[238,241,245],fontSize:9}}]);
-      rows.push([{content:'Fecha',styles:{fontStyle:'bold',fillColor:[248,250,252]}},{content:'Detalle',styles:{fontStyle:'bold',fillColor:[248,250,252]}},{content:'Estado',styles:{fontStyle:'bold',fillColor:[248,250,252]}},{content:'Situación',styles:{fontStyle:'bold',fillColor:[248,250,252]}},{content:'Técnico',styles:{fontStyle:'bold',fillColor:[248,250,252]}}]);
-      items.forEach(t=>{
-        const det=t.tipo==='Camara'?`${t.dvr} Cam ${t.camara}`:t.tipo==='Boton'?`${t.nombreLocal} (${t.numeroLocal})`:t.tipo==='Incendio'?(t.identificador||''):t.novedad||'';
-        rows.push([t.fecha||'',det,t.estado||'',t.pendienteEstado||'Pendiente',t.tecnico||'']);
-      });
-      doc.autoTable({
-        startY:y, margin:{left:10,right:10},
-        body:rows,
-        styles:{fontSize:7.5,cellPadding:3,valign:'middle',lineColor:[215,222,230],lineWidth:0.3},
-        theme:'grid',
-        didDrawPage:()=>{y=15;}
-      });
-      y=doc.lastAutoTable.finalY+4;
-    });
-    y+=4;
-  });
-  doc.save(`Trabajos_Realizados_${hoyISO()}.pdf`);
-}
-
-function exportarTodosTrabajosRealizados(docExterno, opciones){
-  // Si se llama desde el consolidado, usar el doc existente en modo compacto
-  if(docExterno){
-    const compacto = !!(opciones && opciones.compacto);
-    let y = (opciones && opciones.startY) || 15;
-    const ap = docExterno.internal.pageSize.getWidth();
-    const filtroTipos = opciones && opciones.filtroTipos ? opciones.filtroTipos : ['Camara','Boton','Incendio','Otro'];
-    let lista = [...trabajos].filter(t => filtroTipos.includes(t.tipo||'Otro'));
-    lista.sort((a,b)=>(a.piazza||'').localeCompare(b.piazza||'')||(a.tipo||'').localeCompare(b.tipo||'')||(b.fecha||'').localeCompare(a.fecha||''));
-    if(!lista.length) return y;
-    // Barra de sección
-    if(y > 230){ docExterno.addPage(); y = 15; }
-    docExterno.setFillColor(11,35,64); docExterno.rect(10,y,ap-20,7,'F');
-    docExterno.setTextColor(255,255,255); docExterno.setFontSize(9); docExterno.setFont(undefined,'bold');
-    docExterno.text('TRABAJOS REALIZADOS', 13, y+5);
-    docExterno.setFont(undefined,'normal'); docExterno.setTextColor(0,0,0);
-    y += 10;
-    // Agrupar por piazza
-    const grupos={};
-    lista.forEach(t=>{const pz=t.piazza||'Sin Piazza';if(!grupos[pz])grupos[pz]={};if(!grupos[pz][t.tipo])grupos[pz][t.tipo]=[];grupos[pz][t.tipo].push(t);});
-    Object.keys(grupos).sort().forEach(piazza=>{
-      if(y>230){docExterno.addPage();y=15;} // saltar si queda poco espacio para encabezado+datos
-      docExterno.setFillColor(242,145,28); docExterno.rect(10,y,ap-20,6,'F');
-      docExterno.setTextColor(255,255,255); docExterno.setFontSize(8); docExterno.setFont(undefined,'bold');
-      docExterno.text('Piazza: '+piazza, 13, y+4.5); docExterno.setFont(undefined,'normal'); docExterno.setTextColor(0,0,0);
-      y+=8;
-      Object.keys(grupos[piazza]).sort().forEach(tipo=>{
-        if(y>245){docExterno.addPage();y=15;}
-        const items=grupos[piazza][tipo];
-        const rows=[];
-        rows.push([{content:NOMBRES_TIPO[tipo]||tipo,colSpan:5,styles:{fontStyle:'bold',fillColor:[238,241,245],fontSize:8}}]);
-        rows.push([
-          {content:'Fecha',styles:{fontStyle:'bold',fillColor:[248,250,252]}},
-          {content:'Detalle',styles:{fontStyle:'bold',fillColor:[248,250,252]}},
-          {content:'Estado',styles:{fontStyle:'bold',fillColor:[248,250,252]}},
-          {content:'Situacion',styles:{fontStyle:'bold',fillColor:[248,250,252]}},
-          {content:'Tecnico',styles:{fontStyle:'bold',fillColor:[248,250,252]}}
-        ]);
-        items.forEach(t=>{
-          const det=t.tipo==='Camara'?(t.dvr+' Cam '+t.camara):t.tipo==='Boton'?(t.nombreLocal+' ('+t.numeroLocal+')'):t.tipo==='Incendio'?(t.identificador||''):t.novedad||'';
-          rows.push([t.fecha||'',det,t.estado||'',t.pendienteEstado||'Pendiente',t.tecnico||'']);
-        });
-        docExterno.autoTable({
-          startY:y, margin:{left:10,right:10},
-          body:rows,
-          styles:{fontSize:7,cellPadding:2.5,valign:'middle',lineColor:[215,222,230],lineWidth:0.3},
-          theme:'grid',
-          didDrawPage:()=>{y=15;}
-        });
-        y=docExterno.lastAutoTable.finalY+3;
-      });
-      y+=3;
-    });
-    return y;
-  }
-  // Llamada standalone — generar PDF propio
-  exportarTrabajosRealizadosPDF();
-}
-
-
 cargarCatalogoOverrides();
 cargarDatos();
 cargarDatosPruebas();
 cargarDatosGrabacion();
-trCargar();
+cargarTrabajos();
 cargarBitacora();
 poblarSelectorAnioPruebas();
 poblarSelectsPiazza();
