@@ -1666,7 +1666,7 @@ function mesDeSemanaISO(anio, semana){
 }
 
 function claveCeldaPrueba(piazza, numeroLocal, nombreLocal, anio, semana){
-  return `${piazza}|${numeroLocal}|${nombreLocal}|${anio}|${semana}`;
+  return `${piazza}|${numeroLocal}|${nombreLocal}|${parseInt(anio,10)}|${parseInt(semana,10)}`;
 }
 
 const CLAVE_STORAGE_CATALOGO_OVERRIDES = 'krause_catalogo_overrides_v1';
@@ -2305,7 +2305,7 @@ function renderPruebas(){
     const celdas = Array.from({length: totalSemanas}, (_, i) => {
       const semana = i + 1;
       const clave = claveCeldaPrueba(piazza, loc.numeroLocal, loc.nombreLocal, anio, semana);
-      const registro = pruebasSemanales.find(p => claveCeldaPrueba(p.piazza, p.numeroLocal, p.nombreLocal, p.anio, p.semana) === clave);
+      const registro = pruebasSemanales.find(p => claveCeldaPrueba(p.piazza, p.numeroLocal, p.nombreLocal, parseInt(p.anio,10), parseInt(p.semana,10)) === clave);
       const estado = registro ? registro.estado : '-';
       const clase = CLASE_ESTADO_PRUEBA[estado] || 'est-guion';
       let contenido = estado === '-' ? '-' : '';
@@ -2753,7 +2753,7 @@ function exportarPruebasPDF(docExterno, piazzaExterna, anioExterno){
     return Array.from({length: totalSemanas}, (_, i) => {
       const semana = i + 1;
       const clave = claveCeldaPrueba(piazza, loc.numeroLocal, loc.nombreLocal, anio, semana);
-      const registro = pruebasSemanales.find(p => claveCeldaPrueba(p.piazza, p.numeroLocal, p.nombreLocal, p.anio, p.semana) === clave);
+      const registro = pruebasSemanales.find(p => claveCeldaPrueba(p.piazza, p.numeroLocal, p.nombreLocal, parseInt(p.anio,10), parseInt(p.semana,10)) === clave);
       const estado = registro ? registro.estado : '-';
       let texto = estado === '-' ? '-' : '';
       if((estado === 'No' || estado === 'Otro') && registro && registro.comentario){
