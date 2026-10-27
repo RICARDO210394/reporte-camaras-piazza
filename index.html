@@ -2399,7 +2399,7 @@ function abrirModalPrueba(idxLoc, anio, semana){
   const nombreLocal = loc.nombreLocal;
   _celdaPruebaActual = { piazza, numeroLocal, nombreLocal, anio, semana };
   const clave = claveCeldaPrueba(piazza, numeroLocal, nombreLocal, anio, semana);
-  const registro = pruebasSemanales.find(p => claveCeldaPrueba(p.piazza, p.numeroLocal, p.nombreLocal, p.anio, p.semana) === clave);
+  const registro = pruebasSemanales.find(p => claveCeldaPrueba(p.piazza, p.numeroLocal, p.nombreLocal, parseInt(p.anio,10), parseInt(p.semana,10)) === clave);
 
   document.getElementById('modal-prueba-titulo').textContent = `${nombreLocal} — Semana ${semana} / ${anio}`;
   document.getElementById('mp-estado').value = registro ? registro.estado : '-';
@@ -2468,7 +2468,7 @@ function eliminarPruebaActual(){
   if(!_celdaPruebaActual) return;
   const { piazza, numeroLocal, nombreLocal, anio, semana } = _celdaPruebaActual;
   const clave = claveCeldaPrueba(piazza, numeroLocal, nombreLocal, anio, semana);
-  const idx = pruebasSemanales.findIndex(p => claveCeldaPrueba(p.piazza, p.numeroLocal, p.nombreLocal, p.anio, p.semana) === clave);
+  const idx = pruebasSemanales.findIndex(p => claveCeldaPrueba(p.piazza, p.numeroLocal, p.nombreLocal, parseInt(p.anio,10), parseInt(p.semana,10)) === clave);
   if(idx === -1){ cerrarModalPrueba(); return; } // no había nada guardado en esta celda
 
   const registroBorrado = pruebasSemanales[idx];
@@ -2520,7 +2520,7 @@ function guardarPrueba(){
     return;
   }
 
-  const idx = pruebasSemanales.findIndex(p => claveCeldaPrueba(p.piazza, p.numeroLocal, p.nombreLocal, p.anio, p.semana) === clave);
+  const idx = pruebasSemanales.findIndex(p => claveCeldaPrueba(p.piazza, p.numeroLocal, p.nombreLocal, parseInt(p.anio,10), parseInt(p.semana,10)) === clave);
   const registro = { id: 'ps_' + piazza.replace(/\s+/g,'_') + '_' + numeroLocal + '_' + anio + '_' + semana, piazza, numeroLocal, nombreLocal, anio, semana, estado, comentario, quien, fecha };
 
   if(idx !== -1) pruebasSemanales[idx] = registro;
