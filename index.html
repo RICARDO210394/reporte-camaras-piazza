@@ -1411,6 +1411,7 @@ function historialDeEquipo(clave){
 
 function diasParaSolucion(historialOrdenadoAsc, idx){
   const actual = historialOrdenadoAsc[idx];
+  if(!actual) return null;
   if(esPendienteActivo(actual)) return null; // aún no resuelto
   // Buscar hacia atrás el "Pendiente" más reciente antes de esta entrada de cierre
   for(let i = idx - 1; i >= 0; i--){
@@ -4319,8 +4320,8 @@ function renderRealizados(){
       if(!itemsTipo.length) return '';
       const filas = itemsTipo.map(p => {
         const hist = historialDeEquipo(claveDe(p));
-        const idxEnHist = hist.indexOf(p);
-        const dias = diasParaSolucion(hist, idxEnHist);
+        const idxEnHist = hist.findIndex(h => h.id === p.id);
+        const dias = idxEnHist !== -1 ? diasParaSolucion(hist, idxEnHist) : null;
         return `
           <tr>
             <td>${p.fecha || ''}</td>
