@@ -529,6 +529,7 @@
   <button data-tab="lista">📋 Lista de Pendientes</button>
   <button data-tab="items">🛠️ Registrar Trabajo</button>
   <button data-tab="realizados">✅ Trabajos Realizados</button>
+  <button data-tab="vista-camaras">📹 Vista de Cámaras</button>
   <button data-tab="exportar">📤 Exportar</button>
   <button data-tab="bitacora">📒 Bitácora</button>
 </nav>
@@ -942,6 +943,91 @@
     </div>
     <div class="card" style="padding:0; overflow:hidden;">
       <div id="grabacion-tabla-wrap" style="overflow-x:auto;"></div>
+    </div>
+  </div>
+
+  <!-- TAB VISTA DE CÁMARAS -->
+  <div class="tab" id="tab-vista-camaras">
+    <div class="card" style="padding:16px 20px;">
+      <div style="display:flex; align-items:center; gap:14px; flex-wrap:wrap; margin-bottom:16px;">
+        <h2 style="margin:0; font-size:1.1rem;">📹 Vista de Cámaras</h2>
+        <select id="vc-piazza" onchange="vcCambiarPiazza()" style="min-width:160px;">
+          <option value="">Seleccionar Piazza...</option>
+        </select>
+        <select id="vc-dvr" onchange="vcRenderGrid()" style="min-width:120px;">
+          <option value="">Seleccionar DVR/NVR...</option>
+        </select>
+        <div style="display:flex; gap:10px; align-items:center; font-size:.82rem; margin-left:auto; flex-wrap:wrap;">
+          <span style="display:flex;align-items:center;gap:5px;"><span style="width:14px;height:14px;border-radius:3px;background:#22c55e;display:inline-block;"></span> Operativa</span>
+          <span style="display:flex;align-items:center;gap:5px;"><span style="width:14px;height:14px;border-radius:3px;background:#f59e0b;display:inline-block;"></span> Con novedad</span>
+          <span style="display:flex;align-items:center;gap:5px;"><span style="width:14px;height:14px;border-radius:3px;background:#ef4444;display:inline-block;"></span> Sin imagen / falla</span>
+          <span style="display:flex;align-items:center;gap:5px;"><span style="width:14px;height:14px;border-radius:3px;background:#94a3b8;display:inline-block;"></span> Puerto libre</span>
+          <button class="btn btn-primario btn-chico" onclick="pedirDatosReporte(()=>vcExportarPDF())" style="margin-left:8px;">📄 Exportar PDF</button>
+        </div>
+      </div>
+      <div id="vc-grid" style="display:grid; gap:8px;"></div>
+      <div id="vc-vacio" style="color:#8a97a5; padding:30px 0; text-align:center; display:none;">Selecciona una Piazza y un DVR/NVR para ver el estado de las cámaras.</div>
+    </div>
+  </div>
+
+  <!-- MODAL HISTORIAL + EDICIÓN RÁPIDA DE CÁMARA -->
+  <div id="modal-vc-historial" style="display:none; position:fixed; inset:0; background:rgba(11,35,64,0.6); z-index:1500; align-items:center; justify-content:center; padding:16px;" onclick="if(event.target===this)cerrarModalVCHistorial()">
+    <div style="background:#fff; border-radius:12px; max-width:720px; width:100%; max-height:92vh; display:flex; flex-direction:column; box-shadow:0 16px 48px rgba(0,0,0,0.3);">
+      <!-- Cabecera -->
+      <div style="background:#0b2340; color:#fff; border-radius:12px 12px 0 0; padding:14px 20px; display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap;">
+        <div>
+          <div style="font-weight:700; font-size:1rem;" id="vc-hist-titulo">Historial</div>
+          <div style="font-size:.82rem; opacity:.75;" id="vc-hist-subtitulo"></div>
+        </div>
+        <div style="display:flex; gap:8px; align-items:center;">
+          <button id="vc-btn-editar" onclick="vcMostrarFormEdicion()" style="background:#f59e0b; border:none; color:#fff; border-radius:6px; padding:5px 12px; cursor:pointer; font-size:.85rem; font-weight:600;">✏️ Editar estado</button>
+          <button onclick="cerrarModalVCHistorial()" style="background:rgba(255,255,255,.15); border:none; color:#fff; border-radius:6px; padding:4px 10px; cursor:pointer; font-size:1rem;">✕</button>
+        </div>
+      </div>
+      <!-- Formulario de edición rápida (oculto por defecto) -->
+      <div id="vc-form-edicion" style="display:none; padding:16px 20px; background:#f8fafc; border-bottom:2px solid #e2e8f0;">
+        <div style="font-weight:700; color:#0b2340; margin-bottom:12px; font-size:.92rem;">✏️ Modificar registro activo</div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:10px;">
+          <div>
+            <label style="font-size:.8rem; color:#4a5a6b; font-weight:600; display:block; margin-bottom:4px;">Estado del equipo</label>
+            <select id="vc-ed-estado" style="width:100%; padding:7px 10px; border:1px solid #c0ccd8; border-radius:6px; font-size:.88rem;">
+              <option value="Sin imagen">Sin imagen</option>
+              <option value="Blanco y negro">Blanco y negro</option>
+              <option value="Intermitencia">Intermitencia</option>
+              <option value="Interferencia">Interferencia</option>
+              <option value="Operativo">Operativo</option>
+              <option value="Puerto libre">Puerto libre</option>
+              <option value="Otro">Otro</option>
+            </select>
+          </div>
+          <div>
+            <label style="font-size:.8rem; color:#4a5a6b; font-weight:600; display:block; margin-bottom:4px;">Estado del pendiente</label>
+            <select id="vc-ed-pendiente-estado" style="width:100%; padding:7px 10px; border:1px solid #c0ccd8; border-radius:6px; font-size:.88rem;">
+              <option value="Pendiente">Pendiente</option>
+              <option value="Resuelto">Resuelto</option>
+              <option value="En proceso">En proceso</option>
+            </select>
+          </div>
+          <div>
+            <label style="font-size:.8rem; color:#4a5a6b; font-weight:600; display:block; margin-bottom:4px;">Técnico</label>
+            <input id="vc-ed-tecnico" type="text" placeholder="Nombre del técnico..." style="width:100%; padding:7px 10px; border:1px solid #c0ccd8; border-radius:6px; font-size:.88rem; box-sizing:border-box;">
+          </div>
+          <div>
+            <label style="font-size:.8rem; color:#4a5a6b; font-weight:600; display:block; margin-bottom:4px;">Fecha</label>
+            <input id="vc-ed-fecha" type="date" style="width:100%; padding:7px 10px; border:1px solid #c0ccd8; border-radius:6px; font-size:.88rem; box-sizing:border-box;">
+          </div>
+        </div>
+        <div style="margin-bottom:10px;">
+          <label style="font-size:.8rem; color:#4a5a6b; font-weight:600; display:block; margin-bottom:4px;">Reporte del técnico</label>
+          <textarea id="vc-ed-reporte" rows="3" placeholder="Detalle del diagnóstico o acción realizada..." style="width:100%; padding:7px 10px; border:1px solid #c0ccd8; border-radius:6px; font-size:.88rem; resize:vertical; box-sizing:border-box;"></textarea>
+        </div>
+        <div style="display:flex; gap:8px;">
+          <button onclick="vcGuardarEdicion()" style="background:#0b2340; color:#fff; border:none; border-radius:6px; padding:7px 18px; cursor:pointer; font-size:.88rem; font-weight:600;">💾 Guardar cambios</button>
+          <button onclick="vcOcultarFormEdicion()" style="background:#e2e8f0; color:#374151; border:none; border-radius:6px; padding:7px 14px; cursor:pointer; font-size:.88rem;">Cancelar</button>
+        </div>
+      </div>
+      <!-- Historial -->
+      <div style="overflow-y:auto; padding:16px 20px; flex:1;" id="vc-hist-contenido"></div>
     </div>
   </div>
 
@@ -4683,6 +4769,7 @@ function cambiarTab(nombre){
   if(nombre === 'grabacion'){ renderGrabacion(); }
   if(nombre === 'exportar'){ poblarSelectoresExportar(); }
   if(nombre === 'bitacora'){ renderBitacora(); }
+  if(nombre === 'vista-camaras'){ vcInicializar(); }
 }
 
 document.querySelectorAll('nav button').forEach(btn => {
@@ -5982,6 +6069,420 @@ if('serviceWorker' in navigator && (location.hostname.includes('netlify.app') ||
     });
   }).catch(err => console.warn('SW no disponible:', err));
 }
+
+// ============================================================
+//  VISTA DE CÁMARAS
+// ============================================================
+
+function vcInicializar(){
+  const sel = document.getElementById('vc-piazza');
+  if(!sel) return;
+  // Poblar Piazzas con DVR
+  if(sel.options.length <= 1){
+    sel.innerHTML = '<option value="">Seleccionar Piazza...</option>' +
+      PIAZZAS_CON_DVR_Y_PRUEBAS.map(p => `<option>${p}</option>`).join('');
+  }
+  vcRenderGrid();
+}
+
+function vcCambiarPiazza(){
+  const piazza = document.getElementById('vc-piazza').value;
+  const selDvr = document.getElementById('vc-dvr');
+  const dvrs = piazza ? (DVRS_POR_PIAZZA[piazza] || ['DVR1']) : [];
+  selDvr.innerHTML = '<option value="">Seleccionar DVR/NVR...</option>' +
+    dvrs.map(d => `<option>${d}</option>`).join('');
+  vcRenderGrid();
+}
+
+function vcEstadoCamara(piazza, dvr, numCam){
+  // Busca en pendientes el registro más reciente de esta cámara
+  const clave = `Camara|${piazza}|${dvr}|${numCam}`;
+  // p.camara se guarda como "Cam 5" — comparar con "Cam {numCam}"
+  const claveCam = 'Cam ' + numCam;
+  const registros = pendientes
+    .filter(p => p.tipo === 'Camara' && p.piazza === piazza && p.dvr === dvr && p.camara === claveCam)
+    .sort((a,b) => (b.fecha||'') > (a.fecha||'') ? 1 : -1);
+
+  if(!registros.length) return { color: '#22c55e', texto: 'Operativa', icono: '✅', registros: [] };
+
+  // El registro más reciente activo (Pendiente) define el estado visual
+  const activo = registros.find(r => r.pendienteEstado === 'Pendiente');
+  const ultimo = registros[0];
+
+  const estadoRef = activo ? activo.estado : ultimo.estado;
+
+  // Estados rojos (falla grave)
+  const estadosRojos = ['Sin imagen','Desconectado','Sin señal'];
+  // Estados amarillos (novedad / advertencia)
+  const estadosAmarillos = ['Intermitencia','Interferencia','Blanco y negro','Falla de sensor','Batería baja','Requiere mantenimiento','Otro'];
+
+  if(estadoRef === 'Puerto libre')
+    return { color: '#94a3b8', texto: 'Puerto libre', icono: '⬜', registros };
+
+  if(!activo)
+    return { color: '#22c55e', texto: 'Operativa', icono: '✅', registros };
+
+  if(estadosRojos.includes(estadoRef))
+    return { color: '#ef4444', texto: estadoRef, icono: '🔴', registros };
+
+  if(estadosAmarillos.includes(estadoRef))
+    return { color: '#f59e0b', texto: estadoRef, icono: '🟡', registros };
+
+  return { color: '#22c55e', texto: 'Operativa', icono: '✅', registros };
+}
+
+function vcRenderGrid(){
+  const piazza = document.getElementById('vc-piazza').value;
+  const dvr    = document.getElementById('vc-dvr').value;
+  const grid   = document.getElementById('vc-grid');
+  const vacio  = document.getElementById('vc-vacio');
+
+  if(!piazza || !dvr){
+    grid.innerHTML = '';
+    grid.style.display = 'none';
+    vacio.style.display = 'block';
+    return;
+  }
+
+  const totalCams = puertosCamaraDePiazza(piazza);
+  // Calcular columnas: raíz cuadrada redondeada, mínimo 4
+  const cols = Math.ceil(Math.sqrt(totalCams));
+  grid.style.display = 'grid';
+  grid.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
+  grid.style.gap = '8px';
+  vacio.style.display = 'none';
+
+  let html = '';
+  for(let cam = 1; cam <= totalCams; cam++){
+    const est = vcEstadoCamara(piazza, dvr, cam);
+    const tieneHistorial = est.registros.length > 0;
+    const titulo = tieneHistorial
+      ? `Doble clic para ver historial (${est.registros.length} registro${est.registros.length>1?'s':''})`
+      : 'Sin registros de novedades';
+    html += `
+      <div
+        ondblclick="vcAbrirHistorialConContexto('${piazza}','${dvr}',${cam})"
+        title="${titulo}"
+        style="
+          background:${est.color};
+          border-radius:8px;
+          padding:10px 6px;
+          display:flex; flex-direction:column; align-items:center; justify-content:center;
+          gap:4px; cursor:${tieneHistorial?'pointer':'default'};
+          min-height:70px; position:relative;
+          box-shadow:0 2px 6px rgba(0,0,0,.15);
+          transition: transform .15s, box-shadow .15s;
+          color:${est.color==='#f59e0b'?'#78350f':'#fff'};
+        "
+        onmouseover="if(${tieneHistorial}){this.style.transform='scale(1.04)';this.style.boxShadow='0 4px 14px rgba(0,0,0,.25)';}"
+        onmouseout="this.style.transform='';this.style.boxShadow='0 2px 6px rgba(0,0,0,.15)';"
+      >
+        <div style="font-size:.7rem; font-weight:700; opacity:.85;">CAM ${cam}</div>
+        <div style="font-size:1.3rem; line-height:1;">${est.icono}</div>
+        <div style="font-size:.65rem; text-align:center; font-weight:600; opacity:.9; max-width:90%; overflow:hidden; white-space:nowrap; text-overflow:ellipsis;">${est.texto}</div>
+        ${tieneHistorial ? `<div style="position:absolute;top:4px;right:5px;font-size:.6rem;opacity:.7;">📋</div>` : ''}
+      </div>`;
+  }
+  grid.innerHTML = html;
+}
+
+function vcAbrirHistorial(piazza, dvr, cam){
+  const claveCam = 'Cam ' + cam;
+  const registros = pendientes
+    .filter(p => p.tipo === 'Camara' && p.piazza === piazza && p.dvr === dvr && p.camara === claveCam)
+    .sort((a,b) => (b.fecha||'') > (a.fecha||'') ? 1 : -1);
+
+  document.getElementById('vc-hist-titulo').textContent = `${dvr} / Cam ${cam} — ${piazza}`;
+  document.getElementById('vc-hist-subtitulo').textContent = `${registros.length} registro${registros.length!==1?'s':''} en total`;
+
+  if(!registros.length){
+    document.getElementById('vc-hist-contenido').innerHTML =
+      '<div style="color:#8a97a5; padding:20px 0; text-align:center;">Sin novedades registradas para esta cámara.</div>';
+  } else {
+    let html = '<div style="display:flex; flex-direction:column; gap:12px;">';
+    registros.forEach(r => {
+      const esPend = r.pendienteEstado === 'Pendiente';
+      const badgeColor = esPend ? '#ef4444' : '#22c55e';
+      const badgeTexto = r.pendienteEstado || 'Pendiente';
+      html += `
+        <div style="border:1px solid #e2e8f0; border-radius:8px; overflow:hidden;">
+          <div style="background:#f8fafc; padding:8px 12px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:6px; border-bottom:1px solid #e2e8f0;">
+            <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+              <span style="font-weight:700; color:#0b2340;">${r.fecha||'—'}</span>
+              <span style="background:${badgeColor}; color:#fff; border-radius:4px; padding:2px 7px; font-size:.74rem; font-weight:600;">${badgeTexto}</span>
+              <span style="background:#e2e8f0; color:#374151; border-radius:4px; padding:2px 7px; font-size:.74rem;">${r.estado||''}</span>
+            </div>
+            <span style="font-size:.78rem; color:#6b7785;">${r.tecnico||''}</span>
+          </div>
+          <div style="padding:10px 12px; font-size:.85rem; color:#334155; white-space:pre-wrap;">${(r.reporte||'Sin reporte').replace(/</g,'&lt;')}</div>
+        </div>`;
+    });
+    html += '</div>';
+    document.getElementById('vc-hist-contenido').innerHTML = html;
+  }
+
+  const modal = document.getElementById('modal-vc-historial');
+  modal.style.display = 'flex';
+}
+
+function cerrarModalVCHistorial(){
+  document.getElementById('modal-vc-historial').style.display = 'none';
+  vcOcultarFormEdicion();
+  _vcHistorialActual = null;
+}
+
+function vcExportarPDF(){
+  const piazza = document.getElementById('vc-piazza').value;
+  const dvr    = document.getElementById('vc-dvr').value;
+  if(!piazza || !dvr){
+    alert('Selecciona una Piazza y un DVR/NVR antes de exportar.');
+    return;
+  }
+
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ orientation: 'portrait' });
+  const hoy = hoyISO();
+  const anchoPagina = doc.internal.pageSize.getWidth();
+
+  // Encabezado estándar
+  let y = dibujarEncabezadoReporte(doc, 'Reporte de Camaras, Botones de Panico y Sistema Contra Incendio', 14);
+  y += 4;
+
+  // Título de sección
+  doc.setFillColor(11, 35, 64);
+  doc.rect(14, y, anchoPagina - 28, 8, 'F');
+  doc.setTextColor(255, 255, 255);
+  doc.setFontSize(10);
+  doc.setFont(undefined, 'bold');
+  doc.text(`VISTA DE CAMARAS — ${piazza.toUpperCase()} / ${dvr}`, 17, y + 5.5);
+  doc.setTextColor(0, 0, 0);
+  y += 12;
+
+  // Leyenda
+  doc.setFontSize(7.5);
+  doc.setFont(undefined, 'normal');
+  const leyenda = [
+    { color: [34,197,94],  texto: 'Operativa' },
+    { color: [245,158,11], texto: 'Con novedad' },
+    { color: [239,68,68],  texto: 'Sin imagen/falla' },
+    { color: [148,163,184],texto: 'Puerto libre' }
+  ];
+  let xLey = 14;
+  leyenda.forEach(l => {
+    doc.setFillColor(...l.color);
+    doc.rect(xLey, y, 5, 3.5, 'F');
+    doc.setTextColor(60,60,60);
+    doc.text(l.texto, xLey + 6.5, y + 3);
+    xLey += 34;
+  });
+  y += 8;
+
+  // Grid de cámaras
+  const totalCams = puertosCamaraDePiazza(piazza);
+  const cols = Math.ceil(Math.sqrt(totalCams));
+  const margen = 14;
+  const anchoUtil = anchoPagina - margen * 2;
+  const celdaW = anchoUtil / cols;
+  const celdaH = 14;
+
+  // Colores por estado
+  const colorDe = (est) => {
+    if(est === 'Puerto libre')   return [148, 163, 184];
+    if(!est._activo)             return [34, 197, 94];
+    const rojos = ['Sin imagen','Desconectado','Sin señal'];
+    const amarillos = ['Intermitencia','Interferencia','Blanco y negro','Falla de sensor','Batería baja','Requiere mantenimiento','Otro'];
+    if(rojos.includes(est._estadoRef))    return [239, 68, 68];
+    if(amarillos.includes(est._estadoRef))return [245, 158, 11];
+    return [34, 197, 94];
+  };
+
+  for(let cam = 1; cam <= totalCams; cam++){
+    const col = (cam - 1) % cols;
+    const row = Math.floor((cam - 1) / cols);
+    const x = margen + col * celdaW;
+    const fila_y = y + row * (celdaH + 2);
+
+    // Salto de página
+    if(fila_y + celdaH > doc.internal.pageSize.getHeight() - 14){
+      doc.addPage();
+      y = 14 - row * (celdaH + 2); // reiniciar offset
+    }
+
+    const yCelda = y + row * (celdaH + 2);
+
+    // Calcular estado real
+    const claveCam = 'Cam ' + cam;
+    const regs = pendientes.filter(p => p.tipo==='Camara' && p.piazza===piazza && p.dvr===dvr && p.camara===claveCam);
+    let estadoObj;
+    if(!regs.length){
+      estadoObj = { _activo: false, _estadoRef: 'Operativo' };
+    } else {
+      const activo = regs.sort((a,b)=>(b.fecha||'')>(a.fecha||'')?1:-1).find(r=>r.pendienteEstado==='Pendiente');
+      const ultimo = regs[0];
+      const eRef = activo ? activo.estado : ultimo.estado;
+      if(eRef === 'Puerto libre') estadoObj = { _activo: false, _estadoRef: 'Puerto libre' };
+      else estadoObj = { _activo: !!activo, _estadoRef: eRef };
+    }
+
+    // Fondo celda
+    const rgb = colorDe(estadoObj);
+    doc.setFillColor(...rgb);
+    doc.roundedRect(x + 1, yCelda, celdaW - 2, celdaH, 1.5, 1.5, 'F');
+
+    // Texto número cámara
+    const textColor = (rgb[0]===245 && rgb[1]===158) ? [120,53,15] : [255,255,255];
+    doc.setTextColor(...textColor);
+    doc.setFontSize(7);
+    doc.setFont(undefined, 'bold');
+    doc.text('CAM ' + cam, x + celdaW/2, yCelda + 4.5, { align:'center' });
+
+    // Texto estado
+    doc.setFontSize(6);
+    doc.setFont(undefined, 'normal');
+    const estadoTexto = estadoObj._estadoRef === 'Puerto libre' ? 'Puerto libre'
+      : estadoObj._activo ? estadoObj._estadoRef : 'Operativa';
+    doc.text(estadoTexto, x + celdaW/2, yCelda + 10, { align:'center', maxWidth: celdaW - 4 });
+  }
+
+  doc.setTextColor(0,0,0);
+  const totalFilas = Math.ceil(totalCams / cols);
+  y += totalFilas * (celdaH + 2) + 6;
+
+  // Resumen de estados
+  const resumen = { operativas:0, novedades:0, fallas:0, libres:0 };
+  for(let cam = 1; cam <= totalCams; cam++){
+    const claveCam = 'Cam ' + cam;
+    const regs = pendientes.filter(p => p.tipo==='Camara' && p.piazza===piazza && p.dvr===dvr && p.camara===claveCam);
+    if(!regs.length){ resumen.operativas++; continue; }
+    const activo = regs.sort((a,b)=>(b.fecha||'')>(a.fecha||'')?1:-1).find(r=>r.pendienteEstado==='Pendiente');
+    const eRef = activo ? activo.estado : regs[0].estado;
+    if(eRef === 'Puerto libre') resumen.libres++;
+    else if(!activo) resumen.operativas++;
+    else if(['Sin imagen','Desconectado','Sin señal'].includes(eRef)) resumen.fallas++;
+    else resumen.novedades++;
+  }
+
+  if(y + 12 > doc.internal.pageSize.getHeight() - 14){ doc.addPage(); y = 20; }
+  doc.setFontSize(8);
+  doc.setFont(undefined, 'bold');
+  doc.setTextColor(11,35,64);
+  doc.text(`Resumen — Total: ${totalCams}  |  Operativas: ${resumen.operativas}  |  Con novedad: ${resumen.novedades}  |  Sin imagen/falla: ${resumen.fallas}  |  Puertos libres: ${resumen.libres}`, 14, y);
+
+  doc.save(`Vista_Camaras_${piazza}_${dvr}_${hoy}.pdf`);
+}
+
+// Guarda piazza/dvr/cam actuales para la edición
+let _vcHistorialActual = null;
+
+// Sobrescribir vcAbrirHistorial para guardar contexto
+const _vcAbrirHistorialOrig = vcAbrirHistorial;
+// (ya definida arriba — extendemos comportamiento guardando contexto)
+function vcAbrirHistorialConContexto(piazza, dvr, cam){
+  _vcHistorialActual = { piazza, dvr, cam };
+  vcAbrirHistorial(piazza, dvr, cam);
+}
+
+function vcMostrarFormEdicion(){
+  if(!_vcHistorialActual) return;
+  const { piazza, dvr, cam } = _vcHistorialActual;
+  const claveCam = 'Cam ' + cam;
+
+  // Buscar registro pendiente activo (el más reciente con pendienteEstado === 'Pendiente')
+  const activo = pendientes
+    .filter(p => p.tipo === 'Camara' && p.piazza === piazza && p.dvr === dvr && p.camara === claveCam)
+    .sort((a,b) => (b.fecha||'') > (a.fecha||'') ? 1 : -1)
+    .find(p => p.pendienteEstado === 'Pendiente');
+
+  // Si no hay activo, tomar el más reciente de cualquier estado
+  const ref = activo || pendientes
+    .filter(p => p.tipo === 'Camara' && p.piazza === piazza && p.dvr === dvr && p.camara === claveCam)
+    .sort((a,b) => (b.fecha||'') > (a.fecha||'') ? 1 : -1)[0];
+
+  if(ref){
+    document.getElementById('vc-ed-estado').value = ref.estado || 'Sin imagen';
+    document.getElementById('vc-ed-pendiente-estado').value = ref.pendienteEstado || 'Pendiente';
+    document.getElementById('vc-ed-tecnico').value = ref.tecnico || '';
+    document.getElementById('vc-ed-fecha').value = ref.fecha || hoyISO();
+    document.getElementById('vc-ed-reporte').value = ref.reporte || '';
+    _vcHistorialActual._refId = ref.id;
+  } else {
+    // No existe registro — crear uno nuevo
+    document.getElementById('vc-ed-estado').value = 'Sin imagen';
+    document.getElementById('vc-ed-pendiente-estado').value = 'Pendiente';
+    document.getElementById('vc-ed-tecnico').value = '';
+    document.getElementById('vc-ed-fecha').value = hoyISO();
+    document.getElementById('vc-ed-reporte').value = '';
+    _vcHistorialActual._refId = null;
+  }
+
+  document.getElementById('vc-form-edicion').style.display = 'block';
+}
+
+function vcOcultarFormEdicion(){
+  document.getElementById('vc-form-edicion').style.display = 'none';
+}
+
+function vcGuardarEdicion(){
+  if(!_vcHistorialActual) return;
+  const { piazza, dvr, cam } = _vcHistorialActual;
+  const claveCam = 'Cam ' + cam;
+
+  const nuevoEstado       = document.getElementById('vc-ed-estado').value;
+  const nuevoPendEstado   = document.getElementById('vc-ed-pendiente-estado').value;
+  const nuevoTecnico      = document.getElementById('vc-ed-tecnico').value.trim();
+  const nuevaFecha        = document.getElementById('vc-ed-fecha').value;
+  const nuevoReporte      = document.getElementById('vc-ed-reporte').value.trim();
+
+  if(!nuevaFecha){ alert('Por favor ingresa una fecha.'); return; }
+
+  let idGuardado;
+
+  if(_vcHistorialActual._refId){
+    // Modificar registro existente
+    const idx = pendientes.findIndex(p => p.id === _vcHistorialActual._refId);
+    if(idx !== -1){
+      pendientes[idx].estado         = nuevoEstado;
+      pendientes[idx].pendienteEstado = nuevoPendEstado;
+      pendientes[idx].tecnico        = nuevoTecnico;
+      pendientes[idx].fecha          = nuevaFecha;
+      pendientes[idx].reporte        = nuevoReporte;
+      pendientes[idx].modificado     = new Date().toISOString();
+      idGuardado = pendientes[idx].id;
+    }
+  } else {
+    // Crear nuevo registro
+    const nuevoId = 'p_' + Date.now() + '_' + Math.floor(Math.random()*1000);
+    const nuevo = {
+      id: nuevoId,
+      tipo: 'Camara',
+      piazza, dvr,
+      camara: claveCam,
+      estado: nuevoEstado,
+      pendienteEstado: nuevoPendEstado,
+      tecnico: nuevoTecnico,
+      fecha: nuevaFecha,
+      reporte: nuevoReporte,
+      origen: 'vista-camaras',
+      modificado: new Date().toISOString()
+    };
+    pendientes.push(nuevo);
+    idGuardado = nuevoId;
+  }
+
+  // Guardar en Firebase + localStorage
+  guardarDatos([idGuardado]);
+
+  // Actualizar UI
+  vcOcultarFormEdicion();
+  vcRenderGrid(); // actualizar colores del grid
+  renderTabla();  // actualizar lista de pendientes
+  renderEstadistica();
+
+  // Reabrir historial actualizado
+  vcAbrirHistorial(piazza, dvr, cam);
+  alert('✅ Cambios guardados correctamente.');
+}
+
 </script>
 
 </body>
